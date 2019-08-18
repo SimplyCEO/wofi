@@ -97,6 +97,56 @@ static void do_dmenu(GtkWidget* box) {
 	free(line);
 }
 
+static void do_drun(GtkWidget* box) {
+	char* data_home = getenv("XDG_DATA_HOME");
+	if(data_home == NULL) {
+		data_home = utils_concat(2, getenv("HOME"), "/.local/share");
+	} else {
+		data_home = strdup(data_home);
+	}
+	char* data_dirs = getenv("XDG_DATA_DIRS");
+	if(data_dirs == NULL) {
+		data_dirs = "/usr/local/share:/usr/share";
+	}
+	char* dirs = utils_concat(3, data_home, ":", data_dirs);
+	char* original_dirs = dirs;
+	free(data_home);
+
+	size_t colon_count = utils_split(dirs, ':');
+	for(size_t count = 0; count < colon_count; ++count) {
+		char* app_dir = utils_concat(2, dirs, "/applications");
+		DIR* dir = opendir(app_dir);
+		if(dir == NULL) {
+			goto cont;
+		}
+		struct dirent* entry;
+		while((entry = readdir(dir)) != NULL) {
+			if(strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+				continue;
+			}
+			char* full_path = utils_concat(3, app_dir, "/", entry->d_name);
+			GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(full_path);
+			free(full_path);
+			if(!G_IS_DESKTOP_APP_INFO(info)) {
+				continue;
+			}
+			const gchar* name = g_desktop_app_info_get_string(info, "Name");
+			if(name == NULL) {
+				continue;
+			}
+			GtkWidget* label = gtk_label_new(name);
+			gtk_widget_set_name(label, "unselected");
+			gtk_label_set_xalign(GTK_LABEL(label), 0);
+			gtk_container_add(GTK_CONTAINER(box), label);
+		}
+		closedir(dir);
+		cont:
+		dirs += strlen(dirs) + 1;
+		free(app_dir);
+	}
+	free(original_dirs);
+}
+
 static void execute_action(char* mode, const gchar* cmd) {
 	if(strcmp(mode, "run") == 0) {
 		execlp(cmd, cmd, NULL);
@@ -224,6 +274,8 @@ void wofi_init(struct map* config) {
 		do_run(inner_box);
 	} else if(strcmp(mode, "dmenu") == 0) {
 		do_dmenu(inner_box);
+	} else if(strcmp(mode, "drun") == 0) {
+		do_drun(inner_box);
 	} else {
 		fprintf(stderr, "I would love to show %s but Idk what it is\n", mode);
 		exit(1);

@@ -222,6 +222,9 @@ void wofi_init(struct map* config) {
 		do_run(inner_box);
 	} else if(strcmp(mode, "dmenu") == 0) {
 		do_dmenu(inner_box);
+	} else {
+		fprintf(stderr, "I would love to show %s but Idk what it is\n", mode);
+		exit(1);
 	}
 	gtk_widget_grab_focus(entry);
 }

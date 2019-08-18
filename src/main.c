@@ -56,6 +56,7 @@ static void print_usage(char** argv) {
 	printf("\t\t-p\tPrompt to display\n");
 	printf("--xoffset\t-x\tThe x offset\n");
 	printf("--yoffset\t-y\tThe y offset\n");
+	printf("--normal-window\t-n\tRender to a normal window\n");
 	exit(0);
 }
 
@@ -232,6 +233,12 @@ int main(int argc, char** argv) {
 			.val = 'y'
 		},
 		{
+			.name = "normal-window",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'n'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -248,8 +255,9 @@ int main(int argc, char** argv) {
 	char* height = NULL;
 	char* x = NULL;
 	char* y = NULL;
+	char* normal_window = NULL;
 	char opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:n", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -291,6 +299,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'y':
 			y = optarg;
+			break;
+		case 'n':
+			normal_window = "true";
 			break;
 		}
 	}
@@ -379,6 +390,9 @@ int main(int argc, char** argv) {
 	}
 	if(y != NULL) {
 		map_put(config, "y", y);
+	}
+	if(normal_window != NULL) {
+		map_put(config, "normal_window", normal_window);
 	}
 
 	gtk_init(&argc, &argv);

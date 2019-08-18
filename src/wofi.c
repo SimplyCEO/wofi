@@ -43,11 +43,6 @@ static void config_surface(void* data, struct zwlr_layer_surface_v1* surface, ui
 		zwlr_layer_surface_v1_set_margin(surface, y, 0, 0, x);
 		zwlr_layer_surface_v1_set_anchor(surface, ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT);
 	}
-	gtk_window_set_default_size(GTK_WINDOW(window), width, height);
-	gtk_window_resize(GTK_WINDOW(window), width, height);
-	gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
-	gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
-	gtk_widget_show_all(window);
 }
 
 static void get_input(GtkSearchEntry* entry, gpointer data) {
@@ -166,31 +161,38 @@ void wofi_init(struct map* config) {
 	height = strtol(config_get(config, "height", "400"), NULL, 10);
 	x = strtol(config_get(config, "x", "-1"), NULL, 10);
 	y = strtol(config_get(config, "y", "-1"), NULL, 10);
+	bool normal_window = strcmp(config_get(config, "normal_window", "false"), "true") == 0;
 	char* mode = map_get(config, "mode");
 	char* prompt = config_get(config, "prompt", mode);
-	GdkDisplay* disp = gdk_display_get_default();
-	struct wl_display* wl = gdk_wayland_display_get_wl_display(disp);
-	struct wl_registry* registry = wl_display_get_registry(wl);
-	struct wl_registry_listener listener = {
-		.global = add_interface,
-		.global_remove = nop
-	};
-	wl_registry_add_listener(registry, &listener, NULL);
-	wl_display_roundtrip(wl);
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_realize(window);
 	gtk_widget_set_name(window, "window");
-	GdkWindow* gdk_win = gtk_widget_get_window(window);
-	gdk_wayland_window_set_use_custom_surface(gdk_win);
-	struct wl_surface* wl_surface = gdk_wayland_window_get_wl_surface(gdk_win);
-	struct zwlr_layer_surface_v1* surface = zwlr_layer_shell_v1_get_layer_surface(shell, wl_surface, NULL, ZWLR_LAYER_SHELL_V1_LAYER_TOP, "wofi");
-	struct zwlr_layer_surface_v1_listener* surface_listener = malloc(sizeof(struct zwlr_layer_surface_v1_listener));
-	surface_listener->configure = config_surface;
-	surface_listener->closed = nop;
-	zwlr_layer_surface_v1_add_listener(surface, surface_listener, NULL);
-	wl_surface_commit(wl_surface);
-	wl_display_roundtrip(wl);
+	gtk_window_set_default_size(GTK_WINDOW(window), width, height);
+	gtk_window_resize(GTK_WINDOW(window), width, height);
+	gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
+	gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
+	if(!normal_window) {
+		GdkDisplay* disp = gdk_display_get_default();
+		struct wl_display* wl = gdk_wayland_display_get_wl_display(disp);
+		struct wl_registry* registry = wl_display_get_registry(wl);
+		struct wl_registry_listener listener = {
+			.global = add_interface,
+			.global_remove = nop
+		};
+		wl_registry_add_listener(registry, &listener, NULL);
+		wl_display_roundtrip(wl);
+		GdkWindow* gdk_win = gtk_widget_get_window(window);
+		gdk_wayland_window_set_use_custom_surface(gdk_win);
+		struct wl_surface* wl_surface = gdk_wayland_window_get_wl_surface(gdk_win);
+		struct zwlr_layer_surface_v1* surface = zwlr_layer_shell_v1_get_layer_surface(shell, wl_surface, NULL, ZWLR_LAYER_SHELL_V1_LAYER_TOP, "wofi");
+		struct zwlr_layer_surface_v1_listener* surface_listener = malloc(sizeof(struct zwlr_layer_surface_v1_listener));
+		surface_listener->configure = config_surface;
+		surface_listener->closed = nop;
+		zwlr_layer_surface_v1_add_listener(surface, surface_listener, NULL);
+		wl_surface_commit(wl_surface);
+		wl_display_roundtrip(wl);
+	}
 
 	GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
 	gtk_widget_set_name(box, "outer-box");
@@ -227,4 +229,5 @@ void wofi_init(struct map* config) {
 		exit(1);
 	}
 	gtk_widget_grab_focus(entry);
+	gtk_widget_show_all(window);
 }

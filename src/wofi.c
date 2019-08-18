@@ -71,6 +71,8 @@ static void do_run(GtkWidget* box) {
 			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode)) {
 				GtkWidget* label = gtk_label_new(entry->d_name);
 				gtk_widget_set_name(label, "unselected");
+				gtk_widget_set_tooltip_text(label, full_path);
+				gtk_widget_set_has_tooltip(label, FALSE);
 				gtk_label_set_xalign(GTK_LABEL(label), 0);
 				gtk_container_add(GTK_CONTAINER(box), label);
 			}
@@ -128,18 +130,22 @@ static void do_drun(GtkWidget* box) {
 			}
 			char* full_path = utils_concat(3, app_dir, "/", entry->d_name);
 			GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(full_path);
-			free(full_path);
 			if(!G_IS_DESKTOP_APP_INFO(info)) {
+				free(full_path);
 				continue;
 			}
-			const gchar* name = g_desktop_app_info_get_string(info, "Name");
+			const char* name = g_app_info_get_display_name(G_APP_INFO(info));
 			if(name == NULL) {
+				free(full_path);
 				continue;
 			}
 			GtkWidget* label = gtk_label_new(name);
 			gtk_widget_set_name(label, "unselected");
+			gtk_widget_set_tooltip_text(label, full_path);
+			gtk_widget_set_has_tooltip(label, FALSE);
 			gtk_label_set_xalign(GTK_LABEL(label), 0);
 			gtk_container_add(GTK_CONTAINER(box), label);
+			free(full_path);
 		}
 		closedir(dir);
 		cont:
@@ -157,6 +163,17 @@ static void execute_action(char* mode, const gchar* cmd) {
 	} else if(strcmp(mode, "dmenu") == 0) {
 		printf("%s\n", cmd);
 		exit(0);
+	} else if(strcmp(mode, "drun") == 0) {
+		GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(cmd);
+		if(G_IS_DESKTOP_APP_INFO(info)) {
+			const char* exec = g_app_info_get_executable(G_APP_INFO(info));
+			execlp(exec, exec, NULL);
+			fprintf(stderr, "%s cannot be executed\n", exec);
+			exit(errno);
+		} else {
+			fprintf(stderr, "%s cannot be executed\n", cmd);
+			exit(1);
+		}
 	}
 }
 
@@ -164,7 +181,7 @@ static void activate_item(GtkListBox* box, GtkListBoxRow* row, gpointer data) {
 	(void) box;
 	char* mode = data;
 	GtkWidget* label = gtk_bin_get_child(GTK_BIN(row));
-	execute_action(mode, gtk_label_get_text(GTK_LABEL(label)));
+	execute_action(mode, gtk_widget_get_tooltip_text(label));
 }
 
 static void select_item(GtkListBox* box, GtkListBoxRow* row, gpointer data) {

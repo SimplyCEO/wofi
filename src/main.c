@@ -359,13 +359,11 @@ int main(int argc, char** argv) {
 
 	free(COLORS_LOCATION);
 
-	if(mode == NULL) {
-		fprintf(stderr, "I need a mode, please give me a mode, that's what --show is for\n");
-		exit(1);
-	}
-
 	if(mode != NULL) {
 		map_put(config, "mode", mode);
+	} else if(map_get(config, "mode") == NULL) {
+		fprintf(stderr, "I need a mode, please give me a mode, that's what --show is for\n");
+		exit(1);
 	}
 	if(width != NULL) {
 		map_put(config, "width", width);

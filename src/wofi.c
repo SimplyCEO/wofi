@@ -20,7 +20,7 @@
 static uint64_t width, height;
 static int64_t x, y;
 static struct zwlr_layer_shell_v1* shell;
-static GtkWidget* window;
+static GtkWidget* window, *previous_selection = NULL;
 static const gchar* filter;
 
 static void nop() {}
@@ -75,6 +75,7 @@ static void do_run(GtkWidget* box) {
 			stat(full_path, &info);
 			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode)) {
 				GtkWidget* label = gtk_label_new(entry->d_name);
+				gtk_widget_set_name(label, "unselected");
 				gtk_label_set_xalign(GTK_LABEL(label), 0);
 				gtk_container_add(GTK_CONTAINER(box), label);
 			}
@@ -94,6 +95,7 @@ static void do_dmenu(GtkWidget* box) {
 			*lf = 0;
 		}
 		GtkWidget* label = gtk_label_new(line);
+		gtk_widget_set_name(label, "unselected");
 		gtk_label_set_xalign(GTK_LABEL(label), 0);
 		gtk_container_add(GTK_CONTAINER(box), label);
 	}
@@ -116,6 +118,17 @@ static void activate_item(GtkListBox* box, GtkListBoxRow* row, gpointer data) {
 	char* mode = data;
 	GtkWidget* label = gtk_bin_get_child(GTK_BIN(row));
 	execute_action(mode, gtk_label_get_text(GTK_LABEL(label)));
+}
+
+static void select_item(GtkListBox* box, GtkListBoxRow* row, gpointer data) {
+	(void) box;
+	(void) data;
+	if(previous_selection != NULL) {
+		gtk_widget_set_name(previous_selection, "unselected");
+	}
+	GtkWidget* label = gtk_bin_get_child(GTK_BIN(row));
+	gtk_widget_set_name(label, "selected");
+	previous_selection = label;
 }
 
 static void activate_search(GtkEntry* entry, gpointer data) {
@@ -201,6 +214,7 @@ void wofi_init(struct map* config) {
 
 	g_signal_connect(entry, "search-changed", G_CALLBACK(get_input), inner_box);
 	g_signal_connect(inner_box, "row-activated", G_CALLBACK(activate_item), mode);
+	g_signal_connect(inner_box, "row-selected", G_CALLBACK(select_item), NULL);
 	g_signal_connect(entry, "activate", G_CALLBACK(activate_search), mode);
 	g_signal_connect(window, "key-press-event", G_CALLBACK(escape), NULL);
 

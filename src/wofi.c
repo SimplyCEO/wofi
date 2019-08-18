@@ -58,7 +58,7 @@ static void do_run(GtkWidget* box) {
 	for(size_t count = 0; count < colon_count; ++count) {
 		DIR* dir = opendir(path);
 		if(dir == NULL) {
-			continue;
+			goto cont;
 		}
 		struct dirent* entry;
 		while((entry = readdir(dir)) != NULL) {
@@ -76,6 +76,8 @@ static void do_run(GtkWidget* box) {
 			}
 			free(full_path);
 		}
+		closedir(dir);
+		cont:
 		path += strlen(path) + 1;
 	}
 	free(original_path);

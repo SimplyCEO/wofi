@@ -34,15 +34,19 @@ static char* config_path;
 static char* stylesheet;
 static char* color_path;
 
-static void print_usage(char** argv) {
-	char* slash = strrchr(argv[0], '/');
+static char* get_exec_name(char* path) {
+	char* slash = strrchr(path, '/');
 	uint64_t offset;
 	if(slash == NULL) {
 		offset = 0;
 	} else {
-		offset = (slash - argv[0]) + 1;
+		offset = (slash - path) + 1;
 	}
-	printf("%s [options]\n", argv[0] + offset);
+	return path + offset;
+}
+
+static void print_usage(char** argv) {
+	printf("%s [options]\n", get_exec_name(argv[0]));
 	printf("Options:\n");
 	printf("--help\t\t-h\tDisplays this help message\n");
 	printf("--fork\t\t-f\tForks the menu so you can close the terminal\n");
@@ -370,7 +374,9 @@ int main(int argc, char** argv) {
 
 	free(COLORS_LOCATION);
 
-	if(mode != NULL) {
+	if(strcmp(get_exec_name(argv[0]), "dmenu") == 0) {
+		map_put(config, "mode", "dmenu");
+	} else if(mode != NULL) {
 		map_put(config, "mode", mode);
 	} else if(map_get(config, "mode") == NULL) {
 		fprintf(stderr, "I need a mode, please give me a mode, that's what --show is for\n");

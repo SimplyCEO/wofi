@@ -300,5 +300,6 @@ void wofi_init(struct map* config) {
 		exit(1);
 	}
 	gtk_widget_grab_focus(entry);
+	gtk_window_set_title(GTK_WINDOW(window), prompt);
 	gtk_widget_show_all(window);
 }

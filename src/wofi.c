@@ -245,14 +245,28 @@ static gboolean do_filter(GtkListBoxRow* row, gpointer data) {
 	return FALSE;
 }
 
-static gboolean escape(GtkWidget* widget, GdkEvent* event, gpointer data) {
+static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 	(void) widget;
 	(void) event;
 	(void) data;
+	GtkWidget* entry = data;
 	guint code;
 	gdk_event_get_keyval(event, &code);
-	if(code == GDK_KEY_Escape) {
+	switch(code) {
+	case GDK_KEY_Escape:
 		exit(0);
+		break;
+	case GDK_KEY_Up:
+	case GDK_KEY_Down:
+	case GDK_KEY_Left:
+	case GDK_KEY_Right:
+	case GDK_KEY_Return:
+		break;
+	default:
+		if(!gtk_widget_has_focus(entry)) {
+			gtk_widget_grab_focus(entry);
+		}
+		break;
 	}
 	return FALSE;
 }
@@ -319,7 +333,7 @@ void wofi_init(struct map* config) {
 	g_signal_connect(inner_box, "row-activated", G_CALLBACK(activate_item), mode);
 	g_signal_connect(inner_box, "row-selected", G_CALLBACK(select_item), NULL);
 	g_signal_connect(entry, "activate", G_CALLBACK(activate_search), mode);
-	g_signal_connect(window, "key-press-event", G_CALLBACK(escape), NULL);
+	g_signal_connect(window, "key-press-event", G_CALLBACK(key_press), entry);
 
 	pthread_t thread;
 	if(strcmp(mode, "run") == 0) {

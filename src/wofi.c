@@ -22,6 +22,10 @@ static int64_t x, y;
 static struct zwlr_layer_shell_v1* shell;
 static GtkWidget* window, *previous_selection = NULL;
 static const gchar* filter;
+struct node {
+	GtkWidget* widget;
+	GtkContainer* container;
+};
 
 static void nop() {}
 
@@ -51,7 +55,16 @@ static void get_input(GtkSearchEntry* entry, gpointer data) {
 	gtk_list_box_invalidate_filter(box);
 }
 
-static void do_run(GtkWidget* box) {
+static gboolean insert_widget(gpointer data) {
+	struct node* node = data;
+	gtk_container_add(node->container, node->widget);
+	gtk_widget_show(node->widget);
+	free(node);
+	return FALSE;
+}
+
+static void* do_run(void* data) {
+	GtkContainer* box = data;
 	char* path = strdup(getenv("PATH"));
 	char* original_path = path;
 	size_t colon_count = utils_split(path, ':');
@@ -74,7 +87,11 @@ static void do_run(GtkWidget* box) {
 				gtk_widget_set_tooltip_text(label, full_path);
 				gtk_widget_set_has_tooltip(label, FALSE);
 				gtk_label_set_xalign(GTK_LABEL(label), 0);
-				gtk_container_add(GTK_CONTAINER(box), label);
+				struct node* node = malloc(sizeof(struct node));
+				node->widget = label;
+				node->container = box;
+				g_idle_add(insert_widget, node);
+				utils_sleep_millis(1);
 			}
 			free(full_path);
 		}
@@ -83,9 +100,11 @@ static void do_run(GtkWidget* box) {
 		path += strlen(path) + 1;
 	}
 	free(original_path);
+	return NULL;
 }
 
-static void do_dmenu(GtkWidget* box) {
+static void* do_dmenu(void* data) {
+	GtkContainer* box = data;
 	char* line;
 	size_t size = 0;
 	while(getline(&line, &size, stdin) != -1) {
@@ -96,12 +115,18 @@ static void do_dmenu(GtkWidget* box) {
 		GtkWidget* label = gtk_label_new(line);
 		gtk_widget_set_name(label, "unselected");
 		gtk_label_set_xalign(GTK_LABEL(label), 0);
-		gtk_container_add(GTK_CONTAINER(box), label);
+		struct node* node = malloc(sizeof(struct node));
+		node->widget = label;
+		node->container = box;
+		g_idle_add(insert_widget, node);
+		utils_sleep_millis(1);
 	}
 	free(line);
+	return NULL;
 }
 
-static void do_drun(GtkWidget* box) {
+static void* do_drun(void* data) {
+	GtkContainer* box = data;
 	char* data_home = getenv("XDG_DATA_HOME");
 	if(data_home == NULL) {
 		data_home = utils_concat(2, getenv("HOME"), "/.local/share");
@@ -144,7 +169,11 @@ static void do_drun(GtkWidget* box) {
 			gtk_widget_set_tooltip_text(label, full_path);
 			gtk_widget_set_has_tooltip(label, FALSE);
 			gtk_label_set_xalign(GTK_LABEL(label), 0);
-			gtk_container_add(GTK_CONTAINER(box), label);
+			struct node* node = malloc(sizeof(struct node));
+			node->widget = label;
+			node->container = box;
+			g_idle_add(insert_widget, node);
+			utils_sleep_millis(1);
 			free(full_path);
 		}
 		closedir(dir);
@@ -153,6 +182,7 @@ static void do_drun(GtkWidget* box) {
 		free(app_dir);
 	}
 	free(original_dirs);
+	return NULL;
 }
 
 static void execute_action(char* mode, const gchar* cmd) {
@@ -289,12 +319,13 @@ void wofi_init(struct map* config) {
 	g_signal_connect(entry, "activate", G_CALLBACK(activate_search), mode);
 	g_signal_connect(window, "key-press-event", G_CALLBACK(escape), NULL);
 
+	pthread_t thread;
 	if(strcmp(mode, "run") == 0) {
-		do_run(inner_box);
+		pthread_create(&thread, NULL, do_run, inner_box);
 	} else if(strcmp(mode, "dmenu") == 0) {
-		do_dmenu(inner_box);
+		pthread_create(&thread, NULL, do_dmenu, inner_box);
 	} else if(strcmp(mode, "drun") == 0) {
-		do_drun(inner_box);
+		pthread_create(&thread, NULL, do_drun, inner_box);
 	} else {
 		fprintf(stderr, "I would love to show %s but Idk what it is\n", mode);
 		exit(1);

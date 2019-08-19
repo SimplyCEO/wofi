@@ -114,6 +114,8 @@ static void* do_dmenu(void* data) {
 		}
 		GtkWidget* label = gtk_label_new(line);
 		gtk_widget_set_name(label, "unselected");
+		gtk_widget_set_tooltip_text(label, line);
+		gtk_widget_set_has_tooltip(label, FALSE);
 		gtk_label_set_xalign(GTK_LABEL(label), 0);
 		struct node* node = malloc(sizeof(struct node));
 		node->widget = label;

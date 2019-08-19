@@ -35,6 +35,8 @@ bool map_put_void(struct map* map, const char* key, void* value);
 
 void* map_get(struct map* map, const char* key);
 
+bool map_contains(struct map* map, const char* key);
+
 size_t map_size(struct map* map);
 
 #endif

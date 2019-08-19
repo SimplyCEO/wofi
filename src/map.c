@@ -125,6 +125,10 @@ void* map_get(struct map* map, const char* key) {
 	}
 }
 
+bool map_contains(struct map* map, const char* key) {
+	return map_get(map, key) != NULL;
+}
+
 size_t map_size(struct map* map) {
 	return map->size;
 }

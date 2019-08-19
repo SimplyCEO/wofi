@@ -27,6 +27,11 @@ struct node {
 	GtkContainer* container;
 };
 
+struct cache_line {
+	char* line;
+	struct wl_list link;
+};
+
 static void nop() {}
 
 static void add_interface(void* data, struct wl_registry* registry, uint32_t name, const char* interface, uint32_t version) {
@@ -63,8 +68,89 @@ static gboolean insert_widget(gpointer data) {
 	return FALSE;
 }
 
+static GtkWidget* create_label(const char* text, char* tooltip) {
+	GtkWidget* label = gtk_label_new(text);
+	gtk_widget_set_name(label, "unselected");
+	gtk_widget_set_tooltip_text(label, tooltip);
+	gtk_widget_set_has_tooltip(label, FALSE);
+	gtk_label_set_xalign(GTK_LABEL(label), 0);
+	return label;
+}
+
+static char* get_cache_path(char* mode) {
+	char* cache_path = getenv("XDG_CACHE_HOME");
+	if(cache_path == NULL) {
+		cache_path = utils_concat(3, getenv("HOME"), "/.cache/wofi-", mode);
+	} else {
+		cache_path = utils_concat(3, cache_path, "/wofi-", mode);
+	}
+	return cache_path;
+}
+
+static struct wl_list* read_cache(char* mode) {
+	char* cache_path = get_cache_path(mode);
+	struct wl_list* cache = malloc(sizeof(struct wl_list));
+	wl_list_init(cache);
+	struct wl_list lines;
+	wl_list_init(&lines);
+	if(access(cache_path, R_OK) == 0) {
+		FILE* file = fopen(cache_path, "r");
+		char* line = NULL;
+		size_t size = 0;
+		while(getline(&line, &size, file) != -1) {
+			struct cache_line* node = malloc(sizeof(struct cache_line));
+			char* lf = strchr(line, '\n');
+			if(lf != NULL) {
+				*lf = 0;
+			}
+			node->line = strdup(line);
+			wl_list_insert(&lines, &node->link);
+		}
+		free(line);
+		fclose(file);
+	}
+	while(wl_list_length(&lines) > 0) {
+		uint64_t largest = 0;
+		struct cache_line* node, *largest_node = NULL;
+		wl_list_for_each(node, &lines, link) {
+			uint64_t num = strtol(node->line, NULL, 10);
+			if(num > largest) {
+				largest = num;
+				largest_node = node;
+			}
+		}
+		wl_list_remove(&largest_node->link);
+		wl_list_insert(cache, &largest_node->link);
+	}
+	free(cache_path);
+	return cache;
+}
+
 static void* do_run(void* data) {
+	struct map* cached = map_init();
 	GtkContainer* box = data;
+	struct wl_list* cache = read_cache("run");
+	struct cache_line* node, *tmp;
+	wl_list_for_each_reverse_safe(node, tmp, cache, link) {
+		struct node* label = malloc(sizeof(struct node));
+		char* text = strrchr(node->line, '/');
+		char* tooltip = strchr(node->line, ' ') + 1;
+		if(text == NULL) {
+			text = tooltip;
+		} else {
+			++text;
+		}
+		map_put(cached, tooltip, "true");
+		label->widget = create_label(text, tooltip);
+		label->container = box;
+		g_idle_add(insert_widget, label);
+		utils_sleep_millis(1);
+		free(node->line);
+		wl_list_remove(&node->link);
+		free(node);
+	}
+	free(cache);
+
 	char* path = strdup(getenv("PATH"));
 	char* original_path = path;
 	size_t colon_count = utils_split(path, ':');
@@ -81,14 +167,9 @@ static void* do_run(void* data) {
 			char* full_path = utils_concat(3, path, "/", entry->d_name);
 			struct stat info;
 			stat(full_path, &info);
-			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode)) {
-				GtkWidget* label = gtk_label_new(entry->d_name);
-				gtk_widget_set_name(label, "unselected");
-				gtk_widget_set_tooltip_text(label, full_path);
-				gtk_widget_set_has_tooltip(label, FALSE);
-				gtk_label_set_xalign(GTK_LABEL(label), 0);
+			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path)) {
 				struct node* node = malloc(sizeof(struct node));
-				node->widget = label;
+				node->widget = create_label(entry->d_name, full_path);
 				node->container = box;
 				g_idle_add(insert_widget, node);
 				utils_sleep_millis(1);
@@ -100,6 +181,7 @@ static void* do_run(void* data) {
 		path += strlen(path) + 1;
 	}
 	free(original_path);
+	map_free(cached);
 	return NULL;
 }
 
@@ -112,13 +194,8 @@ static void* do_dmenu(void* data) {
 		if(lf != NULL) {
 			*lf = 0;
 		}
-		GtkWidget* label = gtk_label_new(line);
-		gtk_widget_set_name(label, "unselected");
-		gtk_widget_set_tooltip_text(label, line);
-		gtk_widget_set_has_tooltip(label, FALSE);
-		gtk_label_set_xalign(GTK_LABEL(label), 0);
 		struct node* node = malloc(sizeof(struct node));
-		node->widget = label;
+		node->widget = create_label(line, line);
 		node->container = box;
 		g_idle_add(insert_widget, node);
 		utils_sleep_millis(1);
@@ -166,13 +243,8 @@ static void* do_drun(void* data) {
 				free(full_path);
 				continue;
 			}
-			GtkWidget* label = gtk_label_new(name);
-			gtk_widget_set_name(label, "unselected");
-			gtk_widget_set_tooltip_text(label, full_path);
-			gtk_widget_set_has_tooltip(label, FALSE);
-			gtk_label_set_xalign(GTK_LABEL(label), 0);
 			struct node* node = malloc(sizeof(struct node));
-			node->widget = label;
+			node->widget = create_label(name, full_path);
 			node->container = box;
 			g_idle_add(insert_widget, node);
 			utils_sleep_millis(1);
@@ -188,6 +260,48 @@ static void* do_drun(void* data) {
 }
 
 static void execute_action(char* mode, const gchar* cmd) {
+	char* cache_path = get_cache_path(mode);
+	struct wl_list lines;
+	wl_list_init(&lines);
+	bool inc_count = false;
+	if(access(cache_path, R_OK) == 0) {
+		FILE* file = fopen(cache_path, "r");
+		char* line = NULL;
+		size_t size = 0;
+		while(getline(&line, &size, file) != -1) {
+			struct cache_line* node = malloc(sizeof(struct cache_line));
+			if(strstr(line, cmd) != NULL) {
+				uint64_t count = strtol(line, NULL, 10) + 1;
+				char num[6];
+				snprintf(num, 5, "%lu", count);
+				node->line = utils_concat(4, num, " ", cmd, "\n");
+				inc_count = true;
+			} else {
+				node->line = strdup(line);
+			}
+			wl_list_insert(&lines, &node->link);
+		}
+		free(line);
+		fclose(file);
+	}
+	if(!inc_count) {
+		struct cache_line* node = malloc(sizeof(struct cache_line));
+		node->line = utils_concat(3, "1 ", cmd, "\n");
+		wl_list_insert(&lines, &node->link);
+	}
+
+	FILE* file = fopen(cache_path, "w");
+	struct cache_line* node, *tmp;
+	wl_list_for_each_safe(node, tmp, &lines, link) {
+		fwrite(node->line, 1, strlen(node->line), file);
+		free(node->line);
+		wl_list_remove(&node->link);
+		free(node);
+	}
+
+	fclose(file);
+
+	free(cache_path);
 	if(strcmp(mode, "run") == 0) {
 		execlp(cmd, cmd, NULL);
 		fprintf(stderr, "%s cannot be executed\n", cmd);

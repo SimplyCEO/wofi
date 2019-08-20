@@ -20,8 +20,9 @@
 static uint64_t width, height;
 static int64_t x, y;
 static struct zwlr_layer_shell_v1* shell;
-static GtkWidget* window, *previous_selection = NULL;
+static GtkWidget* window, *outer_box, *scroll, *entry, *inner_box, *previous_selection = NULL;
 static const gchar* filter;
+static char* mode;
 struct node {
 	GtkWidget* widget;
 	GtkContainer* container;
@@ -55,9 +56,9 @@ static void config_surface(void* data, struct zwlr_layer_surface_v1* surface, ui
 }
 
 static void get_input(GtkSearchEntry* entry, gpointer data) {
-	GtkListBox* box = data;
+	(void) data;
 	filter = gtk_entry_get_text(GTK_ENTRY(entry));
-	gtk_list_box_invalidate_filter(box);
+	gtk_list_box_invalidate_filter(GTK_LIST_BOX(inner_box));
 }
 
 static gboolean insert_widget(gpointer data) {
@@ -127,8 +128,8 @@ static struct wl_list* read_cache(char* mode) {
 }
 
 static void* do_run(void* data) {
+	(void) data;
 	struct map* cached = map_init();
-	GtkContainer* box = data;
 	struct wl_list* cache = read_cache("run");
 	struct cache_line* node, *tmp;
 	wl_list_for_each_reverse_safe(node, tmp, cache, link) {
@@ -142,7 +143,7 @@ static void* do_run(void* data) {
 		}
 		map_put(cached, tooltip, "true");
 		label->widget = create_label(text, tooltip);
-		label->container = box;
+		label->container = GTK_CONTAINER(inner_box);
 		g_idle_add(insert_widget, label);
 		utils_sleep_millis(1);
 		free(node->line);
@@ -170,7 +171,7 @@ static void* do_run(void* data) {
 			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path)) {
 				struct node* node = malloc(sizeof(struct node));
 				node->widget = create_label(entry->d_name, full_path);
-				node->container = box;
+				node->container = GTK_CONTAINER(inner_box);
 				g_idle_add(insert_widget, node);
 				utils_sleep_millis(1);
 			}
@@ -186,7 +187,7 @@ static void* do_run(void* data) {
 }
 
 static void* do_dmenu(void* data) {
-	GtkContainer* box = data;
+	(void) data;
 	char* line;
 	size_t size = 0;
 	while(getline(&line, &size, stdin) != -1) {
@@ -196,7 +197,7 @@ static void* do_dmenu(void* data) {
 		}
 		struct node* node = malloc(sizeof(struct node));
 		node->widget = create_label(line, line);
-		node->container = box;
+		node->container = GTK_CONTAINER(inner_box);
 		g_idle_add(insert_widget, node);
 		utils_sleep_millis(1);
 	}
@@ -205,7 +206,7 @@ static void* do_dmenu(void* data) {
 }
 
 static void* do_drun(void* data) {
-	GtkContainer* box = data;
+	(void) data;
 	char* data_home = getenv("XDG_DATA_HOME");
 	if(data_home == NULL) {
 		data_home = utils_concat(2, getenv("HOME"), "/.local/share");
@@ -245,7 +246,7 @@ static void* do_drun(void* data) {
 			}
 			struct node* node = malloc(sizeof(struct node));
 			node->widget = create_label(name, full_path);
-			node->container = box;
+			node->container = GTK_CONTAINER(inner_box);
 			g_idle_add(insert_widget, node);
 			utils_sleep_millis(1);
 			free(full_path);
@@ -325,7 +326,7 @@ static void execute_action(char* mode, const gchar* cmd) {
 
 static void activate_item(GtkListBox* box, GtkListBoxRow* row, gpointer data) {
 	(void) box;
-	char* mode = data;
+	(void) data;
 	GtkWidget* label = gtk_bin_get_child(GTK_BIN(row));
 	execute_action(mode, gtk_widget_get_tooltip_text(label));
 }
@@ -342,8 +343,14 @@ static void select_item(GtkListBox* box, GtkListBoxRow* row, gpointer data) {
 }
 
 static void activate_search(GtkEntry* entry, gpointer data) {
-	char* mode = data;
-	execute_action(mode, gtk_entry_get_text(entry));
+	(void) data;
+	if(strcmp(mode, "dmenu") == 0) {
+		execute_action(mode, gtk_entry_get_text(entry));
+	} else {
+		GtkListBoxRow* row = gtk_list_box_get_row_at_y(GTK_LIST_BOX(inner_box), 0);
+		GtkWidget* label = gtk_bin_get_child(GTK_BIN(row));
+		execute_action(mode, gtk_widget_get_tooltip_text(label));
+	}
 }
 
 static gboolean do_filter(GtkListBoxRow* row, gpointer data) {
@@ -363,7 +370,6 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 	(void) widget;
 	(void) event;
 	(void) data;
-	GtkWidget* entry = data;
 	guint code;
 	gdk_event_get_keyval(event, &code);
 	switch(code) {
@@ -391,7 +397,7 @@ void wofi_init(struct map* config) {
 	x = strtol(config_get(config, "x", "-1"), NULL, 10);
 	y = strtol(config_get(config, "y", "-1"), NULL, 10);
 	bool normal_window = strcmp(config_get(config, "normal_window", "false"), "true") == 0;
-	char* mode = map_get(config, "mode");
+	mode = map_get(config, "mode");
 	char* prompt = config_get(config, "prompt", mode);
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -423,39 +429,39 @@ void wofi_init(struct map* config) {
 		wl_display_roundtrip(wl);
 	}
 
-	GtkWidget* box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
-	gtk_widget_set_name(box, "outer-box");
-	gtk_container_add(GTK_CONTAINER(window), box);
-	GtkWidget* entry = gtk_search_entry_new();
+	outer_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	gtk_widget_set_name(outer_box, "outer-box");
+	gtk_container_add(GTK_CONTAINER(window), outer_box);
+	entry = gtk_search_entry_new();
 	gtk_widget_set_name(entry, "input");
 	gtk_entry_set_placeholder_text(GTK_ENTRY(entry), prompt);
-	gtk_container_add(GTK_CONTAINER(box), entry);
+	gtk_container_add(GTK_CONTAINER(outer_box), entry);
 
-	GtkWidget* scroll = gtk_scrolled_window_new(NULL, NULL);
+	scroll = gtk_scrolled_window_new(NULL, NULL);
 	gtk_widget_set_name(scroll, "scroll");
-	gtk_container_add(GTK_CONTAINER(box), scroll);
+	gtk_container_add(GTK_CONTAINER(outer_box), scroll);
 	gtk_widget_set_size_request(scroll, width, height);
 
-	GtkWidget* inner_box = gtk_list_box_new();
+	inner_box = gtk_list_box_new();
 	gtk_widget_set_name(inner_box, "inner-box");
 	gtk_list_box_set_activate_on_single_click(GTK_LIST_BOX(inner_box), FALSE);
 	gtk_container_add(GTK_CONTAINER(scroll), inner_box);
 
 	gtk_list_box_set_filter_func(GTK_LIST_BOX(inner_box), do_filter, NULL, NULL);
 
-	g_signal_connect(entry, "search-changed", G_CALLBACK(get_input), inner_box);
-	g_signal_connect(inner_box, "row-activated", G_CALLBACK(activate_item), mode);
+	g_signal_connect(entry, "search-changed", G_CALLBACK(get_input), NULL);
+	g_signal_connect(inner_box, "row-activated", G_CALLBACK(activate_item), NULL);
 	g_signal_connect(inner_box, "row-selected", G_CALLBACK(select_item), NULL);
-	g_signal_connect(entry, "activate", G_CALLBACK(activate_search), mode);
-	g_signal_connect(window, "key-press-event", G_CALLBACK(key_press), entry);
+	g_signal_connect(entry, "activate", G_CALLBACK(activate_search), NULL);
+	g_signal_connect(window, "key-press-event", G_CALLBACK(key_press), NULL);
 
 	pthread_t thread;
 	if(strcmp(mode, "run") == 0) {
-		pthread_create(&thread, NULL, do_run, inner_box);
+		pthread_create(&thread, NULL, do_run, NULL);
 	} else if(strcmp(mode, "dmenu") == 0) {
-		pthread_create(&thread, NULL, do_dmenu, inner_box);
+		pthread_create(&thread, NULL, do_dmenu, NULL);
 	} else if(strcmp(mode, "drun") == 0) {
-		pthread_create(&thread, NULL, do_drun, inner_box);
+		pthread_create(&thread, NULL, do_drun, NULL);
 	} else {
 		fprintf(stderr, "I would love to show %s but Idk what it is\n", mode);
 		exit(1);

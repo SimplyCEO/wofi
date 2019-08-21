@@ -7,5 +7,5 @@ packages:
 
 tasks:
  - build: |
-    cd wlrobs/Release
+    cd wofi/Release
     make

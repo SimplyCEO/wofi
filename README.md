@@ -1,5 +1,7 @@
 # Wofi
 Wofi is a launcher/menu program for wlroots based wayland compositors such as sway
+
+[![builds.sr.ht status](https://builds.sr.ht/~scoopta/wofi.svg)](https://builds.sr.ht/~scoopta/wofi?)
 ## Dependencies
 	libwayland-dev
 	libgtk-3-dev

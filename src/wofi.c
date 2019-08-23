@@ -24,7 +24,7 @@ static GtkWidget* window, *outer_box, *scroll, *entry, *inner_box, *previous_sel
 static const gchar* filter;
 static char* mode;
 struct node {
-	GtkWidget* widget;
+	char* label, *tooltip;
 	GtkContainer* container;
 };
 
@@ -61,14 +61,6 @@ static void get_input(GtkSearchEntry* entry, gpointer data) {
 	gtk_list_box_invalidate_filter(GTK_LIST_BOX(inner_box));
 }
 
-static gboolean insert_widget(gpointer data) {
-	struct node* node = data;
-	gtk_container_add(node->container, node->widget);
-	gtk_widget_show(node->widget);
-	free(node);
-	return FALSE;
-}
-
 static GtkWidget* create_label(const char* text, char* tooltip) {
 	GtkWidget* label = gtk_label_new(text);
 	gtk_widget_set_name(label, "unselected");
@@ -76,6 +68,17 @@ static GtkWidget* create_label(const char* text, char* tooltip) {
 	gtk_widget_set_has_tooltip(label, FALSE);
 	gtk_label_set_xalign(GTK_LABEL(label), 0);
 	return label;
+}
+
+static gboolean insert_widget(gpointer data) {
+	struct node* node = data;
+	GtkWidget* label = create_label(node->label, node->tooltip);
+	gtk_container_add(node->container, label);
+	gtk_widget_show(label);
+	free(node->label);
+	free(node->tooltip);
+	free(node);
+	return FALSE;
 }
 
 static char* get_cache_path(char* mode) {
@@ -142,7 +145,8 @@ static void* do_run(void* data) {
 			++text;
 		}
 		map_put(cached, tooltip, "true");
-		label->widget = create_label(text, tooltip);
+		label->label = strdup(text);
+		label->tooltip = strdup(tooltip);
 		label->container = GTK_CONTAINER(inner_box);
 		g_idle_add(insert_widget, label);
 		utils_sleep_millis(1);
@@ -170,7 +174,8 @@ static void* do_run(void* data) {
 			stat(full_path, &info);
 			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path)) {
 				struct node* node = malloc(sizeof(struct node));
-				node->widget = create_label(entry->d_name, full_path);
+				node->label = strdup(entry->d_name);
+				node->tooltip = strdup(full_path);
 				node->container = GTK_CONTAINER(inner_box);
 				g_idle_add(insert_widget, node);
 				utils_sleep_millis(1);
@@ -196,7 +201,8 @@ static void* do_dmenu(void* data) {
 			*lf = 0;
 		}
 		struct node* node = malloc(sizeof(struct node));
-		node->widget = create_label(line, line);
+		node->label = strdup(line);
+		node->tooltip = strdup(line);
 		node->container = GTK_CONTAINER(inner_box);
 		g_idle_add(insert_widget, node);
 		utils_sleep_millis(1);
@@ -245,7 +251,8 @@ static void* do_drun(void* data) {
 				continue;
 			}
 			struct node* node = malloc(sizeof(struct node));
-			node->widget = create_label(name, full_path);
+			node->label = strdup(name);
+			node->tooltip = strdup(full_path);
 			node->container = GTK_CONTAINER(inner_box);
 			g_idle_add(insert_widget, node);
 			utils_sleep_millis(1);

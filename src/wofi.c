@@ -23,6 +23,8 @@ static struct zwlr_layer_shell_v1* shell;
 static GtkWidget* window, *outer_box, *scroll, *entry, *inner_box, *previous_selection = NULL;
 static const gchar* filter;
 static char* mode;
+static time_t filter_time;
+static int64_t filter_rate;
 struct node {
 	char* label, *tooltip;
 	GtkContainer* container;
@@ -56,6 +58,15 @@ static void config_surface(void* data, struct zwlr_layer_surface_v1* surface, ui
 }
 
 static void get_input(GtkSearchEntry* entry, gpointer data) {
+	(void) data;
+	if(utils_get_time_millis() - filter_time > filter_rate) {
+		filter = gtk_entry_get_text(GTK_ENTRY(entry));
+		filter_time = utils_get_time_millis();
+		gtk_list_box_invalidate_filter(GTK_LIST_BOX(inner_box));
+	}
+}
+
+static void get_search(GtkSearchEntry* entry, gpointer data) {
 	(void) data;
 	filter = gtk_entry_get_text(GTK_ENTRY(entry));
 	gtk_list_box_invalidate_filter(GTK_LIST_BOX(inner_box));
@@ -406,6 +417,8 @@ void wofi_init(struct map* config) {
 	bool normal_window = strcmp(config_get(config, "normal_window", "false"), "true") == 0;
 	mode = map_get(config, "mode");
 	char* prompt = config_get(config, "prompt", mode);
+	filter_rate = strtol(config_get(config, "filter_rate", "100"), NULL, 10);
+	filter_time = utils_get_time_millis();
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_realize(window);
@@ -456,7 +469,8 @@ void wofi_init(struct map* config) {
 
 	gtk_list_box_set_filter_func(GTK_LIST_BOX(inner_box), do_filter, NULL, NULL);
 
-	g_signal_connect(entry, "search-changed", G_CALLBACK(get_input), NULL);
+	g_signal_connect(entry, "changed", G_CALLBACK(get_input), NULL);
+	g_signal_connect(entry, "search-changed", G_CALLBACK(get_search), NULL);
 	g_signal_connect(inner_box, "row-activated", G_CALLBACK(activate_item), NULL);
 	g_signal_connect(inner_box, "row-selected", G_CALLBACK(select_item), NULL);
 	g_signal_connect(entry, "activate", G_CALLBACK(activate_search), NULL);

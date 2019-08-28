@@ -15,24 +15,19 @@
     along with Wofi.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef WAIFU_H
-
+#ifndef PROPERTY_LABEL_H
+#define PROPERTY_LABEL_H
 #include <map.h>
-#include <config.h>
-#include <property_label.h>
-
-#include <errno.h>
-#include <stddef.h>
-#include <string.h>
-
-#include <sys/stat.h>
 
 #include <gtk/gtk.h>
-#include <gdk/gdkwayland.h>
-#include <gio/gdesktopappinfo.h>
 
-#include <wayland-client.h>
-#include <wlr-layer-shell-unstable-v1-client-protocol.h>
+#define WOFI_TYPE_PROPERTY_LABEL wofi_property_label_get_type()
+G_DECLARE_FINAL_TYPE(WofiPropertyLabel, wofi_property_label, WOFI, PROPERTY_LABEL, GtkLabel);
 
-void wofi_init(struct map* config);
+GtkWidget* wofi_property_label_new(const gchar* str);
+
+void wofi_property_label_add_property(WofiPropertyLabel* this, const gchar* key, gchar* value);
+
+const gchar* wofi_property_label_get_property(WofiPropertyLabel* this, const gchar* key);
+
 #endif

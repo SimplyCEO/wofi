@@ -25,8 +25,9 @@ static const gchar* filter;
 static char* mode;
 static time_t filter_time;
 static int64_t filter_rate;
+
 struct node {
-	char* label, *tooltip;
+	char* text, *action;
 	GtkContainer* container;
 };
 
@@ -72,22 +73,21 @@ static void get_search(GtkSearchEntry* entry, gpointer data) {
 	gtk_list_box_invalidate_filter(GTK_LIST_BOX(inner_box));
 }
 
-static GtkWidget* create_label(const char* text, char* tooltip) {
-	GtkWidget* label = gtk_label_new(text);
+static GtkWidget* create_label(const char* text, char* action) {
+	GtkWidget* label = wofi_property_label_new(text);
 	gtk_widget_set_name(label, "unselected");
-	gtk_widget_set_tooltip_text(label, tooltip);
-	gtk_widget_set_has_tooltip(label, FALSE);
+	wofi_property_label_add_property(WOFI_PROPERTY_LABEL(label), "action", action);
 	gtk_label_set_xalign(GTK_LABEL(label), 0);
 	return label;
 }
 
 static gboolean insert_widget(gpointer data) {
 	struct node* node = data;
-	GtkWidget* label = create_label(node->label, node->tooltip);
+	GtkWidget* label = create_label(node->text, node->action);
 	gtk_container_add(node->container, label);
 	gtk_widget_show(label);
-	free(node->label);
-	free(node->tooltip);
+	free(node->text);
+	free(node->action);
 	free(node);
 	return FALSE;
 }
@@ -149,15 +149,15 @@ static void* do_run(void* data) {
 	wl_list_for_each_reverse_safe(node, tmp, cache, link) {
 		struct node* label = malloc(sizeof(struct node));
 		char* text = strrchr(node->line, '/');
-		char* tooltip = strchr(node->line, ' ') + 1;
+		char* action = strchr(node->line, ' ') + 1;
 		if(text == NULL) {
-			text = tooltip;
+			text = action;
 		} else {
 			++text;
 		}
-		map_put(cached, tooltip, "true");
-		label->label = strdup(text);
-		label->tooltip = strdup(tooltip);
+		map_put(cached, action, "true");
+		label->text = strdup(text);
+		label->action = strdup(action);
 		label->container = GTK_CONTAINER(inner_box);
 		g_idle_add(insert_widget, label);
 		utils_sleep_millis(1);
@@ -185,8 +185,8 @@ static void* do_run(void* data) {
 			stat(full_path, &info);
 			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path)) {
 				struct node* node = malloc(sizeof(struct node));
-				node->label = strdup(entry->d_name);
-				node->tooltip = strdup(full_path);
+				node->text = strdup(entry->d_name);
+				node->action = strdup(full_path);
 				node->container = GTK_CONTAINER(inner_box);
 				g_idle_add(insert_widget, node);
 				utils_sleep_millis(1);
@@ -212,8 +212,8 @@ static void* do_dmenu(void* data) {
 			*lf = 0;
 		}
 		struct node* node = malloc(sizeof(struct node));
-		node->label = strdup(line);
-		node->tooltip = strdup(line);
+		node->text = strdup(line);
+		node->action = strdup(line);
 		node->container = GTK_CONTAINER(inner_box);
 		g_idle_add(insert_widget, node);
 		utils_sleep_millis(1);
@@ -262,8 +262,8 @@ static void* do_drun(void* data) {
 				continue;
 			}
 			struct node* node = malloc(sizeof(struct node));
-			node->label = strdup(name);
-			node->tooltip = strdup(full_path);
+			node->text = strdup(name);
+			node->action = strdup(full_path);
 			node->container = GTK_CONTAINER(inner_box);
 			g_idle_add(insert_widget, node);
 			utils_sleep_millis(1);
@@ -346,7 +346,7 @@ static void activate_item(GtkListBox* box, GtkListBoxRow* row, gpointer data) {
 	(void) box;
 	(void) data;
 	GtkWidget* label = gtk_bin_get_child(GTK_BIN(row));
-	execute_action(mode, gtk_widget_get_tooltip_text(label));
+	execute_action(mode, wofi_property_label_get_property(WOFI_PROPERTY_LABEL(label), "action"));
 }
 
 static void select_item(GtkListBox* box, GtkListBoxRow* row, gpointer data) {
@@ -367,7 +367,7 @@ static void activate_search(GtkEntry* entry, gpointer data) {
 	} else {
 		GtkListBoxRow* row = gtk_list_box_get_row_at_y(GTK_LIST_BOX(inner_box), 0);
 		GtkWidget* label = gtk_bin_get_child(GTK_BIN(row));
-		execute_action(mode, gtk_widget_get_tooltip_text(label));
+		execute_action(mode, wofi_property_label_get_property(WOFI_PROPERTY_LABEL(label), "action"));
 	}
 }
 

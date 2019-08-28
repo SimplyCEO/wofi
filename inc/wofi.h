@@ -16,6 +16,7 @@
  */
 
 #ifndef WAIFU_H
+#define WAIFU_H
 
 #include <map.h>
 #include <config.h>

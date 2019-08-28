@@ -25,7 +25,7 @@ static const gchar* filter;
 static char* mode;
 static time_t filter_time;
 static int64_t filter_rate;
-static bool allow_images;
+static bool allow_images, allow_markup;
 
 struct node {
 	char* text, *action;
@@ -115,6 +115,7 @@ static GtkWidget* create_label(char* text, char* action) {
 						filter = tmp_filter;
 					}
 					GtkWidget* label = gtk_label_new(tmp);
+					gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
 					gtk_label_set_xalign(GTK_LABEL(label), 0);
 					gtk_container_add(GTK_CONTAINER(box), label);
 				}
@@ -128,6 +129,7 @@ static GtkWidget* create_label(char* text, char* action) {
 	} else {
 		wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "filter", text);
 		GtkWidget* label = gtk_label_new(text);
+		gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
 		gtk_label_set_xalign(GTK_LABEL(label), 0);
 		gtk_container_add(GTK_CONTAINER(box), label);
 	}
@@ -474,6 +476,7 @@ void wofi_init(struct map* config) {
 	filter_rate = strtol(config_get(config, "filter_rate", "100"), NULL, 10);
 	filter_time = utils_get_time_millis();
 	allow_images = strcmp(config_get(config, "allow_images", "false"), "true") == 0;
+	allow_markup = strcmp(config_get(config, "allow_markup", "false"), "true") == 0;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_realize(window);

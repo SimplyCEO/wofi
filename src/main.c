@@ -62,6 +62,7 @@ static void print_usage(char** argv) {
 	printf("--yoffset\t-y\tThe y offset\n");
 	printf("--normal-window\t-n\tRender to a normal window\n");
 	printf("--allow-images\t-i\tAllows images to be rendered\n");
+	printf("--allow-markup\t-m\tAllows pango markup\n");
 	exit(0);
 }
 
@@ -250,6 +251,12 @@ int main(int argc, char** argv) {
 			.val = 'i'
 		},
 		{
+			.name = "allow-markup",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'm'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -268,8 +275,9 @@ int main(int argc, char** argv) {
 	char* y = NULL;
 	char* normal_window = NULL;
 	char* allow_images = NULL;
+	char* allow_markup = NULL;
 	char opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:ni", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nim", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -317,6 +325,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'i':
 			allow_images = "true";
+			break;
+		case 'm':
+			allow_markup = "true";
 			break;
 		}
 	}
@@ -413,6 +424,9 @@ int main(int argc, char** argv) {
 	}
 	if(allow_images != NULL) {
 		map_put(config, "allow_images", allow_images);
+	}
+	if(allow_markup != NULL) {
+		map_put(config, "allow_markup", allow_markup);
 	}
 
 	gtk_init(&argc, &argv);

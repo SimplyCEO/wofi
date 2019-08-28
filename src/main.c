@@ -61,6 +61,7 @@ static void print_usage(char** argv) {
 	printf("--xoffset\t-x\tThe x offset\n");
 	printf("--yoffset\t-y\tThe y offset\n");
 	printf("--normal-window\t-n\tRender to a normal window\n");
+	printf("--allow-images\t-i\tAllows images to be rendered\n");
 	exit(0);
 }
 
@@ -243,6 +244,12 @@ int main(int argc, char** argv) {
 			.val = 'n'
 		},
 		{
+			.name = "allow-images",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'i'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -260,8 +267,9 @@ int main(int argc, char** argv) {
 	char* x = NULL;
 	char* y = NULL;
 	char* normal_window = NULL;
+	char* allow_images = NULL;
 	char opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:n", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:ni", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -306,6 +314,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'n':
 			normal_window = "true";
+			break;
+		case 'i':
+			allow_images = "true";
 			break;
 		}
 	}
@@ -399,6 +410,9 @@ int main(int argc, char** argv) {
 	}
 	if(normal_window != NULL) {
 		map_put(config, "normal_window", normal_window);
+	}
+	if(allow_images != NULL) {
+		map_put(config, "allow_images", allow_images);
 	}
 
 	gtk_init(&argc, &argv);

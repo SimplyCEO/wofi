@@ -19,7 +19,7 @@
 
 #include <map.h>
 #include <config.h>
-#include <property_label.h>
+#include <property_box.h>
 
 #include <errno.h>
 #include <stddef.h>

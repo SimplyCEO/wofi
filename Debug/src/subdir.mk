@@ -7,7 +7,7 @@ C_SRCS += \
 ../src/config.c \
 ../src/main.c \
 ../src/map.c \
-../src/property_label.c \
+../src/property_box.c \
 ../src/utils.c \
 ../src/wofi.c 
 
@@ -15,7 +15,7 @@ OBJS += \
 ./src/config.o \
 ./src/main.o \
 ./src/map.o \
-./src/property_label.o \
+./src/property_box.o \
 ./src/utils.o \
 ./src/wofi.o 
 
@@ -23,7 +23,7 @@ C_DEPS += \
 ./src/config.d \
 ./src/main.d \
 ./src/map.d \
-./src/property_label.d \
+./src/property_box.d \
 ./src/utils.d \
 ./src/wofi.d 
 

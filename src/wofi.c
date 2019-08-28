@@ -25,6 +25,7 @@ static const gchar* filter;
 static char* mode;
 static time_t filter_time;
 static int64_t filter_rate;
+static bool allow_images;
 
 struct node {
 	char* text, *action;
@@ -73,19 +74,72 @@ static void get_search(GtkSearchEntry* entry, gpointer data) {
 	gtk_list_box_invalidate_filter(GTK_LIST_BOX(inner_box));
 }
 
-static GtkWidget* create_label(const char* text, char* action) {
-	GtkWidget* label = wofi_property_label_new(text);
-	gtk_widget_set_name(label, "unselected");
-	wofi_property_label_add_property(WOFI_PROPERTY_LABEL(label), "action", action);
-	gtk_label_set_xalign(GTK_LABEL(label), 0);
-	return label;
+static GtkWidget* create_label(char* text, char* action) {
+	GtkWidget* box = wofi_property_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+	gtk_widget_set_name(box, "unselected");
+	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "action", action);
+	if(allow_images) {
+		char* tmp = strdup(text);
+		char* original = tmp;
+		char* mode = NULL;
+		char* filter = NULL;
+
+		size_t colon_count = utils_split(tmp, ':');
+		for(size_t count = 0; count < colon_count; ++count) {
+			if(mode == NULL) {
+				mode = tmp;
+			} else {
+				if(strcmp(mode, "img") == 0) {
+					GdkPixbuf* buf = gdk_pixbuf_new_from_file(tmp, NULL);
+					int width = gdk_pixbuf_get_width(buf);
+					int height = gdk_pixbuf_get_height(buf);
+					if(height > width) {
+						float percent = 32.f / height;
+						GdkPixbuf* tmp = gdk_pixbuf_scale_simple(buf, width * percent, 32, GDK_INTERP_BILINEAR);
+						g_object_unref(buf);
+						buf = tmp;
+					} else {
+						float percent = 32.f / width;
+						GdkPixbuf* tmp = gdk_pixbuf_scale_simple(buf, 32, height * percent, GDK_INTERP_BILINEAR);
+						g_object_unref(buf);
+						buf = tmp;
+					}
+					GtkWidget* img = gtk_image_new_from_pixbuf(buf);
+					gtk_container_add(GTK_CONTAINER(box), img);
+				} else if(strcmp(mode, "text") == 0) {
+					if(filter == NULL) {
+						filter = strdup(tmp);
+					} else {
+						char* tmp_filter = utils_concat(2, filter, tmp);
+						free(filter);
+						filter = tmp_filter;
+					}
+					GtkWidget* label = gtk_label_new(tmp);
+					gtk_label_set_xalign(GTK_LABEL(label), 0);
+					gtk_container_add(GTK_CONTAINER(box), label);
+				}
+				mode = NULL;
+			}
+			tmp += strlen(tmp) + 1;
+		}
+		wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "filter", filter);
+		free(filter);
+		free(original);
+	} else {
+		wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "filter", text);
+		GtkWidget* label = gtk_label_new(text);
+		gtk_label_set_xalign(GTK_LABEL(label), 0);
+		gtk_container_add(GTK_CONTAINER(box), label);
+	}
+
+	return box;
 }
 
 static gboolean insert_widget(gpointer data) {
 	struct node* node = data;
-	GtkWidget* label = create_label(node->text, node->action);
-	gtk_container_add(node->container, label);
-	gtk_widget_show(label);
+	GtkWidget* box = create_label(node->text, node->action);
+	gtk_container_add(node->container, box);
+	gtk_widget_show_all(box);
 	free(node->text);
 	free(node->action);
 	free(node);
@@ -342,22 +396,22 @@ static void execute_action(char* mode, const gchar* cmd) {
 	}
 }
 
-static void activate_item(GtkListBox* box, GtkListBoxRow* row, gpointer data) {
-	(void) box;
+static void activate_item(GtkListBox* list_box, GtkListBoxRow* row, gpointer data) {
+	(void) list_box;
 	(void) data;
-	GtkWidget* label = gtk_bin_get_child(GTK_BIN(row));
-	execute_action(mode, wofi_property_label_get_property(WOFI_PROPERTY_LABEL(label), "action"));
+	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
+	execute_action(mode, wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
 }
 
-static void select_item(GtkListBox* box, GtkListBoxRow* row, gpointer data) {
-	(void) box;
+static void select_item(GtkListBox* list_box, GtkListBoxRow* row, gpointer data) {
+	(void) list_box;
 	(void) data;
 	if(previous_selection != NULL) {
 		gtk_widget_set_name(previous_selection, "unselected");
 	}
-	GtkWidget* label = gtk_bin_get_child(GTK_BIN(row));
-	gtk_widget_set_name(label, "selected");
-	previous_selection = label;
+	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
+	gtk_widget_set_name(box, "selected");
+	previous_selection = box;
 }
 
 static void activate_search(GtkEntry* entry, gpointer data) {
@@ -366,15 +420,15 @@ static void activate_search(GtkEntry* entry, gpointer data) {
 		execute_action(mode, gtk_entry_get_text(entry));
 	} else {
 		GtkListBoxRow* row = gtk_list_box_get_row_at_y(GTK_LIST_BOX(inner_box), 0);
-		GtkWidget* label = gtk_bin_get_child(GTK_BIN(row));
-		execute_action(mode, wofi_property_label_get_property(WOFI_PROPERTY_LABEL(label), "action"));
+		GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
+		execute_action(mode, wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
 	}
 }
 
 static gboolean do_filter(GtkListBoxRow* row, gpointer data) {
 	(void) data;
-	GtkWidget* label = gtk_bin_get_child(GTK_BIN(row));
-	const gchar* text = gtk_label_get_text(GTK_LABEL(label));
+	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
+	const gchar* text = wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "filter");
 	if(filter == NULL || strcmp(filter, "") == 0) {
 		return TRUE;
 	}
@@ -419,6 +473,7 @@ void wofi_init(struct map* config) {
 	char* prompt = config_get(config, "prompt", mode);
 	filter_rate = strtol(config_get(config, "filter_rate", "100"), NULL, 10);
 	filter_time = utils_get_time_millis();
+	allow_images = strcmp(config_get(config, "allow_images", "false"), "true") == 0;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_realize(window);

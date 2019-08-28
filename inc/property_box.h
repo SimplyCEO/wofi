@@ -15,19 +15,19 @@
     along with Wofi.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef PROPERTY_LABEL_H
-#define PROPERTY_LABEL_H
+#ifndef PROPERTY_BOX_H
+#define PROPERTY_BOX_H
 #include <map.h>
 
 #include <gtk/gtk.h>
 
-#define WOFI_TYPE_PROPERTY_LABEL wofi_property_label_get_type()
-G_DECLARE_FINAL_TYPE(WofiPropertyLabel, wofi_property_label, WOFI, PROPERTY_LABEL, GtkLabel);
+#define WOFI_TYPE_PROPERTY_BOX wofi_property_box_get_type()
+G_DECLARE_FINAL_TYPE(WofiPropertyBox, wofi_property_box, WOFI, PROPERTY_BOX, GtkBox);
 
-GtkWidget* wofi_property_label_new(const gchar* str);
+GtkWidget* wofi_property_box_new(GtkOrientation orientation, gint spacing);
 
-void wofi_property_label_add_property(WofiPropertyLabel* this, const gchar* key, gchar* value);
+void wofi_property_box_add_property(WofiPropertyBox* this, const gchar* key, gchar* value);
 
-const gchar* wofi_property_label_get_property(WofiPropertyLabel* this, const gchar* key);
+const gchar* wofi_property_box_get_property(WofiPropertyBox* this, const gchar* key);
 
 #endif

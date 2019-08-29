@@ -202,10 +202,9 @@ static struct wl_list* read_cache(char* mode) {
 	return cache;
 }
 
-static void* do_run(void* data) {
-	(void) data;
+static struct map* load_cache(char* mode) {
 	struct map* cached = map_init();
-	struct wl_list* cache = read_cache("run");
+	struct wl_list* cache = read_cache(mode);
 	struct cache_line* node, *tmp;
 	wl_list_for_each_reverse_safe(node, tmp, cache, link) {
 		struct node* label = malloc(sizeof(struct node));
@@ -227,7 +226,12 @@ static void* do_run(void* data) {
 		free(node);
 	}
 	free(cache);
+	return cached;
+}
 
+static void* do_run(void* data) {
+	(void) data;
+	struct map* cached = load_cache("run");
 	char* path = strdup(getenv("PATH"));
 	char* original_path = path;
 	size_t colon_count = utils_split(path, ':');
@@ -265,12 +269,16 @@ static void* do_run(void* data) {
 
 static void* do_dmenu(void* data) {
 	(void) data;
+	struct map* cached = load_cache("dmenu");
 	char* line;
 	size_t size = 0;
 	while(getline(&line, &size, stdin) != -1) {
 		char* lf = strchr(line, '\n');
 		if(lf != NULL) {
 			*lf = 0;
+		}
+		if(map_contains(cached, line)) {
+			continue;
 		}
 		struct node* node = malloc(sizeof(struct node));
 		node->text = strdup(line);

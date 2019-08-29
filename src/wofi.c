@@ -482,6 +482,7 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 			GtkFlowBoxChild* child = gtk_flow_box_get_child_at_pos(GTK_FLOW_BOX(inner_box), 0, 0);
 			gtk_widget_grab_focus(GTK_WIDGET(child));
 			gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), child);
+			return TRUE;
 		}
 		break;
 	default:

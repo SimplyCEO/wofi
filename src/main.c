@@ -63,7 +63,7 @@ static void print_usage(char** argv) {
 	printf("--normal-window\t-n\tRender to a normal window\n");
 	printf("--allow-images\t-i\tAllows images to be rendered\n");
 	printf("--allow-markup\t-m\tAllows pango markup\n");
-	printf("--cache-file\t-k\tSets the cache file to use");
+	printf("--cache-file\t-k\tSets the cache file to use\n");
 	exit(0);
 }
 

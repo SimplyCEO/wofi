@@ -451,6 +451,9 @@ static gboolean do_filter(GtkListBoxRow* row, gpointer data) {
 	if(filter == NULL || strcmp(filter, "") == 0) {
 		return TRUE;
 	}
+	if(text == NULL) {
+		return FALSE;
+	}
 	if(strcasestr(text, filter) != NULL) {
 		return TRUE;
 	}

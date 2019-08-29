@@ -139,7 +139,7 @@ static GtkWidget* create_label(char* text, char* action) {
 	return box;
 }
 
-static gboolean insert_widget(gpointer data) {
+static gboolean _insert_widget(gpointer data) {
 	struct node* node = data;
 	GtkWidget* box = create_label(node->text, node->action);
 	gtk_container_add(node->container, box);
@@ -202,12 +202,20 @@ static struct wl_list* read_cache(char* mode) {
 	return cache;
 }
 
+static void insert_widget(char* text, char* action, GtkContainer* container) {
+	struct node* widget = malloc(sizeof(struct node));
+	widget->text = text;
+	widget->action = action;
+	widget->container = container;
+	g_idle_add(_insert_widget, widget);
+	utils_sleep_millis(1);
+}
+
 static struct map* load_cache(char* mode) {
 	struct map* cached = map_init();
 	struct wl_list* cache = read_cache(mode);
 	struct cache_line* node, *tmp;
 	wl_list_for_each_reverse_safe(node, tmp, cache, link) {
-		struct node* label = malloc(sizeof(struct node));
 		char* text = strrchr(node->line, '/');
 		char* action = strchr(node->line, ' ') + 1;
 		if(text == NULL) {
@@ -216,11 +224,7 @@ static struct map* load_cache(char* mode) {
 			++text;
 		}
 		map_put(cached, action, "true");
-		label->text = strdup(text);
-		label->action = strdup(action);
-		label->container = GTK_CONTAINER(inner_box);
-		g_idle_add(insert_widget, label);
-		utils_sleep_millis(1);
+		insert_widget(strdup(text), strdup(action), GTK_CONTAINER(inner_box));
 		free(node->line);
 		wl_list_remove(&node->link);
 		free(node);
@@ -249,12 +253,7 @@ static void* do_run(void* data) {
 			struct stat info;
 			stat(full_path, &info);
 			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path)) {
-				struct node* node = malloc(sizeof(struct node));
-				node->text = strdup(entry->d_name);
-				node->action = strdup(full_path);
-				node->container = GTK_CONTAINER(inner_box);
-				g_idle_add(insert_widget, node);
-				utils_sleep_millis(1);
+				insert_widget(strdup(entry->d_name), strdup(full_path), GTK_CONTAINER(inner_box));
 			}
 			free(full_path);
 		}
@@ -280,12 +279,7 @@ static void* do_dmenu(void* data) {
 		if(map_contains(cached, line)) {
 			continue;
 		}
-		struct node* node = malloc(sizeof(struct node));
-		node->text = strdup(line);
-		node->action = strdup(line);
-		node->container = GTK_CONTAINER(inner_box);
-		g_idle_add(insert_widget, node);
-		utils_sleep_millis(1);
+		insert_widget(strdup(line), strdup(line), GTK_CONTAINER(inner_box));
 	}
 	free(line);
 	return NULL;
@@ -345,12 +339,7 @@ static void* do_drun(void* data) {
 			} else {
 				text = strdup(name);
 			}
-			struct node* node = malloc(sizeof(struct node));
-			node->text = text;
-			node->action = strdup(full_path);
-			node->container = GTK_CONTAINER(inner_box);
-			g_idle_add(insert_widget, node);
-			utils_sleep_millis(1);
+			insert_widget(text, strdup(full_path), GTK_CONTAINER(inner_box));
 			free(full_path);
 		}
 		closedir(dir);

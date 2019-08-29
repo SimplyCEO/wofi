@@ -327,6 +327,8 @@ static void* do_drun(void* data) {
 					GtkIconInfo* info = gtk_icon_theme_choose_icon(theme, (const gchar**) icon_names, image_size, 0);
 					const gchar* icon_path = gtk_icon_info_get_filename(info);
 					text = utils_concat(4, "img:", icon_path, ":text:", name);
+				} else {
+					text = strdup(name);
 				}
 			} else {
 				text = strdup(name);

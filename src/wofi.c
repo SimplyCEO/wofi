@@ -317,8 +317,21 @@ static void* do_drun(void* data) {
 				free(full_path);
 				continue;
 			}
+			char* text;
+			GIcon* icon = g_app_info_get_icon(G_APP_INFO(info));
+			if(allow_images && icon != NULL) {
+				if(G_IS_THEMED_ICON(icon)) {
+					GtkIconTheme* theme = gtk_icon_theme_get_default();
+					const gchar* const* icon_names = g_themed_icon_get_names(G_THEMED_ICON(icon));
+					GtkIconInfo* info = gtk_icon_theme_choose_icon(theme, (const gchar**) icon_names, 32, 0);
+					const gchar* icon_path = gtk_icon_info_get_filename(info);
+					text = utils_concat(4, "img:", icon_path, ":text:", name);
+				}
+			} else {
+				text = strdup(name);
+			}
 			struct node* node = malloc(sizeof(struct node));
-			node->text = strdup(name);
+			node->text = text;
 			node->action = strdup(full_path);
 			node->container = GTK_CONTAINER(inner_box);
 			g_idle_add(insert_widget, node);

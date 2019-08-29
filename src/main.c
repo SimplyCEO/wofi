@@ -63,6 +63,7 @@ static void print_usage(char** argv) {
 	printf("--normal-window\t-n\tRender to a normal window\n");
 	printf("--allow-images\t-i\tAllows images to be rendered\n");
 	printf("--allow-markup\t-m\tAllows pango markup\n");
+	printf("--cache-file\t-k\tSets the cache file to use");
 	exit(0);
 }
 
@@ -257,6 +258,12 @@ int main(int argc, char** argv) {
 			.val = 'm'
 		},
 		{
+			.name = "cache-file",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'k'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -276,8 +283,9 @@ int main(int argc, char** argv) {
 	char* normal_window = NULL;
 	char* allow_images = NULL;
 	char* allow_markup = NULL;
+	char* cache_file = NULL;
 	char opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nim", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nimk:", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -328,6 +336,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'm':
 			allow_markup = "true";
+			break;
+		case 'k':
+			cache_file = optarg;
 			break;
 		}
 	}
@@ -427,6 +438,9 @@ int main(int argc, char** argv) {
 	}
 	if(allow_markup != NULL) {
 		map_put(config, "allow_markup", allow_markup);
+	}
+	if(cache_file != NULL) {
+		map_put(config, "cache_file", cache_file);
 	}
 
 	gtk_init(&argc, &argv);

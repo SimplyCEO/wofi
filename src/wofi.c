@@ -27,6 +27,7 @@ static time_t filter_time;
 static int64_t filter_rate;
 static bool allow_images, allow_markup;
 static uint64_t image_size;
+static char* cache_file = NULL;
 
 struct node {
 	char* text, *action;
@@ -150,6 +151,9 @@ static gboolean insert_widget(gpointer data) {
 }
 
 static char* get_cache_path(char* mode) {
+	if(cache_file != NULL) {
+		return cache_file;
+	}
 	char* cache_path = getenv("XDG_CACHE_HOME");
 	if(cache_path == NULL) {
 		cache_path = utils_concat(3, getenv("HOME"), "/.cache/wofi-", mode);
@@ -494,6 +498,7 @@ void wofi_init(struct map* config) {
 	allow_images = strcmp(config_get(config, "allow_images", "false"), "true") == 0;
 	allow_markup = strcmp(config_get(config, "allow_markup", "false"), "true") == 0;
 	image_size = strtol(config_get(config, "image_size", "32"), NULL, 10);
+	cache_file = map_get(config, "cache_file");
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_realize(window);

@@ -501,7 +501,7 @@ void wofi_init(struct map* config) {
 	y = strtol(config_get(config, "y", "-1"), NULL, 10);
 	bool normal_window = strcmp(config_get(config, "normal_window", "false"), "true") == 0;
 	mode = map_get(config, "mode");
-	GtkOrientation orientation = strcmp(config_get(config, "orientation", "horizontal"), "vertical") == 0 ? GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;
+	GtkOrientation orientation = strcmp(config_get(config, "orientation", "vertical"), "horizontal") == 0 ? GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;
 	uint8_t halign = config_get_mnemonic(config, "halign", "fill", 4, "fill", "start", "end", "center");
 	uint8_t valign = config_get_mnemonic(config, "valign", "start", 4, "fill", "start", "end", "center");
 	char* prompt = config_get(config, "prompt", mode);

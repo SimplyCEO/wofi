@@ -21,10 +21,14 @@
 #include <map.h>
 #include <utils.h>
 
+#include <stdint.h>
+#include <stdarg.h>
 #include <stdio.h>
 
 void config_load(struct map* map, const char* config);
 
 char* config_get(struct map* config, const char* key, char* def_opt);
+
+uint8_t config_get_mnemonic(struct map* config, const char* key, char* def_opt, uint8_t num_choices, ...);
 
 #endif

@@ -66,14 +66,14 @@ static void get_input(GtkSearchEntry* entry, gpointer data) {
 	if(utils_get_time_millis() - filter_time > filter_rate) {
 		filter = gtk_entry_get_text(GTK_ENTRY(entry));
 		filter_time = utils_get_time_millis();
-		gtk_list_box_invalidate_filter(GTK_LIST_BOX(inner_box));
+		gtk_flow_box_invalidate_filter(GTK_FLOW_BOX(inner_box));
 	}
 }
 
 static void get_search(GtkSearchEntry* entry, gpointer data) {
 	(void) data;
 	filter = gtk_entry_get_text(GTK_ENTRY(entry));
-	gtk_list_box_invalidate_filter(GTK_LIST_BOX(inner_box));
+	gtk_flow_box_invalidate_filter(GTK_FLOW_BOX(inner_box));
 }
 
 static GtkWidget* create_label(char* text, char* action) {
@@ -144,6 +144,7 @@ static gboolean _insert_widget(gpointer data) {
 	GtkWidget* box = create_label(node->text, node->action);
 	gtk_container_add(node->container, box);
 	gtk_widget_show_all(box);
+
 	free(node->text);
 	free(node->action);
 	free(node);
@@ -415,20 +416,21 @@ static void execute_action(char* mode, const gchar* cmd) {
 	}
 }
 
-static void activate_item(GtkListBox* list_box, GtkListBoxRow* row, gpointer data) {
-	(void) list_box;
+static void activate_item(GtkFlowBox* flow_box, GtkFlowBoxChild* row, gpointer data) {
+	(void) flow_box;
 	(void) data;
 	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
 	execute_action(mode, wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
 }
 
-static void select_item(GtkListBox* list_box, GtkListBoxRow* row, gpointer data) {
-	(void) list_box;
+static void select_item(GtkFlowBox* flow_box, gpointer data) {
 	(void) data;
 	if(previous_selection != NULL) {
 		gtk_widget_set_name(previous_selection, "unselected");
 	}
-	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
+	GList* selected_children = gtk_flow_box_get_selected_children(flow_box);
+	GtkWidget* box = gtk_bin_get_child(GTK_BIN(selected_children->data));
+	g_list_free(selected_children);
 	gtk_widget_set_name(box, "selected");
 	previous_selection = box;
 }
@@ -438,13 +440,13 @@ static void activate_search(GtkEntry* entry, gpointer data) {
 	if(strcmp(mode, "dmenu") == 0) {
 		execute_action(mode, gtk_entry_get_text(entry));
 	} else {
-		GtkListBoxRow* row = gtk_list_box_get_row_at_y(GTK_LIST_BOX(inner_box), 0);
+		GtkFlowBoxChild* row = gtk_flow_box_get_child_at_pos(GTK_FLOW_BOX(inner_box), 0, 0);
 		GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
 		execute_action(mode, wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
 	}
 }
 
-static gboolean do_filter(GtkListBoxRow* row, gpointer data) {
+static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
 	(void) data;
 	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
 	const gchar* text = wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "filter");
@@ -471,10 +473,16 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		exit(0);
 		break;
 	case GDK_KEY_Up:
-	case GDK_KEY_Down:
 	case GDK_KEY_Left:
 	case GDK_KEY_Right:
 	case GDK_KEY_Return:
+		break;
+	case GDK_KEY_Down:
+		if(gtk_widget_has_focus(entry)) {
+			GtkFlowBoxChild* child = gtk_flow_box_get_child_at_pos(GTK_FLOW_BOX(inner_box), 0, 0);
+			gtk_widget_grab_focus(GTK_WIDGET(child));
+			gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), child);
+		}
 		break;
 	default:
 		if(!gtk_widget_has_focus(entry)) {
@@ -492,6 +500,9 @@ void wofi_init(struct map* config) {
 	y = strtol(config_get(config, "y", "-1"), NULL, 10);
 	bool normal_window = strcmp(config_get(config, "normal_window", "false"), "true") == 0;
 	mode = map_get(config, "mode");
+	GtkOrientation orientation = strcmp(config_get(config, "orientation", "horizontal"), "vertical") == 0 ? GTK_ORIENTATION_VERTICAL : GTK_ORIENTATION_HORIZONTAL;
+	uint8_t halign = config_get_mnemonic(config, "halign", "fill", 4, "fill", "start", "end", "center");
+	uint8_t valign = config_get_mnemonic(config, "valign", "start", 4, "fill", "start", "end", "center");
 	char* prompt = config_get(config, "prompt", mode);
 	filter_rate = strtol(config_get(config, "filter_rate", "100"), NULL, 10);
 	filter_time = utils_get_time_millis();
@@ -542,17 +553,22 @@ void wofi_init(struct map* config) {
 	gtk_container_add(GTK_CONTAINER(outer_box), scroll);
 	gtk_widget_set_size_request(scroll, width, height);
 
-	inner_box = gtk_list_box_new();
+	inner_box = gtk_flow_box_new();
+	gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(inner_box), 1);
+	gtk_orientable_set_orientation(GTK_ORIENTABLE(inner_box), orientation);
+	gtk_widget_set_halign(inner_box, halign);
+	gtk_widget_set_valign(inner_box, valign);
+
 	gtk_widget_set_name(inner_box, "inner-box");
-	gtk_list_box_set_activate_on_single_click(GTK_LIST_BOX(inner_box), FALSE);
+	gtk_flow_box_set_activate_on_single_click(GTK_FLOW_BOX(inner_box), FALSE);
 	gtk_container_add(GTK_CONTAINER(scroll), inner_box);
 
-	gtk_list_box_set_filter_func(GTK_LIST_BOX(inner_box), do_filter, NULL, NULL);
+	gtk_flow_box_set_filter_func(GTK_FLOW_BOX(inner_box), do_filter, NULL, NULL);
 
 	g_signal_connect(entry, "changed", G_CALLBACK(get_input), NULL);
 	g_signal_connect(entry, "search-changed", G_CALLBACK(get_search), NULL);
-	g_signal_connect(inner_box, "row-activated", G_CALLBACK(activate_item), NULL);
-	g_signal_connect(inner_box, "row-selected", G_CALLBACK(select_item), NULL);
+	g_signal_connect(inner_box, "child-activated", G_CALLBACK(activate_item), NULL);
+	g_signal_connect(inner_box, "selected-children-changed", G_CALLBACK(select_item), NULL);
 	g_signal_connect(entry, "activate", G_CALLBACK(activate_search), NULL);
 	g_signal_connect(window, "key-press-event", G_CALLBACK(key_press), NULL);
 

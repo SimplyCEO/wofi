@@ -217,8 +217,11 @@ static struct map* load_cache(char* mode) {
 	struct wl_list* cache = read_cache(mode);
 	struct cache_line* node, *tmp;
 	wl_list_for_each_reverse_safe(node, tmp, cache, link) {
-		char* text = strrchr(node->line, '/');
-		char* action = strchr(node->line, ' ') + 1;
+		char* text = NULL;
+		char* action = action = strchr(node->line, ' ') + 1;
+		if(strcmp(mode, "run") == 0) {
+			text = strrchr(node->line, '/');
+		}
 		if(text == NULL) {
 			text = action;
 		} else {

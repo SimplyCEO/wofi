@@ -26,6 +26,7 @@ static char* mode;
 static time_t filter_time;
 static int64_t filter_rate;
 static bool allow_images, allow_markup;
+static uint64_t image_size;
 
 struct node {
 	char* text, *action;
@@ -94,13 +95,13 @@ static GtkWidget* create_label(char* text, char* action) {
 					int width = gdk_pixbuf_get_width(buf);
 					int height = gdk_pixbuf_get_height(buf);
 					if(height > width) {
-						float percent = 32.f / height;
-						GdkPixbuf* tmp = gdk_pixbuf_scale_simple(buf, width * percent, 32, GDK_INTERP_BILINEAR);
+						float percent = (float) image_size / height;
+						GdkPixbuf* tmp = gdk_pixbuf_scale_simple(buf, width * percent, image_size, GDK_INTERP_BILINEAR);
 						g_object_unref(buf);
 						buf = tmp;
 					} else {
-						float percent = 32.f / width;
-						GdkPixbuf* tmp = gdk_pixbuf_scale_simple(buf, 32, height * percent, GDK_INTERP_BILINEAR);
+						float percent = (float) image_size / width;
+						GdkPixbuf* tmp = gdk_pixbuf_scale_simple(buf, image_size, height * percent, GDK_INTERP_BILINEAR);
 						g_object_unref(buf);
 						buf = tmp;
 					}
@@ -323,7 +324,7 @@ static void* do_drun(void* data) {
 				if(G_IS_THEMED_ICON(icon)) {
 					GtkIconTheme* theme = gtk_icon_theme_get_default();
 					const gchar* const* icon_names = g_themed_icon_get_names(G_THEMED_ICON(icon));
-					GtkIconInfo* info = gtk_icon_theme_choose_icon(theme, (const gchar**) icon_names, 32, 0);
+					GtkIconInfo* info = gtk_icon_theme_choose_icon(theme, (const gchar**) icon_names, image_size, 0);
 					const gchar* icon_path = gtk_icon_info_get_filename(info);
 					text = utils_concat(4, "img:", icon_path, ":text:", name);
 				}
@@ -490,6 +491,7 @@ void wofi_init(struct map* config) {
 	filter_time = utils_get_time_millis();
 	allow_images = strcmp(config_get(config, "allow_images", "false"), "true") == 0;
 	allow_markup = strcmp(config_get(config, "allow_markup", "false"), "true") == 0;
+	image_size = strtol(config_get(config, "image_size", "32"), NULL, 10);
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_realize(window);

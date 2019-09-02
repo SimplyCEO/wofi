@@ -107,6 +107,7 @@ static GtkWidget* create_label(char* text, char* action) {
 						buf = tmp;
 					}
 					GtkWidget* img = gtk_image_new_from_pixbuf(buf);
+					gtk_widget_set_name(img, "img");
 					gtk_container_add(GTK_CONTAINER(box), img);
 				} else if(strcmp(mode, "text") == 0) {
 					if(filter == NULL) {
@@ -117,6 +118,7 @@ static GtkWidget* create_label(char* text, char* action) {
 						filter = tmp_filter;
 					}
 					GtkWidget* label = gtk_label_new(tmp);
+					gtk_widget_set_name(label, "text");
 					gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
 					gtk_label_set_xalign(GTK_LABEL(label), 0);
 					gtk_container_add(GTK_CONTAINER(box), label);

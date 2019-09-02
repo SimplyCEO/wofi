@@ -142,6 +142,7 @@ static GtkWidget* create_label(char* text, char* action) {
 static gboolean _insert_widget(gpointer data) {
 	struct node* node = data;
 	GtkWidget* box = create_label(node->text, node->action);
+	gtk_widget_set_name(box, "entry");
 	gtk_container_add(node->container, box);
 	gtk_widget_show_all(box);
 

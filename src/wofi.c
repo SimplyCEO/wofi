@@ -322,7 +322,7 @@ static void* do_drun(void* data) {
 			}
 			char* full_path = utils_concat(3, app_dir, "/", entry->d_name);
 			GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(full_path);
-			if(!G_IS_DESKTOP_APP_INFO(info) || g_desktop_app_info_get_is_hidden(info) || g_desktop_app_info_get_nodisplay(info)) {
+			if(info == NULL || g_desktop_app_info_get_is_hidden(info) || g_desktop_app_info_get_nodisplay(info)) {
 				free(full_path);
 				continue;
 			}

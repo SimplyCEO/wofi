@@ -333,7 +333,7 @@ static void* do_drun(void* data) {
 			}
 			char* text;
 			GIcon* icon = g_app_info_get_icon(G_APP_INFO(info));
-			if(allow_images && icon != NULL) {
+			if(allow_images) {
 				if(G_IS_THEMED_ICON(icon)) {
 					GtkIconTheme* theme = gtk_icon_theme_get_default();
 					const gchar* const* icon_names = g_themed_icon_get_names(G_THEMED_ICON(icon));
@@ -345,7 +345,7 @@ static void* do_drun(void* data) {
 						text = utils_concat(4, "img:", icon_path, ":text:", name);
 					}
 				} else {
-					text = strdup(name);
+					text = utils_concat(2, "text:", name);
 				}
 			} else {
 				text = strdup(name);

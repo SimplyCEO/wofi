@@ -338,8 +338,12 @@ static void* do_drun(void* data) {
 					GtkIconTheme* theme = gtk_icon_theme_get_default();
 					const gchar* const* icon_names = g_themed_icon_get_names(G_THEMED_ICON(icon));
 					GtkIconInfo* info = gtk_icon_theme_choose_icon(theme, (const gchar**) icon_names, image_size, 0);
-					const gchar* icon_path = gtk_icon_info_get_filename(info);
-					text = utils_concat(4, "img:", icon_path, ":text:", name);
+					if(info == NULL) {
+						text = utils_concat(2, "text:", name);
+					} else {
+						const gchar* icon_path = gtk_icon_info_get_filename(info);
+						text = utils_concat(4, "img:", icon_path, ":text:", name);
+					}
 				} else {
 					text = strdup(name);
 				}

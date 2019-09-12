@@ -156,7 +156,7 @@ static gboolean _insert_widget(gpointer data) {
 
 static char* get_cache_path(char* mode) {
 	if(cache_file != NULL) {
-		return cache_file;
+		return strdup(cache_file);
 	}
 	char* cache_path = getenv("XDG_CACHE_HOME");
 	if(cache_path == NULL) {

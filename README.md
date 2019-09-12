@@ -22,4 +22,5 @@ Please submit patches to https://lists.sr.ht/~scoopta/wofi
 You can find documentation here https://man.sr.ht/hg.sr.ht/email.md
 ## Packages
 If you're on Arch there's an unofficial AUR package https://aur.archlinux.org/packages/wofi-hg/
-
+## Documentation
+Documentation on styling and general configuration can be found here https://cloudninja.pw/docs/wofi.html

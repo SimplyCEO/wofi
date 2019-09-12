@@ -362,6 +362,16 @@ static void* do_drun(void* data) {
 	return NULL;
 }
 
+static void drun_launch_done(GObject* obj, GAsyncResult* result, gpointer data) {
+	if(g_app_info_launch_uris_finish(G_APP_INFO(obj), result, NULL)) {
+		exit(0);
+	} else {
+		char* cmd = data;
+		fprintf(stderr, "%s cannot be executed\n", cmd);
+		exit(1);
+	}
+}
+
 static void execute_action(char* mode, const gchar* cmd) {
 	char* cache_path = get_cache_path(mode);
 	struct wl_list lines;
@@ -415,10 +425,7 @@ static void execute_action(char* mode, const gchar* cmd) {
 	} else if(strcmp(mode, "drun") == 0) {
 		GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(cmd);
 		if(G_IS_DESKTOP_APP_INFO(info)) {
-			const char* exec = g_app_info_get_executable(G_APP_INFO(info));
-			execlp(exec, exec, NULL);
-			fprintf(stderr, "%s cannot be executed\n", exec);
-			exit(errno);
+			g_app_info_launch_uris_async(G_APP_INFO(info), NULL, NULL, NULL, drun_launch_done, (gchar*) cmd);
 		} else {
 			fprintf(stderr, "%s cannot be executed\n", cmd);
 			exit(1);

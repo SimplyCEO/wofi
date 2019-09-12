@@ -79,6 +79,8 @@ static void get_search(GtkSearchEntry* entry, gpointer data) {
 static GtkWidget* create_label(char* text, char* action) {
 	GtkWidget* box = wofi_property_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	gtk_widget_set_name(box, "unselected");
+	GtkStyleContext* style = gtk_widget_get_style_context(box);
+	gtk_style_context_add_class(style, "entry");
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "action", action);
 	if(allow_images) {
 		char* tmp = strdup(text);
@@ -144,7 +146,6 @@ static GtkWidget* create_label(char* text, char* action) {
 static gboolean _insert_widget(gpointer data) {
 	struct node* node = data;
 	GtkWidget* box = create_label(node->text, node->action);
-	gtk_widget_set_name(box, "entry");
 	gtk_container_add(node->container, box);
 	gtk_widget_show_all(box);
 

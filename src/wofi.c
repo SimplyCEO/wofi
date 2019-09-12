@@ -417,7 +417,7 @@ static void execute_action(char* mode, const gchar* cmd) {
 
 	free(cache_path);
 	if(strcmp(mode, "run") == 0) {
-		execlp(cmd, cmd, NULL);
+		execl(cmd, cmd, NULL);
 		fprintf(stderr, "%s cannot be executed\n", cmd);
 		exit(errno);
 	} else if(strcmp(mode, "dmenu") == 0) {

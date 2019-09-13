@@ -415,6 +415,9 @@ int main(int argc, char** argv) {
 		fprintf(stderr, "I need a mode, please give me a mode, that's what --show is for\n");
 		exit(1);
 	}
+
+	map_put(config, "config_dir", CONFIG_LOCATION);
+
 	if(width != NULL) {
 		map_put(config, "width", width);
 	}

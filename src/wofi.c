@@ -28,15 +28,12 @@ static int64_t filter_rate;
 static bool allow_images, allow_markup;
 static uint64_t image_size;
 static char* cache_file = NULL;
+static char* config_dir;
+static void (*mode_exec)(const gchar* cmd);
+static bool (*exec_search)();
 
 struct node {
 	char* text, *action;
-	GtkContainer* container;
-};
-
-struct cache_line {
-	char* line;
-	struct wl_list link;
 };
 
 static void nop() {}
@@ -146,7 +143,7 @@ static GtkWidget* create_label(char* text, char* action) {
 static gboolean _insert_widget(gpointer data) {
 	struct node* node = data;
 	GtkWidget* box = create_label(node->text, node->action);
-	gtk_container_add(node->container, box);
+	gtk_container_add(GTK_CONTAINER(inner_box), box);
 	gtk_widget_show_all(box);
 
 	free(node->text);
@@ -168,7 +165,7 @@ static char* get_cache_path(char* mode) {
 	return cache_path;
 }
 
-static struct wl_list* read_cache(char* mode) {
+struct wl_list* wofi_read_cache(char* mode) {
 	char* cache_path = get_cache_path(mode);
 	struct wl_list* cache = malloc(sizeof(struct wl_list));
 	wl_list_init(cache);
@@ -191,186 +188,39 @@ static struct wl_list* read_cache(char* mode) {
 		fclose(file);
 	}
 	while(wl_list_length(&lines) > 0) {
-		uint64_t largest = 0;
-		struct cache_line* node, *largest_node = NULL;
+		uint64_t smallest = UINT64_MAX;
+		struct cache_line* node, *smallest_node = NULL;
 		wl_list_for_each(node, &lines, link) {
 			uint64_t num = strtol(node->line, NULL, 10);
-			if(num > largest) {
-				largest = num;
-				largest_node = node;
+			if(num < smallest) {
+				smallest = num;
+				smallest_node = node;
 			}
 		}
-		wl_list_remove(&largest_node->link);
-		wl_list_insert(cache, &largest_node->link);
+		char* tmp = strdup(strchr(smallest_node->line, ' ') + 1);
+		free(smallest_node->line);
+		smallest_node->line = tmp;
+		wl_list_remove(&smallest_node->link);
+		wl_list_insert(cache, &smallest_node->link);
 	}
 	free(cache_path);
 	return cache;
 }
 
-static void insert_widget(char* text, char* action, GtkContainer* container) {
+void wofi_insert_widget(char* text, char* action) {
 	struct node* widget = malloc(sizeof(struct node));
-	widget->text = text;
-	widget->action = action;
-	widget->container = container;
+	widget->text = strdup(text);
+	widget->action = strdup(action);
 	g_idle_add(_insert_widget, widget);
 	utils_sleep_millis(1);
 }
 
-static struct map* load_cache(char* mode) {
-	struct map* cached = map_init();
-	struct wl_list* cache = read_cache(mode);
-	struct cache_line* node, *tmp;
-	wl_list_for_each_reverse_safe(node, tmp, cache, link) {
-		char* text = NULL;
-		char* action = action = strchr(node->line, ' ') + 1;
-		if(strcmp(mode, "run") == 0) {
-			text = strrchr(node->line, '/');
-		}
-		if(text == NULL) {
-			text = action;
-		} else {
-			++text;
-		}
-		map_put(cached, action, "true");
-		insert_widget(strdup(text), strdup(action), GTK_CONTAINER(inner_box));
-		free(node->line);
-		wl_list_remove(&node->link);
-		free(node);
-	}
-	free(cache);
-	return cached;
+bool wofi_allow_images() {
+	return allow_images;
 }
 
-static void* do_run(void* data) {
-	(void) data;
-	struct map* cached = load_cache("run");
-	char* path = strdup(getenv("PATH"));
-	char* original_path = path;
-	size_t colon_count = utils_split(path, ':');
-	for(size_t count = 0; count < colon_count; ++count) {
-		DIR* dir = opendir(path);
-		if(dir == NULL) {
-			goto cont;
-		}
-		struct dirent* entry;
-		while((entry = readdir(dir)) != NULL) {
-			if(strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-				continue;
-			}
-			char* full_path = utils_concat(3, path, "/", entry->d_name);
-			struct stat info;
-			stat(full_path, &info);
-			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path)) {
-				insert_widget(strdup(entry->d_name), strdup(full_path), GTK_CONTAINER(inner_box));
-			}
-			free(full_path);
-		}
-		closedir(dir);
-		cont:
-		path += strlen(path) + 1;
-	}
-	free(original_path);
-	map_free(cached);
-	return NULL;
-}
-
-static void* do_dmenu(void* data) {
-	(void) data;
-	struct map* cached = load_cache("dmenu");
-	char* line;
-	size_t size = 0;
-	while(getline(&line, &size, stdin) != -1) {
-		char* lf = strchr(line, '\n');
-		if(lf != NULL) {
-			*lf = 0;
-		}
-		if(map_contains(cached, line)) {
-			continue;
-		}
-		insert_widget(strdup(line), strdup(line), GTK_CONTAINER(inner_box));
-	}
-	free(line);
-	return NULL;
-}
-
-static void* do_drun(void* data) {
-	(void) data;
-	char* data_home = getenv("XDG_DATA_HOME");
-	if(data_home == NULL) {
-		data_home = utils_concat(2, getenv("HOME"), "/.local/share");
-	} else {
-		data_home = strdup(data_home);
-	}
-	char* data_dirs = getenv("XDG_DATA_DIRS");
-	if(data_dirs == NULL) {
-		data_dirs = "/usr/local/share:/usr/share";
-	}
-	char* dirs = utils_concat(3, data_home, ":", data_dirs);
-	char* original_dirs = dirs;
-	free(data_home);
-
-	size_t colon_count = utils_split(dirs, ':');
-	for(size_t count = 0; count < colon_count; ++count) {
-		char* app_dir = utils_concat(2, dirs, "/applications");
-		DIR* dir = opendir(app_dir);
-		if(dir == NULL) {
-			goto cont;
-		}
-		struct dirent* entry;
-		while((entry = readdir(dir)) != NULL) {
-			if(strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-				continue;
-			}
-			char* full_path = utils_concat(3, app_dir, "/", entry->d_name);
-			GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(full_path);
-			if(info == NULL || g_desktop_app_info_get_is_hidden(info) || g_desktop_app_info_get_nodisplay(info)) {
-				free(full_path);
-				continue;
-			}
-			const char* name = g_app_info_get_display_name(G_APP_INFO(info));
-			if(name == NULL) {
-				free(full_path);
-				continue;
-			}
-			char* text;
-			GIcon* icon = g_app_info_get_icon(G_APP_INFO(info));
-			if(allow_images) {
-				if(G_IS_THEMED_ICON(icon)) {
-					GtkIconTheme* theme = gtk_icon_theme_get_default();
-					const gchar* const* icon_names = g_themed_icon_get_names(G_THEMED_ICON(icon));
-					GtkIconInfo* info = gtk_icon_theme_choose_icon(theme, (const gchar**) icon_names, image_size, 0);
-					if(info == NULL) {
-						text = utils_concat(2, "text:", name);
-					} else {
-						const gchar* icon_path = gtk_icon_info_get_filename(info);
-						text = utils_concat(4, "img:", icon_path, ":text:", name);
-					}
-				} else {
-					text = utils_concat(2, "text:", name);
-				}
-			} else {
-				text = strdup(name);
-			}
-			insert_widget(text, strdup(full_path), GTK_CONTAINER(inner_box));
-			free(full_path);
-		}
-		closedir(dir);
-		cont:
-		dirs += strlen(dirs) + 1;
-		free(app_dir);
-	}
-	free(original_dirs);
-	return NULL;
-}
-
-static void drun_launch_done(GObject* obj, GAsyncResult* result, gpointer data) {
-	if(g_app_info_launch_uris_finish(G_APP_INFO(obj), result, NULL)) {
-		exit(0);
-	} else {
-		char* cmd = data;
-		fprintf(stderr, "%s cannot be executed\n", cmd);
-		exit(1);
-	}
+uint64_t wofi_get_image_size() {
+	return image_size;
 }
 
 static void execute_action(char* mode, const gchar* cmd) {
@@ -416,22 +266,7 @@ static void execute_action(char* mode, const gchar* cmd) {
 	fclose(file);
 
 	free(cache_path);
-	if(strcmp(mode, "run") == 0) {
-		execl(cmd, cmd, NULL);
-		fprintf(stderr, "%s cannot be executed\n", cmd);
-		exit(errno);
-	} else if(strcmp(mode, "dmenu") == 0) {
-		printf("%s\n", cmd);
-		exit(0);
-	} else if(strcmp(mode, "drun") == 0) {
-		GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(cmd);
-		if(G_IS_DESKTOP_APP_INFO(info)) {
-			g_app_info_launch_uris_async(G_APP_INFO(info), NULL, NULL, NULL, drun_launch_done, (gchar*) cmd);
-		} else {
-			fprintf(stderr, "%s cannot be executed\n", cmd);
-			exit(1);
-		}
-	}
+	mode_exec(cmd);
 }
 
 static void activate_item(GtkFlowBox* flow_box, GtkFlowBoxChild* row, gpointer data) {
@@ -455,7 +290,7 @@ static void select_item(GtkFlowBox* flow_box, gpointer data) {
 
 static void activate_search(GtkEntry* entry, gpointer data) {
 	(void) data;
-	if(strcmp(mode, "dmenu") == 0) {
+	if(exec_search != NULL && exec_search()) {
 		execute_action(mode, gtk_entry_get_text(entry));
 	} else {
 		GtkFlowBoxChild* row = gtk_flow_box_get_child_at_pos(GTK_FLOW_BOX(inner_box), 0, 0);
@@ -512,6 +347,43 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 	return FALSE;
 }
 
+static void* get_plugin_proc(const char* prefix, const char* suffix) {
+	char* proc_name = utils_concat(2, prefix, suffix);
+	void* proc = dlsym(RTLD_DEFAULT, proc_name);
+	free(proc_name);
+	return proc;
+}
+
+static void* start_thread(void* data) {
+	char* mode = data;
+	char* dso = strstr(mode, ".so");
+
+	void (*init)();
+	if(dso == NULL) {
+		init = get_plugin_proc(mode, "_init");
+		mode_exec = get_plugin_proc(mode, "_exec");
+		exec_search = get_plugin_proc(mode, "_exec_search");
+	} else {
+		char* plugins_dir = utils_concat(2, config_dir, "/plugins/");
+		char* full_name = utils_concat(2, plugins_dir, mode);
+		void* plugin = dlopen(full_name, RTLD_LAZY);
+		free(full_name);
+		free(plugins_dir);
+		init = dlsym(plugin, "init");
+		mode_exec = dlsym(plugin, "exec");
+		exec_search = dlsym(plugin, "exec_search");
+	}
+
+	if(init != NULL) {
+		init();
+	} else {
+		fprintf(stderr, "I would love to show %s but Idk what it is\n", mode);
+		exit(1);
+	}
+
+	return NULL;
+}
+
 void wofi_init(struct map* config) {
 	width = strtol(config_get(config, "width", "1000"), NULL, 10);
 	height = strtol(config_get(config, "height", "400"), NULL, 10);
@@ -529,6 +401,7 @@ void wofi_init(struct map* config) {
 	allow_markup = strcmp(config_get(config, "allow_markup", "false"), "true") == 0;
 	image_size = strtol(config_get(config, "image_size", "32"), NULL, 10);
 	cache_file = map_get(config, "cache_file");
+	config_dir = map_get(config, "config_dir");
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_realize(window);
@@ -592,16 +465,7 @@ void wofi_init(struct map* config) {
 	g_signal_connect(window, "key-press-event", G_CALLBACK(key_press), NULL);
 
 	pthread_t thread;
-	if(strcmp(mode, "run") == 0) {
-		pthread_create(&thread, NULL, do_run, NULL);
-	} else if(strcmp(mode, "dmenu") == 0) {
-		pthread_create(&thread, NULL, do_dmenu, NULL);
-	} else if(strcmp(mode, "drun") == 0) {
-		pthread_create(&thread, NULL, do_drun, NULL);
-	} else {
-		fprintf(stderr, "I would love to show %s but Idk what it is\n", mode);
-		exit(1);
-	}
+	pthread_create(&thread, NULL, start_thread, mode);
 	gtk_widget_grab_focus(entry);
 	gtk_window_set_title(GTK_WINDOW(window), prompt);
 	gtk_widget_show_all(window);

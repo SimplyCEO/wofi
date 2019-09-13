@@ -10,6 +10,7 @@ RM := rm -rf
 -include sources.mk
 -include src/subdir.mk
 -include proto/subdir.mk
+-include modes/subdir.mk
 -include subdir.mk
 -include objects.mk
 
@@ -30,7 +31,7 @@ all: wofi
 wofi: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C Linker'
-	gcc -fsanitize=address -pthread -o "wofi" $(OBJS) $(USER_OBJS) $(LIBS)
+	gcc -fsanitize=address -rdynamic -pthread -o "wofi" $(OBJS) $(USER_OBJS) $(LIBS)
 	@echo 'Finished building target: $@'
 	@echo ' '
 

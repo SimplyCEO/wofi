@@ -22,6 +22,7 @@
 #include <config.h>
 #include <property_box.h>
 
+#include <dlfcn.h>
 #include <errno.h>
 #include <stddef.h>
 #include <string.h>
@@ -35,5 +36,18 @@
 #include <wayland-client.h>
 #include <wlr-layer-shell-unstable-v1-client-protocol.h>
 
+struct cache_line {
+	char* line;
+	struct wl_list link;
+};
+
 void wofi_init(struct map* config);
+
+struct wl_list* wofi_read_cache(char* mode);
+
+void wofi_insert_widget(char* text, char* action);
+
+bool wofi_allow_images();
+
+uint64_t wofi_get_image_size();
 #endif

@@ -132,6 +132,7 @@ static GtkWidget* create_label(char* text, char* action) {
 	} else {
 		wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "filter", text);
 		GtkWidget* label = gtk_label_new(text);
+		gtk_widget_set_name(label, "text");
 		gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
 		gtk_label_set_xalign(GTK_LABEL(label), 0);
 		gtk_container_add(GTK_CONTAINER(box), label);

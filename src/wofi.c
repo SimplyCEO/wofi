@@ -467,7 +467,7 @@ void wofi_init(struct map* config) {
 
 	pthread_t thread;
 	pthread_create(&thread, NULL, start_thread, mode);
-	gtk_widget_grab_focus(entry);
+	gtk_widget_grab_focus(scroll);
 	gtk_window_set_title(GTK_WINDOW(window), prompt);
 	gtk_widget_show_all(window);
 }

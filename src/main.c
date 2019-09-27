@@ -64,6 +64,7 @@ static void print_usage(char** argv) {
 	printf("--allow-images\t-i\tAllows images to be rendered\n");
 	printf("--allow-markup\t-m\tAllows pango markup\n");
 	printf("--cache-file\t-k\tSets the cache file to use\n");
+	printf("--term\t\t-t\tSpecifies the terminal to use when running in a term\n");
 	exit(0);
 }
 
@@ -264,6 +265,12 @@ int main(int argc, char** argv) {
 			.val = 'k'
 		},
 		{
+			.name = "term",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 't'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -284,8 +291,9 @@ int main(int argc, char** argv) {
 	char* allow_images = NULL;
 	char* allow_markup = NULL;
 	char* cache_file = NULL;
+	char* terminal = NULL;
 	char opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nimk:", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nimk:t:", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -339,6 +347,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'k':
 			cache_file = optarg;
+			break;
+		case 't':
+			terminal = optarg;
 			break;
 		}
 	}
@@ -444,6 +455,9 @@ int main(int argc, char** argv) {
 	}
 	if(cache_file != NULL) {
 		map_put(config, "cache_file", cache_file);
+	}
+	if(terminal != NULL) {
+		map_put(config, "term", terminal);
 	}
 
 	gtk_init(&argc, &argv);

@@ -17,6 +17,8 @@
 
 #include <wofi.h>
 
+static const char* terminals[] = {"kitty", "termite", "gnome-terminal", "weston-terminal"};
+
 static uint64_t width, height;
 static int64_t x, y;
 static struct zwlr_layer_shell_v1* shell;
@@ -29,6 +31,8 @@ static bool allow_images, allow_markup;
 static uint64_t image_size;
 static char* cache_file = NULL;
 static char* config_dir;
+static bool run_in_term;
+static char* terminal;
 static void (*mode_exec)(const gchar* cmd);
 static bool (*exec_search)();
 
@@ -224,6 +228,22 @@ uint64_t wofi_get_image_size() {
 	return image_size;
 }
 
+bool wofi_run_in_term() {
+	return run_in_term;
+}
+
+void wofi_term_run(const char* cmd) {
+	if(terminal != NULL) {
+		execlp(terminal, terminal, "--", cmd, NULL);
+	}
+	size_t term_count = sizeof(terminals) / sizeof(char*);
+	for(size_t count = 0; count < term_count; ++count) {
+		execlp(terminals[count], terminals[count], "--", cmd, NULL);
+	}
+	fprintf(stderr, "No terminal emulator found please set term in config or use --term\n");
+	exit(1);
+}
+
 static void execute_action(char* mode, const gchar* cmd) {
 	char* cache_path = get_cache_path(mode);
 	struct wl_list lines;
@@ -318,11 +338,8 @@ static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
 
 static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 	(void) widget;
-	(void) event;
 	(void) data;
-	guint code;
-	gdk_event_get_keyval(event, &code);
-	switch(code) {
+	switch(event->key.keyval) {
 	case GDK_KEY_Escape:
 		exit(0);
 		break;
@@ -330,6 +347,10 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 	case GDK_KEY_Left:
 	case GDK_KEY_Right:
 	case GDK_KEY_Return:
+		run_in_term = (event->key.state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK;
+		if(run_in_term) {
+			event->key.state &= ~GDK_SHIFT_MASK;
+		}
 		if(gtk_widget_has_focus(scroll)) {
 			gtk_entry_grab_focus_without_selecting(GTK_ENTRY(entry));
 		}
@@ -406,6 +427,7 @@ void wofi_init(struct map* config) {
 	image_size = strtol(config_get(config, "image_size", "32"), NULL, 10);
 	cache_file = map_get(config, "cache_file");
 	config_dir = map_get(config, "config_dir");
+	terminal = map_get(config, "term");
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_realize(window);

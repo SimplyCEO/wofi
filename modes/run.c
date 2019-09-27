@@ -63,6 +63,9 @@ void run_init() {
 }
 
 void run_exec(const gchar* cmd) {
+	if(wofi_run_in_term()) {
+		wofi_term_run(cmd);
+	}
 	execl(cmd, cmd, NULL);
 	fprintf(stderr, "%s cannot be executed\n", cmd);
 	exit(errno);

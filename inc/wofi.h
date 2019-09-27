@@ -50,4 +50,8 @@ void wofi_insert_widget(char* text, char* action);
 bool wofi_allow_images();
 
 uint64_t wofi_get_image_size();
+
+bool wofi_run_in_term();
+
+void wofi_term_run(const char* cmd);
 #endif

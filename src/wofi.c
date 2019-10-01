@@ -363,6 +363,8 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 			return TRUE;
 		}
 		break;
+	case GDK_KEY_Shift_L:case GDK_KEY_Shift_R:
+		break;
 	default:
 		if(!gtk_widget_has_focus(entry)) {
 			gtk_entry_grab_focus_without_selecting(GTK_ENTRY(entry));

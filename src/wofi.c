@@ -355,6 +355,7 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 			gtk_entry_grab_focus_without_selecting(GTK_ENTRY(entry));
 		}
 		break;
+	case GDK_KEY_Tab:
 	case GDK_KEY_Down:
 		if(gtk_widget_has_focus(entry) || gtk_widget_has_focus(scroll)) {
 			GtkFlowBoxChild* child = gtk_flow_box_get_child_at_pos(GTK_FLOW_BOX(inner_box), 0, 0);

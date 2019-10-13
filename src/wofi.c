@@ -494,7 +494,11 @@ void wofi_init(struct map* config) {
 
 	gtk_widget_set_name(inner_box, "inner-box");
 	gtk_flow_box_set_activate_on_single_click(GTK_FLOW_BOX(inner_box), FALSE);
-	gtk_container_add(GTK_CONTAINER(scroll), inner_box);
+
+	GtkWidget* wrapper_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	gtk_box_set_homogeneous(GTK_BOX(wrapper_box), TRUE);
+	gtk_container_add(GTK_CONTAINER(wrapper_box), inner_box);
+	gtk_container_add(GTK_CONTAINER(scroll), wrapper_box);
 
 	gtk_flow_box_set_filter_func(GTK_FLOW_BOX(inner_box), do_filter, NULL, NULL);
 

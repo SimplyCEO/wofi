@@ -33,6 +33,7 @@ static char* cache_file = NULL;
 static char* config_dir;
 static bool run_in_term;
 static char* terminal;
+static GtkOrientation outer_orientation;
 static void (*mode_exec)(const gchar* cmd);
 static bool (*exec_search)();
 
@@ -345,7 +346,7 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		break;
 	case GDK_KEY_Up:
 	case GDK_KEY_Left:
-	case GDK_KEY_Right:
+		break;
 	case GDK_KEY_Return:
 		run_in_term = (event->key.state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK;
 		if(run_in_term) {
@@ -357,6 +358,12 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		break;
 	case GDK_KEY_Tab:
 	case GDK_KEY_Down:
+	case GDK_KEY_Right:
+		if(event->key.keyval == GDK_KEY_Down && outer_orientation == GTK_ORIENTATION_HORIZONTAL) {
+			return FALSE;
+		} else if(event->key.keyval == GDK_KEY_Right && outer_orientation == GTK_ORIENTATION_VERTICAL) {
+			return FALSE;
+		}
 		if(gtk_widget_has_focus(entry) || gtk_widget_has_focus(scroll)) {
 			GtkFlowBoxChild* child = gtk_flow_box_get_child_at_pos(GTK_FLOW_BOX(inner_box), 0, 0);
 			gtk_widget_grab_focus(GTK_WIDGET(child));
@@ -420,8 +427,13 @@ void wofi_init(struct map* config) {
 	bool normal_window = strcmp(config_get(config, "normal_window", "false"), "true") == 0;
 	mode = map_get(config, "mode");
 	uint8_t orientation = config_get_mnemonic(config, "orientation", "vertical", 2, "vertical", "horizontal");
+	outer_orientation = config_get_mnemonic(config, "orientation", "vertical", 2, "horizontal", "vertical");
 	uint8_t halign = config_get_mnemonic(config, "halign", "fill", 4, "fill", "start", "end", "center");
-	uint8_t valign = config_get_mnemonic(config, "valign", "start", 4, "fill", "start", "end", "center");
+	char* default_valign = "start";
+	if(outer_orientation == GTK_ORIENTATION_HORIZONTAL) {
+		default_valign = "center";
+	}
+	uint8_t valign = config_get_mnemonic(config, "valign", default_valign, 4, "fill", "start", "end", "center");
 	char* prompt = config_get(config, "prompt", mode);
 	filter_rate = strtol(config_get(config, "filter_rate", "100"), NULL, 10);
 	filter_time = utils_get_time_millis();
@@ -461,7 +473,7 @@ void wofi_init(struct map* config) {
 		wl_display_roundtrip(wl);
 	}
 
-	outer_box = gtk_box_new(GTK_ORIENTATION_VERTICAL, 0);
+	outer_box = gtk_box_new(outer_orientation, 0);
 	gtk_widget_set_name(outer_box, "outer-box");
 	gtk_container_add(GTK_CONTAINER(window), outer_box);
 	entry = gtk_search_entry_new();

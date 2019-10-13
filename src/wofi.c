@@ -310,13 +310,33 @@ static void select_item(GtkFlowBox* flow_box, gpointer data) {
 	previous_selection = box;
 }
 
+static GtkWidget* get_first_child(GtkContainer* container) {
+	GList* children = gtk_container_get_children(container);
+	GList* list = children;
+	GtkWidget* min_child = NULL;
+	int64_t x = INT64_MAX;
+	int64_t y = INT64_MAX;
+	for(; list->next != NULL; list = list->next) {
+		GtkWidget* child = list->data;
+		GtkAllocation alloc;
+		gtk_widget_get_allocation(child, &alloc);
+		if(alloc.x <= x && alloc.y <= y && alloc.x != -1 && alloc.y != -1 && alloc.width != 1 && alloc.height != 1) {
+			x = alloc.x;
+			y = alloc.y;
+			min_child = child;
+		}
+	}
+	g_list_free(children);
+	return min_child;
+}
+
 static void activate_search(GtkEntry* entry, gpointer data) {
 	(void) data;
 	if(exec_search != NULL && exec_search()) {
 		execute_action(mode, gtk_entry_get_text(entry));
 	} else {
-		GtkFlowBoxChild* row = gtk_flow_box_get_child_at_pos(GTK_FLOW_BOX(inner_box), 0, 0);
-		GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
+		GtkWidget* child = get_first_child(GTK_CONTAINER(inner_box));
+		GtkWidget* box = gtk_bin_get_child(GTK_BIN(child));
 		execute_action(mode, wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
 	}
 }
@@ -365,9 +385,9 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 			return FALSE;
 		}
 		if(gtk_widget_has_focus(entry) || gtk_widget_has_focus(scroll)) {
-			GtkFlowBoxChild* child = gtk_flow_box_get_child_at_pos(GTK_FLOW_BOX(inner_box), 0, 0);
-			gtk_widget_grab_focus(GTK_WIDGET(child));
-			gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), child);
+			GtkWidget* child = get_first_child(GTK_CONTAINER(inner_box));
+			gtk_widget_grab_focus(child);
+			gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), GTK_FLOW_BOX_CHILD(child));
 			return TRUE;
 		}
 		break;

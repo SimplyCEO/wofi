@@ -48,6 +48,7 @@ static char* get_text(char* file) {
 
 void drun_init() {
 	struct map* cached = map_init();
+	struct map* entries = map_init();
 	struct wl_list* cache = wofi_read_cache("drun");
 
 	struct cache_line* node, *tmp;
@@ -104,6 +105,10 @@ void drun_init() {
 				free(full_path);
 				continue;
 			}
+			if(map_contains(entries, entry->d_name)) {
+				continue;
+			}
+			map_put(entries, entry->d_name, "true");
 			wofi_insert_widget(text, full_path);
 			free(text);
 			free(full_path);
@@ -115,6 +120,7 @@ void drun_init() {
 	}
 	free(original_dirs);
 	map_free(cached);
+	map_free(entries);
 }
 
 static void launch_done(GObject* obj, GAsyncResult* result, gpointer data) {

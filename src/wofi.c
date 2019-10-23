@@ -463,6 +463,7 @@ void wofi_init(struct map* config) {
 	cache_file = map_get(config, "cache_file");
 	config_dir = map_get(config, "config_dir");
 	terminal = map_get(config, "term");
+	char* password_char = map_get(config, "password_char");
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_realize(window);
@@ -500,6 +501,10 @@ void wofi_init(struct map* config) {
 	gtk_widget_set_name(entry, "input");
 	gtk_entry_set_placeholder_text(GTK_ENTRY(entry), prompt);
 	gtk_container_add(GTK_CONTAINER(outer_box), entry);
+	if(password_char != NULL) {
+		gtk_entry_set_visibility(GTK_ENTRY(entry), FALSE);
+		gtk_entry_set_invisible_char(GTK_ENTRY(entry), password_char[0]);
+	}
 
 	scroll = gtk_scrolled_window_new(NULL, NULL);
 	gtk_widget_set_name(scroll, "scroll");

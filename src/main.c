@@ -65,6 +65,7 @@ static void print_usage(char** argv) {
 	printf("--allow-markup\t-m\tAllows pango markup\n");
 	printf("--cache-file\t-k\tSets the cache file to use\n");
 	printf("--term\t\t-t\tSpecifies the terminal to use when running in a term\n");
+	printf("--password\t-P\tRuns in password mode\n");
 	exit(0);
 }
 
@@ -271,6 +272,12 @@ int main(int argc, char** argv) {
 			.val = 't'
 		},
 		{
+			.name = "password",
+			.has_arg = optional_argument,
+			.flag = NULL,
+			.val = 'P'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -292,8 +299,9 @@ int main(int argc, char** argv) {
 	char* allow_markup = NULL;
 	char* cache_file = NULL;
 	char* terminal = NULL;
+	char* password_char = "false";
 	char opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nimk:t:", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nimk:t:P::", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -350,6 +358,9 @@ int main(int argc, char** argv) {
 			break;
 		case 't':
 			terminal = optarg;
+			break;
+		case 'P':
+			password_char = optarg;
 			break;
 		}
 	}
@@ -458,6 +469,12 @@ int main(int argc, char** argv) {
 	}
 	if(terminal != NULL) {
 		map_put(config, "term", terminal);
+	}
+	if(password_char == NULL || (password_char != NULL && strcmp(password_char, "false") != 0)) {
+		if(password_char == NULL) {
+			password_char = "*";
+		}
+		map_put(config, "password_char", password_char);
 	}
 
 	gtk_init(&argc, &argv);

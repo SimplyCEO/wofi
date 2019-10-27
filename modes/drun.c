@@ -38,6 +38,10 @@ static char* get_text(char* file) {
 				const gchar* icon_path = gtk_icon_info_get_filename(info);
 				return utils_concat(4, "img:", icon_path, ":text:", name);
 			}
+		} else if(G_IS_FILE_ICON(icon)) {
+			GFile* file = g_file_icon_get_file(G_FILE_ICON(icon));
+			char* path = g_file_get_path(file);
+			return utils_concat(4, "img:", path, ":text:", name);
 		} else {
 			return utils_concat(2, "text:", name);
 		}

@@ -50,8 +50,9 @@ static char* get_text(char* file) {
 	}
 }
 
-static char* get_search_text(char* file, char* name) {
+static char* get_search_text(char* file) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(file);
+	const char* name = g_app_info_get_display_name(G_APP_INFO(info));
 	const char* exec = g_app_info_get_executable(G_APP_INFO(info));
 	const char* description = g_app_info_get_description(G_APP_INFO(info));
 	const char* const* keywords = g_desktop_app_info_get_keywords(info);
@@ -69,7 +70,7 @@ void drun_init() {
 		if(text == NULL) {
 			goto cache_cont;
 		}
-		char* search_text = get_search_text(node->line, text);
+		char* search_text = get_search_text(node->line);
 		wofi_insert_widget(text, search_text, node->line);
 		map_put(cached, node->line, "true");
 		free(search_text);
@@ -123,7 +124,7 @@ void drun_init() {
 				continue;
 			}
 			map_put(entries, entry->d_name, "true");
-			char* search_text = get_search_text(full_path, text);
+			char* search_text = get_search_text(full_path);
 			wofi_insert_widget(text, search_text, full_path);
 			free(text);
 			free(search_text);

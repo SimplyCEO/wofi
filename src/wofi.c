@@ -38,7 +38,7 @@ static void (*mode_exec)(const gchar* cmd);
 static bool (*exec_search)();
 
 struct node {
-	char* text, *action;
+	char* text, *search_text, *action;
 };
 
 static void nop() {}
@@ -78,7 +78,7 @@ static void get_search(GtkSearchEntry* entry, gpointer data) {
 	gtk_flow_box_invalidate_filter(GTK_FLOW_BOX(inner_box));
 }
 
-static GtkWidget* create_label(char* text, char* action) {
+static GtkWidget* create_label(char* text, char* search_text, char* action) {
 	GtkWidget* box = wofi_property_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	gtk_widget_set_name(box, "unselected");
 	GtkStyleContext* style = gtk_widget_get_style_context(box);
@@ -88,7 +88,6 @@ static GtkWidget* create_label(char* text, char* action) {
 		char* tmp = strdup(text);
 		char* original = tmp;
 		char* mode = NULL;
-		char* filter = NULL;
 
 		size_t colon_count = utils_split(tmp, ':');
 		for(size_t count = 0; count < colon_count; ++count) {
@@ -114,13 +113,6 @@ static GtkWidget* create_label(char* text, char* action) {
 					gtk_widget_set_name(img, "img");
 					gtk_container_add(GTK_CONTAINER(box), img);
 				} else if(strcmp(mode, "text") == 0) {
-					if(filter == NULL) {
-						filter = strdup(tmp);
-					} else {
-						char* tmp_filter = utils_concat(2, filter, tmp);
-						free(filter);
-						filter = tmp_filter;
-					}
 					GtkWidget* label = gtk_label_new(tmp);
 					gtk_widget_set_name(label, "text");
 					gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
@@ -131,28 +123,26 @@ static GtkWidget* create_label(char* text, char* action) {
 			}
 			tmp += strlen(tmp) + 1;
 		}
-		wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "filter", filter);
-		free(filter);
 		free(original);
 	} else {
-		wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "filter", text);
 		GtkWidget* label = gtk_label_new(text);
 		gtk_widget_set_name(label, "text");
 		gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
 		gtk_label_set_xalign(GTK_LABEL(label), 0);
 		gtk_container_add(GTK_CONTAINER(box), label);
 	}
-
+	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "filter", search_text);
 	return box;
 }
 
 static gboolean _insert_widget(gpointer data) {
 	struct node* node = data;
-	GtkWidget* box = create_label(node->text, node->action);
+	GtkWidget* box = create_label(node->text, node->search_text, node->action);
 	gtk_container_add(GTK_CONTAINER(inner_box), box);
 	gtk_widget_show_all(box);
 
 	free(node->text);
+	free(node->search_text);
 	free(node->action);
 	free(node);
 	return FALSE;
@@ -213,9 +203,10 @@ struct wl_list* wofi_read_cache(char* mode) {
 	return cache;
 }
 
-void wofi_insert_widget(char* text, char* action) {
+void wofi_insert_widget(char* text, char* search_text, char* action) {
 	struct node* widget = malloc(sizeof(struct node));
 	widget->text = strdup(text);
+	widget->search_text = strdup(search_text);
 	widget->action = strdup(action);
 	g_idle_add(_insert_widget, widget);
 	utils_sleep_millis(1);

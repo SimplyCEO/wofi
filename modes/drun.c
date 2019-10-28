@@ -50,6 +50,14 @@ static char* get_text(char* file) {
 	}
 }
 
+static char* get_search_text(char* file, char* name) {
+	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(file);
+	const char* exec = g_app_info_get_executable(G_APP_INFO(info));
+	const char* description = g_app_info_get_description(G_APP_INFO(info));
+	const char* const* keywords = g_desktop_app_info_get_keywords(info);
+	return utils_concat(5, name, file, exec == NULL ? "" : exec, description == NULL ? "" : description, keywords == NULL ? (const char* const*) "" : keywords);
+}
+
 void drun_init() {
 	struct map* cached = map_init();
 	struct map* entries = map_init();
@@ -61,8 +69,10 @@ void drun_init() {
 		if(text == NULL) {
 			goto cache_cont;
 		}
-		wofi_insert_widget(text, node->line);
+		char* search_text = get_search_text(node->line, text);
+		wofi_insert_widget(text, search_text, node->line);
 		map_put(cached, node->line, "true");
+		free(search_text);
 		free(text);
 
 		cache_cont:
@@ -113,8 +123,10 @@ void drun_init() {
 				continue;
 			}
 			map_put(entries, entry->d_name, "true");
-			wofi_insert_widget(text, full_path);
+			char* search_text = get_search_text(full_path, text);
+			wofi_insert_widget(text, search_text, full_path);
 			free(text);
+			free(search_text);
 			free(full_path);
 		}
 		closedir(dir);

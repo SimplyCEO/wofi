@@ -45,7 +45,7 @@ void wofi_init(struct map* config);
 
 struct wl_list* wofi_read_cache(char* mode);
 
-void wofi_insert_widget(char* text, char* action);
+void wofi_insert_widget(char* text, char* search_text, char* action);
 
 bool wofi_allow_images();
 

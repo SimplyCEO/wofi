@@ -59,6 +59,46 @@ static char* get_search_text(char* file) {
 	return utils_concat(5, name, file, exec == NULL ? "" : exec, description == NULL ? "" : description, keywords == NULL ? (const char* const*) "" : keywords);
 }
 
+static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
+	DIR* dir = opendir(app_dir);
+	if(dir == NULL) {
+		return;
+	}
+	struct dirent* entry;
+	while((entry = readdir(dir)) != NULL) {
+		if(strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
+			continue;
+		}
+		char* full_path = utils_concat(3, app_dir, "/", entry->d_name);
+		struct stat info;
+		stat(full_path, &info);
+		if(S_ISDIR(info.st_mode)) {
+			insert_dir(full_path, cached, entries);
+			free(full_path);
+			continue;
+		}
+		if(map_contains(cached, full_path)) {
+			free(full_path);
+			continue;
+		}
+		char* text = get_text(full_path);
+		if(text == NULL) {
+			free(full_path);
+			continue;
+		}
+		if(map_contains(entries, entry->d_name)) {
+			continue;
+		}
+		map_put(entries, entry->d_name, "true");
+		char* search_text = get_search_text(full_path);
+		wofi_insert_widget(text, search_text, full_path);
+		free(text);
+		free(search_text);
+		free(full_path);
+	}
+	closedir(dir);
+}
+
 void drun_init() {
 	struct map* cached = map_init();
 	struct map* entries = map_init();
@@ -101,37 +141,7 @@ void drun_init() {
 	size_t colon_count = utils_split(dirs, ':');
 	for(size_t count = 0; count < colon_count; ++count) {
 		char* app_dir = utils_concat(2, dirs, "/applications");
-		DIR* dir = opendir(app_dir);
-		if(dir == NULL) {
-			goto cont;
-		}
-		struct dirent* entry;
-		while((entry = readdir(dir)) != NULL) {
-			if(strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
-				continue;
-			}
-			char* full_path = utils_concat(3, app_dir, "/", entry->d_name);
-			if(map_contains(cached, full_path)) {
-				free(full_path);
-				continue;
-			}
-			char* text = get_text(full_path);
-			if(text == NULL) {
-				free(full_path);
-				continue;
-			}
-			if(map_contains(entries, entry->d_name)) {
-				continue;
-			}
-			map_put(entries, entry->d_name, "true");
-			char* search_text = get_search_text(full_path);
-			wofi_insert_widget(text, search_text, full_path);
-			free(text);
-			free(search_text);
-			free(full_path);
-		}
-		closedir(dir);
-		cont:
+		insert_dir(app_dir, cached, entries);
 		dirs += strlen(dirs) + 1;
 		free(app_dir);
 	}

@@ -307,7 +307,7 @@ static GtkWidget* get_first_child(GtkContainer* container) {
 	GtkWidget* min_child = NULL;
 	int64_t x = INT64_MAX;
 	int64_t y = INT64_MAX;
-	for(; list->next != NULL; list = list->next) {
+	for(; list != NULL; list = list->next) {
 		GtkWidget* child = list->data;
 		GtkAllocation alloc;
 		gtk_widget_get_allocation(child, &alloc);

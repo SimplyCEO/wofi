@@ -250,7 +250,7 @@ static void execute_action(char* mode, const gchar* cmd) {
 			if(strstr(line, cmd) != NULL) {
 				uint64_t count = strtol(line, NULL, 10) + 1;
 				char num[6];
-				snprintf(num, 5, "%lu", count);
+				snprintf(num, 5, "%" PRIu64, count);
 				node->line = utils_concat(4, num, " ", cmd, "\n");
 				inc_count = true;
 			} else {

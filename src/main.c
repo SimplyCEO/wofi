@@ -113,7 +113,7 @@ static void load_css() {
 			const char* color = node->line;
 			const char* wofi_color = "--wofi-color";
 			char count_str[3];
-			snprintf(count_str, 3, "%lu", count--);
+			snprintf(count_str, 3, "%zu", count--);
 			char* needle = utils_concat(2, wofi_color, count_str);
 			size_t color_len = strlen(color);
 			size_t needle_len = strlen(needle);
@@ -300,7 +300,7 @@ int main(int argc, char** argv) {
 	char* cache_file = NULL;
 	char* terminal = NULL;
 	char* password_char = "false";
-	char opt;
+	int opt;
 	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nimk:t:P::", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':

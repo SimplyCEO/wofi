@@ -394,7 +394,7 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 }
 
 static void* get_plugin_proc(const char* prefix, const char* suffix) {
-	char* proc_name = utils_concat(2, prefix, suffix);
+	char* proc_name = utils_concat(3, "wofi_", prefix, suffix);
 	void* proc = dlsym(RTLD_DEFAULT, proc_name);
 	free(proc_name);
 	return proc;

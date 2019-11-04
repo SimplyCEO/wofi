@@ -17,7 +17,7 @@
 
 #include <wofi.h>
 
-void dmenu_init() {
+void wofi_dmenu_init() {
 	struct map* cached = map_init();
 	struct wl_list* cache = wofi_read_cache("dmenu");
 
@@ -48,11 +48,11 @@ void dmenu_init() {
 	map_free(cached);
 }
 
-void dmenu_exec(const gchar* cmd) {
+void wofi_dmenu_exec(const gchar* cmd) {
 	printf("%s\n", cmd);
 	exit(0);
 }
 
-bool dmenu_exec_search() {
+bool wofi_dmenu_exec_search() {
 	return true;
 }

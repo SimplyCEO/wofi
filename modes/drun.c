@@ -99,7 +99,7 @@ static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
 	closedir(dir);
 }
 
-void drun_init() {
+void wofi_drun_init() {
 	struct map* cached = map_init();
 	struct map* entries = map_init();
 	struct wl_list* cache = wofi_read_cache("drun");
@@ -160,7 +160,7 @@ static void launch_done(GObject* obj, GAsyncResult* result, gpointer data) {
 	}
 }
 
-void drun_exec(const gchar* cmd) {
+void wofi_drun_exec(const gchar* cmd) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(cmd);
 	if(G_IS_DESKTOP_APP_INFO(info)) {
 		g_app_info_launch_uris_async(G_APP_INFO(info), NULL, NULL, NULL, launch_done, (gchar*) cmd);

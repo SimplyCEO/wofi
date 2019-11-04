@@ -17,7 +17,7 @@
 
 #include <wofi.h>
 
-void run_init() {
+void wofi_run_init() {
 	struct map* cached = map_init();
 	struct wl_list* cache = wofi_read_cache("run");
 
@@ -66,7 +66,7 @@ void run_init() {
 	map_free(cached);
 }
 
-void run_exec(const gchar* cmd) {
+void wofi_run_exec(const gchar* cmd) {
 	if(wofi_run_in_term()) {
 		wofi_term_run(cmd);
 	}

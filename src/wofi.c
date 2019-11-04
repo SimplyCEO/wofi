@@ -412,7 +412,7 @@ static void* start_thread(void* data) {
 	} else {
 		char* plugins_dir = utils_concat(2, config_dir, "/plugins/");
 		char* full_name = utils_concat(2, plugins_dir, mode);
-		void* plugin = dlopen(full_name, RTLD_LAZY);
+		void* plugin = dlopen(full_name, RTLD_LAZY | RTLD_LOCAL);
 		free(full_name);
 		free(plugins_dir);
 		init = dlsym(plugin, "init");

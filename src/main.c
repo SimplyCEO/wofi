@@ -66,6 +66,7 @@ static void print_usage(char** argv) {
 	printf("--cache-file\t-k\tSets the cache file to use\n");
 	printf("--term\t\t-t\tSpecifies the terminal to use when running in a term\n");
 	printf("--password\t-P\tRuns in password mode\n");
+	printf("--exec-search\t-e\tMakes enter always use the search contents not the first result\n");
 	exit(0);
 }
 
@@ -278,6 +279,12 @@ int main(int argc, char** argv) {
 			.val = 'P'
 		},
 		{
+			.name = "exec-search",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'e'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -300,8 +307,9 @@ int main(int argc, char** argv) {
 	char* cache_file = NULL;
 	char* terminal = NULL;
 	char* password_char = "false";
+	char* exec_search = NULL;
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nimk:t:P::", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nimk:t:P::e", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -361,6 +369,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'P':
 			password_char = optarg;
+			break;
+		case 'e':
+			exec_search = "true";
 			break;
 		}
 	}
@@ -490,6 +501,9 @@ int main(int argc, char** argv) {
 			password_char = "*";
 		}
 		map_put(config, "password_char", password_char);
+	}
+	if(exec_search != NULL) {
+		map_put(config, "exec_search", exec_search);
 	}
 
 	gtk_init(&argc, &argv);

@@ -34,8 +34,8 @@ static char* config_dir;
 static bool run_in_term;
 static char* terminal;
 static GtkOrientation outer_orientation;
+static bool exec_search;
 static void (*mode_exec)(const gchar* cmd);
-static bool (*exec_search)();
 
 struct node {
 	char* text, *search_text, *action;
@@ -311,7 +311,7 @@ static GtkWidget* get_first_child(GtkContainer* container) {
 		GtkWidget* child = list->data;
 		GtkAllocation alloc;
 		gtk_widget_get_allocation(child, &alloc);
-		if(alloc.x <= x && alloc.y <= y && alloc.x != -1 && alloc.y != -1 && alloc.width != 1 && alloc.height != 1) {
+		if(alloc.x <= x && alloc.y <= y && alloc.x != -1 && alloc.y != -1 && alloc.width != 1 && alloc.height != 1 && gtk_widget_get_child_visible(child)) {
 			x = alloc.x;
 			y = alloc.y;
 			min_child = child;
@@ -323,10 +323,10 @@ static GtkWidget* get_first_child(GtkContainer* container) {
 
 static void activate_search(GtkEntry* entry, gpointer data) {
 	(void) data;
-	if(exec_search != NULL && exec_search()) {
+	GtkWidget* child = get_first_child(GTK_CONTAINER(inner_box));
+	if(exec_search || child == NULL) {
 		execute_action(mode, gtk_entry_get_text(entry));
 	} else {
-		GtkWidget* child = get_first_child(GTK_CONTAINER(inner_box));
 		GtkWidget* box = gtk_bin_get_child(GTK_BIN(child));
 		execute_action(mode, wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
 	}
@@ -408,7 +408,6 @@ static void* start_thread(void* data) {
 	if(dso == NULL) {
 		init = get_plugin_proc(mode, "_init");
 		mode_exec = get_plugin_proc(mode, "_exec");
-		exec_search = get_plugin_proc(mode, "_exec_search");
 	} else {
 		char* plugins_dir = utils_concat(2, config_dir, "/plugins/");
 		char* full_name = utils_concat(2, plugins_dir, mode);
@@ -417,7 +416,6 @@ static void* start_thread(void* data) {
 		free(plugins_dir);
 		init = dlsym(plugin, "init");
 		mode_exec = dlsym(plugin, "exec");
-		exec_search = dlsym(plugin, "exec_search");
 	}
 
 	if(init != NULL) {
@@ -455,6 +453,7 @@ void wofi_init(struct map* config) {
 	config_dir = map_get(config, "config_dir");
 	terminal = map_get(config, "term");
 	char* password_char = map_get(config, "password_char");
+	exec_search = strcmp(config_get(config, "exec_search", "false"), "true") == 0;
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_realize(window);

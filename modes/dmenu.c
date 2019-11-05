@@ -52,7 +52,3 @@ void wofi_dmenu_exec(const gchar* cmd) {
 	printf("%s\n", cmd);
 	exit(0);
 }
-
-bool wofi_dmenu_exec_search() {
-	return true;
-}

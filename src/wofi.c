@@ -93,6 +93,9 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 		char* tmp = strdup(text);
 		char* mode = NULL;
 
+		if(strchr(tmp, ':') == NULL) {
+			mode = "text";
+		}
 		char* save_ptr;
 		char* str = strtok_r(tmp, ":", &save_ptr);
 		do {

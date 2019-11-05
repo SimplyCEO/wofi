@@ -24,7 +24,7 @@ static int64_t x, y;
 static struct zwlr_layer_shell_v1* shell;
 static GtkWidget* window, *outer_box, *scroll, *entry, *inner_box, *previous_selection = NULL;
 static const gchar* filter;
-static char* mode;
+static char* mode = NULL;
 static time_t filter_time;
 static int64_t filter_rate;
 static bool allow_images, allow_markup;
@@ -35,10 +35,14 @@ static bool run_in_term;
 static char* terminal;
 static GtkOrientation outer_orientation;
 static bool exec_search;
-static void (*mode_exec)(const gchar* cmd);
+static struct map* modes;
 
 struct node {
-	char* text, *search_text, *action;
+	char* mode, *text, *search_text, *action;
+};
+
+struct mode {
+	void (*mode_exec)(const gchar* cmd);
 };
 
 static void nop() {}
@@ -78,11 +82,12 @@ static void get_search(GtkSearchEntry* entry, gpointer data) {
 	gtk_flow_box_invalidate_filter(GTK_FLOW_BOX(inner_box));
 }
 
-static GtkWidget* create_label(char* text, char* search_text, char* action) {
+static GtkWidget* create_label(char* mode, char* text, char* search_text, char* action) {
 	GtkWidget* box = wofi_property_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	gtk_widget_set_name(box, "unselected");
 	GtkStyleContext* style = gtk_widget_get_style_context(box);
 	gtk_style_context_add_class(style, "entry");
+	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "mode", mode);
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "action", action);
 	if(allow_images) {
 		char* tmp = strdup(text);
@@ -137,10 +142,11 @@ static GtkWidget* create_label(char* text, char* search_text, char* action) {
 
 static gboolean _insert_widget(gpointer data) {
 	struct node* node = data;
-	GtkWidget* box = create_label(node->text, node->search_text, node->action);
+	GtkWidget* box = create_label(node->mode, node->text, node->search_text, node->action);
 	gtk_container_add(GTK_CONTAINER(inner_box), box);
 	gtk_widget_show_all(box);
 
+	free(node->mode);
 	free(node->text);
 	free(node->search_text);
 	free(node->action);
@@ -203,8 +209,9 @@ struct wl_list* wofi_read_cache(char* mode) {
 	return cache;
 }
 
-void wofi_insert_widget(char* text, char* search_text, char* action) {
+void wofi_insert_widget(char* mode, char* text, char* search_text, char* action) {
 	struct node* widget = malloc(sizeof(struct node));
+	widget->mode = strdup(mode);
 	widget->text = strdup(text);
 	widget->search_text = strdup(search_text);
 	widget->action = strdup(action);
@@ -237,6 +244,7 @@ void wofi_term_run(const char* cmd) {
 }
 
 static void execute_action(char* mode, const gchar* cmd) {
+	struct mode* mode_ptr = map_get(modes, mode);
 	char* cache_path = get_cache_path(mode);
 	struct wl_list lines;
 	wl_list_init(&lines);
@@ -279,14 +287,14 @@ static void execute_action(char* mode, const gchar* cmd) {
 	fclose(file);
 
 	free(cache_path);
-	mode_exec(cmd);
+	mode_ptr->mode_exec(cmd);
 }
 
 static void activate_item(GtkFlowBox* flow_box, GtkFlowBoxChild* row, gpointer data) {
 	(void) flow_box;
 	(void) data;
 	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
-	execute_action(mode, wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
+	execute_action(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "mode"), wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
 }
 
 static void select_item(GtkFlowBox* flow_box, gpointer data) {
@@ -328,7 +336,7 @@ static void activate_search(GtkEntry* entry, gpointer data) {
 		execute_action(mode, gtk_entry_get_text(entry));
 	} else {
 		GtkWidget* box = gtk_bin_get_child(GTK_BIN(child));
-		execute_action(mode, wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
+		execute_action(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "mode"), wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
 	}
 }
 
@@ -400,14 +408,15 @@ static void* get_plugin_proc(const char* prefix, const char* suffix) {
 	return proc;
 }
 
-static void* start_thread(void* data) {
-	char* mode = data;
+static void add_mode(char* mode) {
 	char* dso = strstr(mode, ".so");
+	struct mode* mode_ptr = calloc(1, sizeof(struct mode));
+	map_put_void(modes, mode, mode_ptr);
 
 	void (*init)();
 	if(dso == NULL) {
 		init = get_plugin_proc(mode, "_init");
-		mode_exec = get_plugin_proc(mode, "_exec");
+		mode_ptr->mode_exec = get_plugin_proc(mode, "_exec");
 	} else {
 		char* plugins_dir = utils_concat(2, config_dir, "/plugins/");
 		char* full_name = utils_concat(2, plugins_dir, mode);
@@ -415,7 +424,7 @@ static void* start_thread(void* data) {
 		free(full_name);
 		free(plugins_dir);
 		init = dlsym(plugin, "init");
-		mode_exec = dlsym(plugin, "exec");
+		mode_ptr->mode_exec = dlsym(plugin, "exec");
 	}
 
 	if(init != NULL) {
@@ -424,7 +433,23 @@ static void* start_thread(void* data) {
 		fprintf(stderr, "I would love to show %s but Idk what it is\n", mode);
 		exit(1);
 	}
+}
 
+static void* start_thread(void* data) {
+	char* modes = data;
+	if(strchr(modes, ',') != NULL) {
+		char* save_ptr;
+		char* _mode = strtok_r(modes, ",", &save_ptr);
+		if(mode == NULL) {
+			mode = _mode;
+		}
+		do {
+			add_mode(_mode);
+		} while((_mode = strtok_r(NULL, ",", &save_ptr)) != NULL);
+	} else {
+		mode = modes;
+		add_mode(modes);
+	}
 	return NULL;
 }
 
@@ -434,7 +459,7 @@ void wofi_init(struct map* config) {
 	x = strtol(config_get(config, "x", "-1"), NULL, 10);
 	y = strtol(config_get(config, "y", "-1"), NULL, 10);
 	bool normal_window = strcmp(config_get(config, "normal_window", "false"), "true") == 0;
-	mode = map_get(config, "mode");
+	char* mode = map_get(config, "mode");
 	uint8_t orientation = config_get_mnemonic(config, "orientation", "vertical", 2, "vertical", "horizontal");
 	outer_orientation = config_get_mnemonic(config, "orientation", "vertical", 2, "horizontal", "vertical");
 	uint8_t halign = config_get_mnemonic(config, "halign", "fill", 4, "fill", "start", "end", "center");
@@ -454,6 +479,7 @@ void wofi_init(struct map* config) {
 	terminal = map_get(config, "term");
 	char* password_char = map_get(config, "password_char");
 	exec_search = strcmp(config_get(config, "exec_search", "false"), "true") == 0;
+	modes = map_init_void();
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_realize(window);

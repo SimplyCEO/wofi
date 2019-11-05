@@ -91,7 +91,7 @@ static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
 		}
 		map_put(entries, entry->d_name, "true");
 		char* search_text = get_search_text(full_path);
-		wofi_insert_widget(text, search_text, full_path);
+		wofi_insert_widget("drun", text, search_text, full_path);
 		free(text);
 		free(search_text);
 		free(full_path);
@@ -111,7 +111,7 @@ void wofi_drun_init() {
 			goto cache_cont;
 		}
 		char* search_text = get_search_text(node->line);
-		wofi_insert_widget(text, search_text, node->line);
+		wofi_insert_widget("drun", text, search_text, node->line);
 		map_put(cached, node->line, "true");
 		free(search_text);
 		free(text);

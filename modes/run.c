@@ -25,7 +25,7 @@ void wofi_run_init() {
 	wl_list_for_each_safe(node, tmp, cache, link) {
 		char* text = strrchr(node->line, '/') + 1;
 		char* search_text = utils_concat(2, text, node->line);
-		wofi_insert_widget(text, search_text, node->line);
+		wofi_insert_widget("run", text, search_text, node->line);
 		map_put(cached, node->line, "true");
 		free(search_text);
 		free(node->line);
@@ -53,7 +53,7 @@ void wofi_run_init() {
 			stat(full_path, &info);
 			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path)) {
 				char* search_text = utils_concat(2, entry->d_name, full_path);
-				wofi_insert_widget(entry->d_name, search_text, full_path);
+				wofi_insert_widget("run", entry->d_name, search_text, full_path);
 				free(search_text);
 			}
 			free(full_path);

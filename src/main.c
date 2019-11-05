@@ -57,7 +57,7 @@ static void print_usage(char** argv) {
 	printf("--show\t\t-S\tSpecifies the mode to run in\n");
 	printf("--width\t\t-W\tSpecifies the surface width\n");
 	printf("--height\t-H\tSpecifies the surface height\n");
-	printf("\t\t-p\tPrompt to display\n");
+	printf("--prompt\t-p\tPrompt to display\n");
 	printf("--xoffset\t-x\tThe x offset\n");
 	printf("--yoffset\t-y\tThe y offset\n");
 	printf("--normal-window\t-n\tRender to a normal window\n");
@@ -229,6 +229,12 @@ int main(int argc, char** argv) {
 			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'H'
+		},
+		{
+			.name = "prompt",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'p'
 		},
 		{
 			.name = "xoffset",

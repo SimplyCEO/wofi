@@ -47,13 +47,3 @@ char* utils_concat(size_t arg_count, ...) {
 	va_end(args);
 	return buffer;
 }
-
-size_t utils_split(char* str, const char chr) {
-	char* split = strchr(str, chr);
-	size_t count = 1;
-	for(; split != NULL; ++count) {
-		*split = 0;
-		split = strchr(split + 1, chr);
-	}
-	return count;
-}

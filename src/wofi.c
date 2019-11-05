@@ -91,16 +91,16 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "action", action);
 	if(allow_images) {
 		char* tmp = strdup(text);
-		char* original = tmp;
 		char* mode = NULL;
 
-		size_t colon_count = utils_split(tmp, ':');
-		for(size_t count = 0; count < colon_count; ++count) {
+		char* save_ptr;
+		char* str = strtok_r(tmp, ":", &save_ptr);
+		do {
 			if(mode == NULL) {
-				mode = tmp;
+				mode = str;
 			} else {
 				if(strcmp(mode, "img") == 0) {
-					GdkPixbuf* buf = gdk_pixbuf_new_from_file(tmp, NULL);
+					GdkPixbuf* buf = gdk_pixbuf_new_from_file(str, NULL);
 					int width = gdk_pixbuf_get_width(buf);
 					int height = gdk_pixbuf_get_height(buf);
 					if(height > width) {
@@ -118,7 +118,7 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 					gtk_widget_set_name(img, "img");
 					gtk_container_add(GTK_CONTAINER(box), img);
 				} else if(strcmp(mode, "text") == 0) {
-					GtkWidget* label = gtk_label_new(tmp);
+					GtkWidget* label = gtk_label_new(str);
 					gtk_widget_set_name(label, "text");
 					gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
 					gtk_label_set_xalign(GTK_LABEL(label), 0);
@@ -126,9 +126,8 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 				}
 				mode = NULL;
 			}
-			tmp += strlen(tmp) + 1;
-		}
-		free(original);
+		} while((str = strtok_r(NULL, ":", &save_ptr)) != NULL);
+		free(tmp);
 	} else {
 		GtkWidget* label = gtk_label_new(text);
 		gtk_widget_set_name(label, "text");
@@ -154,7 +153,7 @@ static gboolean _insert_widget(gpointer data) {
 	return FALSE;
 }
 
-static char* get_cache_path(char* mode) {
+static char* get_cache_path(const gchar* mode) {
 	if(cache_file != NULL) {
 		return strdup(cache_file);
 	}
@@ -243,7 +242,7 @@ void wofi_term_run(const char* cmd) {
 	exit(1);
 }
 
-static void execute_action(char* mode, const gchar* cmd) {
+static void execute_action(const gchar* mode, const gchar* cmd) {
 	struct mode* mode_ptr = map_get(modes, mode);
 	char* cache_path = get_cache_path(mode);
 	struct wl_list lines;
@@ -436,19 +435,15 @@ static void add_mode(char* mode) {
 }
 
 static void* start_thread(void* data) {
-	char* modes = data;
-	if(strchr(modes, ',') != NULL) {
+	(void) data;
+	if(strchr(mode, ',') != NULL) {
 		char* save_ptr;
-		char* _mode = strtok_r(modes, ",", &save_ptr);
-		if(mode == NULL) {
-			mode = _mode;
-		}
+		char* str = strtok_r(mode, ",", &save_ptr);
 		do {
-			add_mode(_mode);
-		} while((_mode = strtok_r(NULL, ",", &save_ptr)) != NULL);
+			add_mode(str);
+		} while((str = strtok_r(NULL, ",", &save_ptr)) != NULL);
 	} else {
-		mode = modes;
-		add_mode(modes);
+		add_mode(mode);
 	}
 	return NULL;
 }
@@ -459,7 +454,7 @@ void wofi_init(struct map* config) {
 	x = strtol(config_get(config, "x", "-1"), NULL, 10);
 	y = strtol(config_get(config, "y", "-1"), NULL, 10);
 	bool normal_window = strcmp(config_get(config, "normal_window", "false"), "true") == 0;
-	char* mode = map_get(config, "mode");
+	mode = map_get(config, "mode");
 	uint8_t orientation = config_get_mnemonic(config, "orientation", "vertical", 2, "vertical", "horizontal");
 	outer_orientation = config_get_mnemonic(config, "orientation", "vertical", 2, "horizontal", "vertical");
 	uint8_t halign = config_get_mnemonic(config, "halign", "fill", 4, "fill", "start", "end", "center");
@@ -551,7 +546,7 @@ void wofi_init(struct map* config) {
 	g_signal_connect(window, "key-press-event", G_CALLBACK(key_press), NULL);
 
 	pthread_t thread;
-	pthread_create(&thread, NULL, start_thread, mode);
+	pthread_create(&thread, NULL, start_thread, NULL);
 	gtk_widget_grab_focus(scroll);
 	gtk_window_set_title(GTK_WINDOW(window), prompt);
 	gtk_widget_show_all(window);

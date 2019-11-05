@@ -36,19 +36,20 @@ void wofi_run_init() {
 	free(cache);
 
 	char* path = strdup(getenv("PATH"));
-	char* original_path = path;
-	size_t colon_count = utils_split(path, ':');
-	for(size_t count = 0; count < colon_count; ++count) {
-		DIR* dir = opendir(path);
+
+	char* save_ptr;
+	char* str = strtok_r(path, ":", &save_ptr);
+	do {
+		DIR* dir = opendir(str);
 		if(dir == NULL) {
-			goto cont;
+			continue;
 		}
 		struct dirent* entry;
 		while((entry = readdir(dir)) != NULL) {
 			if(strcmp(entry->d_name, ".") == 0 || strcmp(entry->d_name, "..") == 0) {
 				continue;
 			}
-			char* full_path = utils_concat(3, path, "/", entry->d_name);
+			char* full_path = utils_concat(3, str, "/", entry->d_name);
 			struct stat info;
 			stat(full_path, &info);
 			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path)) {
@@ -59,10 +60,8 @@ void wofi_run_init() {
 			free(full_path);
 		}
 		closedir(dir);
-		cont:
-		path += strlen(path) + 1;
-	}
-	free(original_path);
+	} while((str = strtok_r(NULL, ":", &save_ptr)) != NULL);
+	free(path);
 	map_free(cached);
 }
 

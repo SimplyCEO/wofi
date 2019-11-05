@@ -135,17 +135,16 @@ void wofi_drun_init() {
 		data_dirs = "/usr/local/share:/usr/share";
 	}
 	char* dirs = utils_concat(3, data_home, ":", data_dirs);
-	char* original_dirs = dirs;
 	free(data_home);
 
-	size_t colon_count = utils_split(dirs, ':');
-	for(size_t count = 0; count < colon_count; ++count) {
-		char* app_dir = utils_concat(2, dirs, "/applications");
+	char* save_ptr;
+	char* str = strtok_r(dirs, ":", &save_ptr);
+	do {
+		char* app_dir = utils_concat(2, str, "/applications");
 		insert_dir(app_dir, cached, entries);
-		dirs += strlen(dirs) + 1;
 		free(app_dir);
-	}
-	free(original_dirs);
+	} while((str = strtok_r(NULL, ":", &save_ptr)) != NULL);
+	free(dirs);
 	map_free(cached);
 	map_free(entries);
 }

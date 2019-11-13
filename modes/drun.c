@@ -55,8 +55,9 @@ static char* get_search_text(char* file) {
 	const char* name = g_app_info_get_display_name(G_APP_INFO(info));
 	const char* exec = g_app_info_get_executable(G_APP_INFO(info));
 	const char* description = g_app_info_get_description(G_APP_INFO(info));
+	const char* categories = g_desktop_app_info_get_categories(info);
 	const char* const* keywords = g_desktop_app_info_get_keywords(info);
-	return utils_concat(5, name, file, exec == NULL ? "" : exec, description == NULL ? "" : description, keywords == NULL ? (const char* const*) "" : keywords);
+	return utils_concat(6, name, file, exec == NULL ? "" : exec, description == NULL ? "" : description, categories == NULL ? "" : categories, keywords == NULL ? (const char* const*) "" : keywords);
 }
 
 static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {

@@ -34,7 +34,7 @@ void wofi_run_init() {
 			search_prefix = text;
 		}
 		char* search_text = utils_concat(2, search_prefix, node->line);
-		wofi_insert_widget("run", text, search_text, node->line);
+		wofi_insert_widget("run", &text, search_text, &node->line, 1);
 		map_put(cached, node->line, "true");
 		free(search_text);
 		free(node->line);
@@ -63,8 +63,10 @@ void wofi_run_init() {
 			stat(full_path, &info);
 			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path)) {
 				char* search_text = utils_concat(2, entry->d_name, full_path);
-				wofi_insert_widget("run", entry->d_name, search_text, full_path);
+				char* text = strdup(entry->d_name);
+				wofi_insert_widget("run", &text, search_text, &full_path, 1);
 				free(search_text);
+				free(text);
 			}
 			free(full_path);
 		}

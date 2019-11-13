@@ -38,7 +38,8 @@ static bool exec_search;
 static struct map* modes;
 
 struct node {
-	char* mode, *text, *search_text, *action;
+	size_t action_count;
+	char* mode, **text, *search_text, **actions;
 };
 
 struct mode {
@@ -142,20 +143,6 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 	return box;
 }
 
-static gboolean _insert_widget(gpointer data) {
-	struct node* node = data;
-	GtkWidget* box = create_label(node->mode, node->text, node->search_text, node->action);
-	gtk_container_add(GTK_CONTAINER(inner_box), box);
-	gtk_widget_show_all(box);
-
-	free(node->mode);
-	free(node->text);
-	free(node->search_text);
-	free(node->action);
-	free(node);
-	return FALSE;
-}
-
 static char* get_cache_path(const gchar* mode) {
 	if(cache_file != NULL) {
 		return strdup(cache_file);
@@ -167,6 +154,100 @@ static char* get_cache_path(const gchar* mode) {
 		cache_path = utils_concat(3, cache_path, "/wofi-", mode);
 	}
 	return cache_path;
+}
+
+static void execute_action(const gchar* mode, const gchar* cmd, bool primary_action) {
+	struct mode* mode_ptr = map_get(modes, mode);
+	if(primary_action) {
+		char* cache_path = get_cache_path(mode);
+		struct wl_list lines;
+		wl_list_init(&lines);
+		bool inc_count = false;
+		if(access(cache_path, R_OK) == 0) {
+			FILE* file = fopen(cache_path, "r");
+			char* line = NULL;
+			size_t size = 0;
+			while(getline(&line, &size, file) != -1) {
+				struct cache_line* node = malloc(sizeof(struct cache_line));
+				if(strstr(line, cmd) != NULL) {
+					uint64_t count = strtol(line, NULL, 10) + 1;
+					char num[6];
+					snprintf(num, 5, "%" PRIu64, count);
+					node->line = utils_concat(4, num, " ", cmd, "\n");
+					inc_count = true;
+				} else {
+					node->line = strdup(line);
+				}
+				wl_list_insert(&lines, &node->link);
+			}
+			free(line);
+			fclose(file);
+		}
+		if(!inc_count) {
+			struct cache_line* node = malloc(sizeof(struct cache_line));
+			node->line = utils_concat(3, "1 ", cmd, "\n");
+			wl_list_insert(&lines, &node->link);
+		}
+
+		FILE* file = fopen(cache_path, "w");
+		struct cache_line* node, *tmp;
+		wl_list_for_each_safe(node, tmp, &lines, link) {
+			fwrite(node->line, 1, strlen(node->line), file);
+			free(node->line);
+			wl_list_remove(&node->link);
+			free(node);
+		}
+
+		fclose(file);
+
+		free(cache_path);
+	}
+	mode_ptr->mode_exec(cmd);
+}
+
+static void activate_item(GtkFlowBox* flow_box, GtkFlowBoxChild* row, gpointer data) {
+	(void) flow_box;
+	(void) data;
+	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
+	bool primary_action = GTK_IS_EXPANDER(box);
+	if(primary_action) {
+		box = gtk_expander_get_label_widget(GTK_EXPANDER(box));
+	}
+	execute_action(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "mode"), wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"), primary_action);
+}
+
+static gboolean _insert_widget(gpointer data) {
+	struct node* node = data;
+	GtkWidget* parent;
+	if(node->action_count > 1) {
+		parent = gtk_expander_new("");
+		GtkWidget* box = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
+		gtk_expander_set_label_widget(GTK_EXPANDER(parent), box);
+		GtkWidget* exp_box = gtk_list_box_new();
+		g_signal_connect(exp_box, "row-activated", G_CALLBACK(activate_item), NULL);
+		gtk_container_add(GTK_CONTAINER(parent), exp_box);
+		for(size_t count = 1; count < node->action_count; ++count) {
+			box = create_label(node->mode, node->text[count], node->search_text, node->actions[count]);
+			gtk_container_add(GTK_CONTAINER(exp_box), box);
+		}
+	} else {
+		parent = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
+	}
+	gtk_container_add(GTK_CONTAINER(inner_box), parent);
+	gtk_widget_show_all(parent);
+
+	free(node->mode);
+	for(size_t count = 0; count < node->action_count; ++count) {
+		free(node->text[count]);
+	}
+	free(node->text);
+	free(node->search_text);
+	for(size_t count = 0; count < node->action_count; ++count) {
+		free(node->actions[count]);
+	}
+	free(node->actions);
+	free(node);
+	return FALSE;
 }
 
 struct wl_list* wofi_read_cache(char* mode) {
@@ -211,12 +292,19 @@ struct wl_list* wofi_read_cache(char* mode) {
 	return cache;
 }
 
-void wofi_insert_widget(char* mode, char* text, char* search_text, char* action) {
+void wofi_insert_widget(char* mode, char** text, char* search_text, char** actions, size_t action_count) {
 	struct node* widget = malloc(sizeof(struct node));
 	widget->mode = strdup(mode);
-	widget->text = strdup(text);
+	widget->text = malloc(action_count * sizeof(char*));
+	for(size_t count = 0; count < action_count; ++count) {
+		widget->text[count] = strdup(text[count]);
+	}
 	widget->search_text = strdup(search_text);
-	widget->action = strdup(action);
+	widget->action_count = action_count;
+	widget->actions = malloc(action_count * sizeof(char*));
+	for(size_t count = 0; count < action_count; ++count) {
+		widget->actions[count] = strdup(actions[count]);
+	}
 	g_idle_add(_insert_widget, widget);
 	utils_sleep_millis(1);
 }
@@ -243,60 +331,6 @@ void wofi_term_run(const char* cmd) {
 	}
 	fprintf(stderr, "No terminal emulator found please set term in config or use --term\n");
 	exit(1);
-}
-
-static void execute_action(const gchar* mode, const gchar* cmd) {
-	struct mode* mode_ptr = map_get(modes, mode);
-	char* cache_path = get_cache_path(mode);
-	struct wl_list lines;
-	wl_list_init(&lines);
-	bool inc_count = false;
-	if(access(cache_path, R_OK) == 0) {
-		FILE* file = fopen(cache_path, "r");
-		char* line = NULL;
-		size_t size = 0;
-		while(getline(&line, &size, file) != -1) {
-			struct cache_line* node = malloc(sizeof(struct cache_line));
-			if(strstr(line, cmd) != NULL) {
-				uint64_t count = strtol(line, NULL, 10) + 1;
-				char num[6];
-				snprintf(num, 5, "%" PRIu64, count);
-				node->line = utils_concat(4, num, " ", cmd, "\n");
-				inc_count = true;
-			} else {
-				node->line = strdup(line);
-			}
-			wl_list_insert(&lines, &node->link);
-		}
-		free(line);
-		fclose(file);
-	}
-	if(!inc_count) {
-		struct cache_line* node = malloc(sizeof(struct cache_line));
-		node->line = utils_concat(3, "1 ", cmd, "\n");
-		wl_list_insert(&lines, &node->link);
-	}
-
-	FILE* file = fopen(cache_path, "w");
-	struct cache_line* node, *tmp;
-	wl_list_for_each_safe(node, tmp, &lines, link) {
-		fwrite(node->line, 1, strlen(node->line), file);
-		free(node->line);
-		wl_list_remove(&node->link);
-		free(node);
-	}
-
-	fclose(file);
-
-	free(cache_path);
-	mode_ptr->mode_exec(cmd);
-}
-
-static void activate_item(GtkFlowBox* flow_box, GtkFlowBoxChild* row, gpointer data) {
-	(void) flow_box;
-	(void) data;
-	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
-	execute_action(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "mode"), wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
 }
 
 static void select_item(GtkFlowBox* flow_box, gpointer data) {
@@ -335,16 +369,23 @@ static void activate_search(GtkEntry* entry, gpointer data) {
 	(void) data;
 	GtkWidget* child = get_first_child(GTK_CONTAINER(inner_box));
 	if(exec_search || child == NULL) {
-		execute_action(mode, gtk_entry_get_text(entry));
+		execute_action(mode, gtk_entry_get_text(entry), true);
 	} else {
 		GtkWidget* box = gtk_bin_get_child(GTK_BIN(child));
-		execute_action(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "mode"), wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
+		bool primary_action = GTK_IS_EXPANDER(box);
+		if(primary_action) {
+			box = gtk_expander_get_label_widget(GTK_EXPANDER(box));
+		}
+		execute_action(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "mode"), wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"), primary_action);
 	}
 }
 
 static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
 	(void) data;
 	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
+	if(GTK_IS_EXPANDER(box)) {
+		box = gtk_expander_get_label_widget(GTK_EXPANDER(box));
+	}
 	const gchar* text = wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "filter");
 	if(filter == NULL || strcmp(filter, "") == 0) {
 		return TRUE;

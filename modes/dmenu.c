@@ -23,7 +23,7 @@ void wofi_dmenu_init() {
 
 	struct cache_line* node, *tmp;
 	wl_list_for_each_safe(node, tmp, cache, link) {
-		wofi_insert_widget("dmenu", node->line, node->line, node->line);
+		wofi_insert_widget("dmenu", &node->line, node->line, &node->line, 1);
 		map_put(cached, node->line, "true");
 		free(node->line);
 		wl_list_remove(&node->link);
@@ -42,7 +42,7 @@ void wofi_dmenu_init() {
 		if(map_contains(cached, line)) {
 			continue;
 		}
-		wofi_insert_widget("dmenu", line, line, line);
+		wofi_insert_widget("dmenu", &line, line, &line, 1);
 	}
 	free(line);
 	map_free(cached);

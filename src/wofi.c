@@ -224,6 +224,7 @@ static gboolean _insert_widget(gpointer data) {
 		GtkWidget* box = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
 		gtk_expander_set_label_widget(GTK_EXPANDER(parent), box);
 		GtkWidget* exp_box = gtk_list_box_new();
+		gtk_list_box_set_activate_on_single_click(GTK_LIST_BOX(exp_box), FALSE);
 		g_signal_connect(exp_box, "row-activated", G_CALLBACK(activate_item), NULL);
 		gtk_container_add(GTK_CONTAINER(parent), exp_box);
 		for(size_t count = 1; count < node->action_count; ++count) {

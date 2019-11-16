@@ -17,9 +17,11 @@
 
 #include <wofi.h>
 
+#define MODE "run"
+
 void wofi_run_init() {
 	struct map* cached = map_init();
-	struct wl_list* cache = wofi_read_cache("run");
+	struct wl_list* cache = wofi_read_cache(MODE);
 
 	struct cache_line* node, *tmp;
 	wl_list_for_each_safe(node, tmp, cache, link) {
@@ -34,7 +36,7 @@ void wofi_run_init() {
 			search_prefix = text;
 		}
 		char* search_text = utils_concat(2, search_prefix, node->line);
-		wofi_insert_widget("run", &text, search_text, &node->line, 1);
+		wofi_insert_widget(MODE, &text, search_text, &node->line, 1);
 		map_put(cached, node->line, "true");
 		free(search_text);
 		free(node->line);
@@ -64,7 +66,7 @@ void wofi_run_init() {
 			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path)) {
 				char* search_text = utils_concat(2, entry->d_name, full_path);
 				char* text = strdup(entry->d_name);
-				wofi_insert_widget("run", &text, search_text, &full_path, 1);
+				wofi_insert_widget(MODE, &text, search_text, &full_path, 1);
 				free(search_text);
 				free(text);
 			}
@@ -77,6 +79,7 @@ void wofi_run_init() {
 }
 
 void wofi_run_exec(const gchar* cmd) {
+	wofi_write_cache(MODE, cmd);
 	if(wofi_run_in_term()) {
 		wofi_term_run(cmd);
 	}

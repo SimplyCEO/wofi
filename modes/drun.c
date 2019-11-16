@@ -17,6 +17,8 @@
 
 #include <wofi.h>
 
+#define MODE "drun"
+
 static char* get_text(char* file, char* action) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(file);
 	if(info == NULL || g_desktop_app_info_get_is_hidden(info) || g_desktop_app_info_get_nodisplay(info)) {
@@ -158,7 +160,7 @@ static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
 		char** actions = get_action_actions(full_path, &action_count);
 
 		char* search_text = get_search_text(full_path);
-		wofi_insert_widget("drun", text, search_text, actions, action_count);
+		wofi_insert_widget(MODE, text, search_text, actions, action_count);
 
 		for(size_t count = 0; count < action_count; ++count) {
 			free(actions[count]);
@@ -176,7 +178,7 @@ static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
 void wofi_drun_init() {
 	struct map* cached = map_init();
 	struct map* entries = map_init();
-	struct wl_list* cache = wofi_read_cache("drun");
+	struct wl_list* cache = wofi_read_cache(MODE);
 
 	struct cache_line* node, *tmp;
 	wl_list_for_each_safe(node, tmp, cache, link) {
@@ -189,7 +191,7 @@ void wofi_drun_init() {
 		char** actions = get_action_actions(node->line, &action_count);
 
 		char* search_text = get_search_text(node->line);
-		wofi_insert_widget("drun", text, search_text, actions, action_count);
+		wofi_insert_widget(MODE, text, search_text, actions, action_count);
 		map_put(cached, node->line, "true");
 
 		free(search_text);
@@ -247,10 +249,12 @@ static void launch_done(GObject* obj, GAsyncResult* result, gpointer data) {
 void wofi_drun_exec(const gchar* cmd) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(cmd);
 	if(G_IS_DESKTOP_APP_INFO(info)) {
+		wofi_write_cache(MODE, cmd);
 		g_app_info_launch_uris_async(G_APP_INFO(info), NULL, NULL, NULL, launch_done, (gchar*) cmd);
 	} else if(strrchr(cmd, ' ') != NULL) {
 		char* space = strrchr(cmd, ' ');
 		*space = 0;
+		wofi_write_cache(MODE, cmd);
 		info = g_desktop_app_info_new_from_filename(cmd);
 		char* action = space + 1;
 		g_desktop_app_info_launch_action(info, action, NULL);

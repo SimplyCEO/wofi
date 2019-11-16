@@ -17,13 +17,15 @@
 
 #include <wofi.h>
 
+#define MODE "dmenu"
+
 void wofi_dmenu_init() {
 	struct map* cached = map_init();
-	struct wl_list* cache = wofi_read_cache("dmenu");
+	struct wl_list* cache = wofi_read_cache(MODE);
 
 	struct cache_line* node, *tmp;
 	wl_list_for_each_safe(node, tmp, cache, link) {
-		wofi_insert_widget("dmenu", &node->line, node->line, &node->line, 1);
+		wofi_insert_widget(MODE, &node->line, node->line, &node->line, 1);
 		map_put(cached, node->line, "true");
 		free(node->line);
 		wl_list_remove(&node->link);
@@ -42,13 +44,14 @@ void wofi_dmenu_init() {
 		if(map_contains(cached, line)) {
 			continue;
 		}
-		wofi_insert_widget("dmenu", &line, line, &line, 1);
+		wofi_insert_widget(MODE, &line, line, &line, 1);
 	}
 	free(line);
 	map_free(cached);
 }
 
 void wofi_dmenu_exec(const gchar* cmd) {
+	wofi_write_cache(MODE, cmd);
 	printf("%s\n", cmd);
 	exit(0);
 }

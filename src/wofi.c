@@ -156,52 +156,8 @@ static char* get_cache_path(const gchar* mode) {
 	return cache_path;
 }
 
-static void execute_action(const gchar* mode, const gchar* cmd, bool primary_action) {
+static void execute_action(const gchar* mode, const gchar* cmd) {
 	struct mode* mode_ptr = map_get(modes, mode);
-	if(primary_action) {
-		char* cache_path = get_cache_path(mode);
-		struct wl_list lines;
-		wl_list_init(&lines);
-		bool inc_count = false;
-		if(access(cache_path, R_OK) == 0) {
-			FILE* file = fopen(cache_path, "r");
-			char* line = NULL;
-			size_t size = 0;
-			while(getline(&line, &size, file) != -1) {
-				struct cache_line* node = malloc(sizeof(struct cache_line));
-				if(strstr(line, cmd) != NULL) {
-					uint64_t count = strtol(line, NULL, 10) + 1;
-					char num[6];
-					snprintf(num, 5, "%" PRIu64, count);
-					node->line = utils_concat(4, num, " ", cmd, "\n");
-					inc_count = true;
-				} else {
-					node->line = strdup(line);
-				}
-				wl_list_insert(&lines, &node->link);
-			}
-			free(line);
-			fclose(file);
-		}
-		if(!inc_count) {
-			struct cache_line* node = malloc(sizeof(struct cache_line));
-			node->line = utils_concat(3, "1 ", cmd, "\n");
-			wl_list_insert(&lines, &node->link);
-		}
-
-		FILE* file = fopen(cache_path, "w");
-		struct cache_line* node, *tmp;
-		wl_list_for_each_safe(node, tmp, &lines, link) {
-			fwrite(node->line, 1, strlen(node->line), file);
-			free(node->line);
-			wl_list_remove(&node->link);
-			free(node);
-		}
-
-		fclose(file);
-
-		free(cache_path);
-	}
 	mode_ptr->mode_exec(cmd);
 }
 
@@ -213,7 +169,7 @@ static void activate_item(GtkFlowBox* flow_box, GtkFlowBoxChild* row, gpointer d
 	if(primary_action) {
 		box = gtk_expander_get_label_widget(GTK_EXPANDER(box));
 	}
-	execute_action(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "mode"), wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"), primary_action);
+	execute_action(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "mode"), wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
 }
 
 static gboolean _insert_widget(gpointer data) {
@@ -249,6 +205,51 @@ static gboolean _insert_widget(gpointer data) {
 	free(node->actions);
 	free(node);
 	return FALSE;
+}
+
+void wofi_write_cache(const gchar* mode, const gchar* cmd) {
+	char* cache_path = get_cache_path(mode);
+	struct wl_list lines;
+	wl_list_init(&lines);
+	bool inc_count = false;
+	if(access(cache_path, R_OK) == 0) {
+		FILE* file = fopen(cache_path, "r");
+		char* line = NULL;
+		size_t size = 0;
+		while(getline(&line, &size, file) != -1) {
+			struct cache_line* node = malloc(sizeof(struct cache_line));
+			if(strstr(line, cmd) != NULL) {
+				uint64_t count = strtol(line, NULL, 10) + 1;
+				char num[6];
+				snprintf(num, 5, "%" PRIu64, count);
+				node->line = utils_concat(4, num, " ", cmd, "\n");
+				inc_count = true;
+			} else {
+				node->line = strdup(line);
+			}
+			wl_list_insert(&lines, &node->link);
+		}
+		free(line);
+		fclose(file);
+	}
+	if(!inc_count) {
+		struct cache_line* node = malloc(sizeof(struct cache_line));
+		node->line = utils_concat(3, "1 ", cmd, "\n");
+		wl_list_insert(&lines, &node->link);
+	}
+
+	FILE* file = fopen(cache_path, "w");
+	struct cache_line* node, *tmp;
+	wl_list_for_each_safe(node, tmp, &lines, link) {
+		fwrite(node->line, 1, strlen(node->line), file);
+		free(node->line);
+		wl_list_remove(&node->link);
+		free(node);
+	}
+
+	fclose(file);
+
+	free(cache_path);
 }
 
 struct wl_list* wofi_read_cache(char* mode) {
@@ -370,14 +371,14 @@ static void activate_search(GtkEntry* entry, gpointer data) {
 	(void) data;
 	GtkWidget* child = get_first_child(GTK_CONTAINER(inner_box));
 	if(exec_search || child == NULL) {
-		execute_action(mode, gtk_entry_get_text(entry), true);
+		execute_action(mode, gtk_entry_get_text(entry));
 	} else {
 		GtkWidget* box = gtk_bin_get_child(GTK_BIN(child));
 		bool primary_action = GTK_IS_EXPANDER(box);
 		if(primary_action) {
 			box = gtk_expander_get_label_widget(GTK_EXPANDER(box));
 		}
-		execute_action(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "mode"), wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"), primary_action);
+		execute_action(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "mode"), wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
 	}
 }
 

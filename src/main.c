@@ -67,6 +67,7 @@ static void print_usage(char** argv) {
 	printf("--term\t\t-t\tSpecifies the terminal to use when running in a term\n");
 	printf("--password\t-P\tRuns in password mode\n");
 	printf("--exec-search\t-e\tMakes enter always use the search contents not the first result\n");
+	printf("--hide-scroll\t-b\tHides the scroll bars\n");
 	exit(0);
 }
 
@@ -291,6 +292,12 @@ int main(int argc, char** argv) {
 			.val = 'e'
 		},
 		{
+			.name = "hide-scroll",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'b'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -314,8 +321,9 @@ int main(int argc, char** argv) {
 	char* terminal = NULL;
 	char* password_char = "false";
 	char* exec_search = NULL;
+	char* hide_scroll = NULL;
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nimk:t:P::e", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nimk:t:P::eb", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -378,6 +386,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'e':
 			exec_search = "true";
+			break;
+		case 'b':
+			hide_scroll = "true";
 			break;
 		}
 	}
@@ -511,6 +522,9 @@ int main(int argc, char** argv) {
 	}
 	if(exec_search != NULL) {
 		map_put(config, "exec_search", exec_search);
+	}
+	if(hide_scroll != NULL) {
+		map_put(config, "hide_scroll", hide_scroll);
 	}
 
 	gtk_init(&argc, &argv);

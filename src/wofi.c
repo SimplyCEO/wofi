@@ -520,6 +520,7 @@ void wofi_init(struct map* config) {
 	terminal = map_get(config, "term");
 	char* password_char = map_get(config, "password_char");
 	exec_search = strcmp(config_get(config, "exec_search", "false"), "true") == 0;
+	bool hide_scroll = strcmp(config_get(config, "hide_scroll", "false"), "true") == 0;
 	modes = map_init_void();
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -567,6 +568,9 @@ void wofi_init(struct map* config) {
 	gtk_widget_set_name(scroll, "scroll");
 	gtk_container_add(GTK_CONTAINER(outer_box), scroll);
 	gtk_widget_set_size_request(scroll, width, height);
+	if(hide_scroll) {
+		gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_EXTERNAL, GTK_POLICY_EXTERNAL);
+	}
 
 	inner_box = gtk_flow_box_new();
 	gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(inner_box), 1);

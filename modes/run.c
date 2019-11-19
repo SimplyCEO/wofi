@@ -79,11 +79,32 @@ void wofi_run_init() {
 }
 
 void wofi_run_exec(const gchar* cmd) {
-	wofi_write_cache(MODE, cmd);
 	if(wofi_run_in_term()) {
+		wofi_write_cache(MODE, cmd);
 		wofi_term_run(cmd);
 	}
-	execl(cmd, cmd, NULL);
+	if(wofi_mod_control()) {
+		char* tmp = strdup(cmd);
+		size_t space_count = 2;
+		char* space;
+		while((space = strchr(tmp, ' ')) != NULL) {
+			++space_count;
+			*space = '\n';
+		}
+		char** args = malloc(space_count * sizeof(char*));
+		char* save_ptr;
+		char* str = strtok_r(tmp, "\n", &save_ptr);
+		size_t count = 0;
+		do {
+			args[count++] = str;
+		} while((str = strtok_r(NULL, "\n", &save_ptr)) != NULL);
+		args[space_count - 1] = NULL;
+		wofi_write_cache(MODE, tmp);
+		execvp(tmp, args);
+	} else {
+		wofi_write_cache(MODE, cmd);
+		execl(cmd, cmd, NULL);
+	}
 	fprintf(stderr, "%s cannot be executed\n", cmd);
 	exit(errno);
 }

@@ -32,6 +32,7 @@ static uint64_t image_size;
 static char* cache_file = NULL;
 static char* config_dir;
 static bool run_in_term;
+static bool mod_ctrl;
 static char* terminal;
 static GtkOrientation outer_orientation;
 static bool exec_search;
@@ -323,6 +324,10 @@ bool wofi_run_in_term() {
 	return run_in_term;
 }
 
+bool wofi_mod_control() {
+	return mod_ctrl;
+}
+
 void wofi_term_run(const char* cmd) {
 	if(terminal != NULL) {
 		execlp(terminal, terminal, "--", cmd, NULL);
@@ -413,8 +418,12 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		break;
 	case GDK_KEY_Return:
 		run_in_term = (event->key.state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK;
+		mod_ctrl = (event->key.state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK;
 		if(run_in_term) {
 			event->key.state &= ~GDK_SHIFT_MASK;
+		}
+		if(mod_ctrl) {
+			event->key.state &= ~GDK_CONTROL_MASK;
 		}
 		if(gtk_widget_has_focus(scroll)) {
 			gtk_entry_grab_focus_without_selecting(GTK_ENTRY(entry));
@@ -436,6 +445,7 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		}
 		break;
 	case GDK_KEY_Shift_L:case GDK_KEY_Shift_R:
+	case GDK_KEY_Control_L:case GDK_KEY_Control_R:
 		break;
 	default:
 		if(!gtk_widget_has_focus(entry)) {

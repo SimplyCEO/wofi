@@ -53,7 +53,7 @@ bool wofi_allow_images();
 
 uint64_t wofi_get_image_size();
 
-bool wofi_run_in_term();
+bool wofi_mod_shift();
 
 bool wofi_mod_control();
 

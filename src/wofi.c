@@ -31,7 +31,7 @@ static bool allow_images, allow_markup;
 static uint64_t image_size;
 static char* cache_file = NULL;
 static char* config_dir;
-static bool run_in_term;
+static bool mod_shift;
 static bool mod_ctrl;
 static char* terminal;
 static GtkOrientation outer_orientation;
@@ -320,8 +320,8 @@ uint64_t wofi_get_image_size() {
 	return image_size;
 }
 
-bool wofi_run_in_term() {
-	return run_in_term;
+bool wofi_mod_shift() {
+	return mod_shift;
 }
 
 bool wofi_mod_control() {
@@ -417,9 +417,9 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 	case GDK_KEY_Left:
 		break;
 	case GDK_KEY_Return:
-		run_in_term = (event->key.state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK;
+		mod_shift = (event->key.state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK;
 		mod_ctrl = (event->key.state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK;
-		if(run_in_term) {
+		if(mod_shift) {
 			event->key.state &= ~GDK_SHIFT_MASK;
 		}
 		if(mod_ctrl) {

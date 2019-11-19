@@ -79,7 +79,7 @@ void wofi_run_init() {
 }
 
 void wofi_run_exec(const gchar* cmd) {
-	if(wofi_run_in_term()) {
+	if(wofi_mod_shift()) {
 		wofi_write_cache(MODE, cmd);
 		wofi_term_run(cmd);
 	}

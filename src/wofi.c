@@ -173,13 +173,21 @@ static void activate_item(GtkFlowBox* flow_box, GtkFlowBoxChild* row, gpointer d
 	execute_action(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "mode"), wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "action"));
 }
 
+static void expand(GtkExpander* expander, gpointer data) {
+	(void) data;
+	GtkWidget* box = gtk_bin_get_child(GTK_BIN(expander));
+	gtk_widget_set_visible(box, !gtk_expander_get_expanded(expander));
+}
+
 static gboolean _insert_widget(gpointer data) {
 	struct node* node = data;
 	GtkWidget* parent;
 	if(node->action_count > 1) {
 		parent = gtk_expander_new("");
+		g_signal_connect(parent, "activate", G_CALLBACK(expand), NULL);
 		GtkWidget* box = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
 		gtk_expander_set_label_widget(GTK_EXPANDER(parent), box);
+
 		GtkWidget* exp_box = gtk_list_box_new();
 		gtk_list_box_set_activate_on_single_click(GTK_LIST_BOX(exp_box), FALSE);
 		g_signal_connect(exp_box, "row-activated", G_CALLBACK(activate_item), NULL);
@@ -193,6 +201,11 @@ static gboolean _insert_widget(gpointer data) {
 	}
 	gtk_container_add(GTK_CONTAINER(inner_box), parent);
 	gtk_widget_show_all(parent);
+
+	if(GTK_IS_EXPANDER(parent)) {
+		GtkWidget* box = gtk_bin_get_child(GTK_BIN(parent));
+		gtk_widget_set_visible(box, FALSE);
+	}
 
 	free(node->mode);
 	for(size_t count = 0; count < node->action_count; ++count) {

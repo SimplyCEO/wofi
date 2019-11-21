@@ -21,6 +21,7 @@
 #include <math.h>
 #include <time.h>
 #include <stdarg.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -31,5 +32,11 @@ time_t utils_get_time_millis();
 void utils_sleep_millis(time_t millis);
 
 char* utils_concat(size_t arg_count, ...);
+
+size_t utils_min(size_t n1, size_t n2);
+
+size_t utils_min3(size_t n1, size_t n2, size_t n3);
+
+size_t utils_distance(const char* str1, const char* str2);
 
 #endif

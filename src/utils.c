@@ -47,3 +47,49 @@ char* utils_concat(size_t arg_count, ...) {
 	va_end(args);
 	return buffer;
 }
+
+size_t utils_min(size_t n1, size_t n2) {
+	if(n1 < n2) {
+		return n1;
+	} else {
+		return n2;
+	}
+}
+
+size_t utils_min3(size_t n1, size_t n2, size_t n3) {
+	if(n1 < n2 && n1 < n3) {
+		return n1;
+	} else if(n2 < n1 && n2 < n3) {
+		return n2;
+	} else {
+		return n3;
+	}
+}
+
+size_t utils_distance(const char* str1, const char* str2) {
+	size_t str1_len = strlen(str1);
+	size_t str2_len = strlen(str2);
+
+	size_t arr[str1_len + 1][str2_len + 1];
+	arr[0][0] = 0;
+	for(size_t count = 1; count <= str1_len; ++count) {
+		arr[count][0] = count;
+	}
+	for(size_t count = 1; count <= str2_len; ++count) {
+		arr[0][count] = count;
+	}
+
+	uint8_t cost;
+	for(size_t c1 = 1; c1 <= str1_len; ++c1) {
+		for(size_t c2 = 1; c2 <= str2_len; ++c2) {
+			if(str1[c1 - 1] == str2[c2 - 1]) {
+				cost = 0;
+			} else {
+				cost = 1;
+			}
+			arr[c1][c2] = utils_min3(arr[c1 - 1][c2] + 1, arr[c1][c2 - 1] + 1, arr[c1 - 1][c2 - 1] + cost);
+		}
+	}
+
+	return arr[str1_len][str2_len];
+}

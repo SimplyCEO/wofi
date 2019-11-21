@@ -19,6 +19,11 @@
 
 static const char* terminals[] = {"kitty", "termite", "gnome-terminal", "weston-terminal"};
 
+enum matching_mode {
+	MATCHING_MODE_CONTAINS,
+	MATCHING_MODE_FUZZY
+};
+
 static uint64_t width, height;
 static int64_t x, y;
 static struct zwlr_layer_shell_v1* shell;
@@ -37,6 +42,7 @@ static char* terminal;
 static GtkOrientation outer_orientation;
 static bool exec_search;
 static struct map* modes;
+static enum matching_mode matching;
 
 struct node {
 	size_t action_count;
@@ -75,6 +81,7 @@ static void get_input(GtkSearchEntry* entry, gpointer data) {
 		filter = gtk_entry_get_text(GTK_ENTRY(entry));
 		filter_time = utils_get_time_millis();
 		gtk_flow_box_invalidate_filter(GTK_FLOW_BOX(inner_box));
+		gtk_flow_box_invalidate_sort(GTK_FLOW_BOX(inner_box));
 	}
 }
 
@@ -82,6 +89,7 @@ static void get_search(GtkSearchEntry* entry, gpointer data) {
 	(void) data;
 	filter = gtk_entry_get_text(GTK_ENTRY(entry));
 	gtk_flow_box_invalidate_filter(GTK_FLOW_BOX(inner_box));
+	gtk_flow_box_invalidate_sort(GTK_FLOW_BOX(inner_box));
 }
 
 static GtkWidget* create_label(char* mode, char* text, char* search_text, char* action) {
@@ -435,10 +443,37 @@ static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
 	if(text == NULL) {
 		return FALSE;
 	}
-	if(strcasestr(text, filter) != NULL) {
-		return TRUE;
+	return strstr(text, filter) != NULL;
+}
+
+static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer data) {
+	(void) data;
+	GtkWidget* box1 = gtk_bin_get_child(GTK_BIN(child1));
+	GtkWidget* box2 = gtk_bin_get_child(GTK_BIN(child2));
+	if(GTK_IS_EXPANDER(box1)) {
+		box1 = gtk_expander_get_label_widget(GTK_EXPANDER(box1));
 	}
-	return FALSE;
+	if(GTK_IS_EXPANDER(box2)) {
+		box2 = gtk_expander_get_label_widget(GTK_EXPANDER(box2));
+	}
+
+	const gchar* text1 = wofi_property_box_get_property(WOFI_PROPERTY_BOX(box1), "filter");
+	const gchar* text2 = wofi_property_box_get_property(WOFI_PROPERTY_BOX(box2), "filter");
+	if(filter == NULL || strcmp(filter, "") == 0) {
+		return 0;
+	}
+	if(text1 == NULL || text2 == NULL) {
+		return 0;
+	}
+	size_t dist1 = utils_distance(text1, filter);
+	size_t dist2 = utils_distance(text2, filter);
+	if(dist1 < dist2) {
+		return -1;
+	} else if(dist1 > dist2) {
+		return 1;
+	} else {
+		return 0;
+	}
 }
 
 static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
@@ -566,6 +601,7 @@ void wofi_init(struct map* config) {
 	char* password_char = map_get(config, "password_char");
 	exec_search = strcmp(config_get(config, "exec_search", "false"), "true") == 0;
 	bool hide_scroll = strcmp(config_get(config, "hide_scroll", "false"), "true") == 0;
+	matching = config_get_mnemonic(config, "matching", "contains", 2, "contains", "fuzzy");
 	modes = map_init_void();
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -631,7 +667,14 @@ void wofi_init(struct map* config) {
 	gtk_container_add(GTK_CONTAINER(wrapper_box), inner_box);
 	gtk_container_add(GTK_CONTAINER(scroll), wrapper_box);
 
-	gtk_flow_box_set_filter_func(GTK_FLOW_BOX(inner_box), do_filter, NULL, NULL);
+	switch(matching) {
+	case MATCHING_MODE_CONTAINS:
+		gtk_flow_box_set_filter_func(GTK_FLOW_BOX(inner_box), do_filter, NULL, NULL);
+		break;
+	case MATCHING_MODE_FUZZY:
+		gtk_flow_box_set_sort_func(GTK_FLOW_BOX(inner_box), do_sort, NULL, NULL);
+		break;
+	}
 
 	g_signal_connect(entry, "changed", G_CALLBACK(get_input), NULL);
 	g_signal_connect(entry, "search-changed", G_CALLBACK(get_search), NULL);

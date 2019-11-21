@@ -26,19 +26,14 @@ void wofi_run_init() {
 	struct cache_line* node, *tmp;
 	wl_list_for_each_safe(node, tmp, cache, link) {
 		char* text;
-		char* search_prefix;
 		char* final_slash = strrchr(node->line, '/');
 		if(final_slash == NULL) {
 			text = node->line;
-			search_prefix = "";
 		} else {
 			text = final_slash + 1;
-			search_prefix = text;
 		}
-		char* search_text = utils_concat(2, search_prefix, node->line);
-		wofi_insert_widget(MODE, &text, search_text, &node->line, 1);
+		wofi_insert_widget(MODE, &text, node->line, &node->line, 1);
 		map_put(cached, node->line, "true");
-		free(search_text);
 		free(node->line);
 		wl_list_remove(&node->link);
 		free(node);
@@ -64,10 +59,8 @@ void wofi_run_init() {
 			struct stat info;
 			stat(full_path, &info);
 			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path)) {
-				char* search_text = utils_concat(2, entry->d_name, full_path);
 				char* text = strdup(entry->d_name);
-				wofi_insert_widget(MODE, &text, search_text, &full_path, 1);
-				free(search_text);
+				wofi_insert_widget(MODE, &text, full_path, &full_path, 1);
 				free(text);
 			}
 			free(full_path);

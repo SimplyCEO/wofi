@@ -32,7 +32,7 @@ void wofi_run_init() {
 		} else {
 			text = final_slash + 1;
 		}
-		wofi_insert_widget(MODE, &text, node->line, &node->line, 1);
+		wofi_insert_widget(MODE, &text, text, &node->line, 1);
 		map_put(cached, node->line, "true");
 		free(node->line);
 		wl_list_remove(&node->link);
@@ -60,7 +60,7 @@ void wofi_run_init() {
 			stat(full_path, &info);
 			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path)) {
 				char* text = strdup(entry->d_name);
-				wofi_insert_widget(MODE, &text, full_path, &full_path, 1);
+				wofi_insert_widget(MODE, &text, text, &full_path, 1);
 				free(text);
 			}
 			free(full_path);

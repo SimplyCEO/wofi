@@ -151,11 +151,11 @@ static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
 		}
 		size_t action_count;
 		char** text = get_action_text(full_path, &action_count);
+		map_put(entries, entry->d_name, "true");
 		if(text == NULL) {
 			free(full_path);
 			continue;
 		}
-		map_put(entries, entry->d_name, "true");
 
 		char** actions = get_action_actions(full_path, &action_count);
 

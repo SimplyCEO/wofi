@@ -35,22 +35,22 @@ static char* get_text(char* file, char* action) {
 	}
 	if(wofi_allow_images()) {
 		GIcon* icon = g_app_info_get_icon(G_APP_INFO(info));
-		if(G_IS_THEMED_ICON(icon)) {
-			GtkIconTheme* theme = gtk_icon_theme_get_default();
-			const gchar* const* icon_names = g_themed_icon_get_names(G_THEMED_ICON(icon));
-			GtkIconInfo* info = gtk_icon_theme_choose_icon(theme, (const gchar**) icon_names, wofi_get_image_size(), 0);
-			if(info == NULL) {
-				return utils_concat(2, "text:", name);
-			} else {
-				const gchar* icon_path = gtk_icon_info_get_filename(info);
-				return utils_concat(4, "img:", icon_path, ":text:", name);
-			}
-		} else if(G_IS_FILE_ICON(icon)) {
+		if(G_IS_FILE_ICON(icon)) {
 			GFile* file = g_file_icon_get_file(G_FILE_ICON(icon));
 			char* path = g_file_get_path(file);
 			return utils_concat(4, "img:", path, ":text:", name);
 		} else {
-			return utils_concat(2, "text:", name);
+			GtkIconTheme* theme = gtk_icon_theme_get_default();
+			GtkIconInfo* info = NULL;
+			if(icon != NULL) {
+				const gchar* const* icon_names = g_themed_icon_get_names(G_THEMED_ICON(icon));
+				info = gtk_icon_theme_choose_icon(theme, (const gchar**) icon_names, wofi_get_image_size(), 0);
+			}
+			if(info == NULL) {
+				info = gtk_icon_theme_lookup_icon(theme, "application-x-executable", wofi_get_image_size(), 0);
+			}
+			const gchar* icon_path = gtk_icon_info_get_filename(info);
+			return utils_concat(4, "img:", icon_path, ":text:", name);
 		}
 	} else {
 		return strdup(name);

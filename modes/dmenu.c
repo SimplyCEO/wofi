@@ -34,7 +34,7 @@ void wofi_dmenu_init() {
 
 	free(cache);
 
-	char* line;
+	char* line = NULL;
 	size_t size = 0;
 	while(getline(&line, &size, stdin) != -1) {
 		char* lf = strchr(line, '\n');

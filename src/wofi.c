@@ -43,6 +43,7 @@ static GtkOrientation outer_orientation;
 static bool exec_search;
 static struct map* modes;
 static enum matching_mode matching;
+static bool insensitive;
 
 struct node {
 	size_t action_count;
@@ -443,7 +444,11 @@ static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
 	if(text == NULL) {
 		return FALSE;
 	}
-	return strstr(text, filter) != NULL;
+	if(insensitive) {
+		return strcasestr(text, filter) != NULL;
+	} else {
+		return strstr(text, filter) != NULL;
+	}
 }
 
 static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer data) {
@@ -602,6 +607,7 @@ void wofi_init(struct map* config) {
 	exec_search = strcmp(config_get(config, "exec_search", "false"), "true") == 0;
 	bool hide_scroll = strcmp(config_get(config, "hide_scroll", "false"), "true") == 0;
 	matching = config_get_mnemonic(config, "matching", "contains", 2, "contains", "fuzzy");
+	insensitive = strcmp(config_get(config, "insensitive", "false"), "true") == 0;
 	modes = map_init_void();
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);

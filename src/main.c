@@ -69,6 +69,7 @@ static void print_usage(char** argv) {
 	printf("--exec-search\t-e\tMakes enter always use the search contents not the first result\n");
 	printf("--hide-scroll\t-b\tHides the scroll bars\n");
 	printf("--matching\t-M\tSets the matching method, default is contains\n");
+	printf("--insensitive\t-I\tAllows case insensitive searching\n");
 	exit(0);
 }
 
@@ -305,6 +306,12 @@ int main(int argc, char** argv) {
 			.val = 'M'
 		},
 		{
+			.name = "insensitive",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'I'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -330,8 +337,9 @@ int main(int argc, char** argv) {
 	char* exec_search = NULL;
 	char* hide_scroll = NULL;
 	char* matching = NULL;
+	char* insensitive = NULL;
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nimk:t:P::ebM:", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nimk:t:P::ebM:I", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -400,6 +408,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'M':
 			matching = optarg;
+			break;
+		case 'I':
+			insensitive = "true";
 			break;
 		}
 	}
@@ -540,6 +551,10 @@ int main(int argc, char** argv) {
 	if(matching != NULL) {
 		map_put(config, "matching", matching);
 	}
+	if(insensitive != NULL) {
+		map_put(config, "insensitive", insensitive);
+	}
+
 
 	gtk_init(&argc, &argv);
 

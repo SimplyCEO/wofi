@@ -61,7 +61,7 @@ static void print_usage(char** argv) {
 	printf("--xoffset\t-x\tThe x offset\n");
 	printf("--yoffset\t-y\tThe y offset\n");
 	printf("--normal-window\t-n\tRender to a normal window\n");
-	printf("--allow-images\t-i\tAllows images to be rendered\n");
+	printf("--allow-images\t-I\tAllows images to be rendered\n");
 	printf("--allow-markup\t-m\tAllows pango markup\n");
 	printf("--cache-file\t-k\tSets the cache file to use\n");
 	printf("--term\t\t-t\tSpecifies the terminal to use when running in a term\n");
@@ -69,7 +69,7 @@ static void print_usage(char** argv) {
 	printf("--exec-search\t-e\tMakes enter always use the search contents not the first result\n");
 	printf("--hide-scroll\t-b\tHides the scroll bars\n");
 	printf("--matching\t-M\tSets the matching method, default is contains\n");
-	printf("--insensitive\t-I\tAllows case insensitive searching\n");
+	printf("--insensitive\t-i\tAllows case insensitive searching\n");
 	exit(0);
 }
 
@@ -261,7 +261,7 @@ int main(int argc, char** argv) {
 			.name = "allow-images",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = 'i'
+			.val = 'I'
 		},
 		{
 			.name = "allow-markup",
@@ -309,7 +309,7 @@ int main(int argc, char** argv) {
 			.name = "insensitive",
 			.has_arg = no_argument,
 			.flag = NULL,
-			.val = 'I'
+			.val = 'i'
 		},
 		{
 			.name = NULL,
@@ -339,7 +339,7 @@ int main(int argc, char** argv) {
 	char* matching = NULL;
 	char* insensitive = NULL;
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nimk:t:P::ebM:I", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:i", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -385,7 +385,7 @@ int main(int argc, char** argv) {
 		case 'n':
 			normal_window = "true";
 			break;
-		case 'i':
+		case 'I':
 			allow_images = "true";
 			break;
 		case 'm':
@@ -409,7 +409,7 @@ int main(int argc, char** argv) {
 		case 'M':
 			matching = optarg;
 			break;
-		case 'I':
+		case 'i':
 			insensitive = "true";
 			break;
 		}

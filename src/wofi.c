@@ -44,6 +44,7 @@ static bool exec_search;
 static struct map* modes;
 static enum matching_mode matching;
 static bool insensitive;
+static struct map* config;
 
 struct node {
 	size_t action_count;
@@ -543,9 +544,13 @@ static void add_mode(char* mode) {
 	struct mode* mode_ptr = calloc(1, sizeof(struct mode));
 	map_put_void(modes, mode, mode_ptr);
 
-	void (*init)();
+	void (*init)(struct map* props);
+	const char** (*get_arg_names)();
+	size_t (*get_arg_count)();
 	if(dso == NULL) {
 		init = get_plugin_proc(mode, "_init");
+		get_arg_names = get_plugin_proc(mode, "_get_arg_names");
+		get_arg_count = get_plugin_proc(mode, "_get_arg_count");
 		mode_ptr->mode_exec = get_plugin_proc(mode, "_exec");
 	} else {
 		char* plugins_dir = utils_concat(2, config_dir, "/plugins/");
@@ -554,15 +559,34 @@ static void add_mode(char* mode) {
 		free(full_name);
 		free(plugins_dir);
 		init = dlsym(plugin, "init");
+		get_arg_names = dlsym(plugin, "get_arg_names");
+		get_arg_count = dlsym(plugin, "get_arg_count");
 		mode_ptr->mode_exec = dlsym(plugin, "exec");
 	}
 
+	const char** arg_names = NULL;
+	size_t arg_count = 0;
+	if(get_arg_names != NULL && get_arg_count != NULL) {
+		arg_names = get_arg_names();
+		arg_count = get_arg_count();
+	}
+
+	struct map* props = map_init();
+	for(size_t count = 0; count < arg_count; ++count) {
+		const char* arg = arg_names[count];
+		char* full_name = utils_concat(3, mode, "-", arg);
+		map_put(props, arg, config_get(config, full_name, NULL));
+		free(full_name);
+	}
+
 	if(init != NULL) {
-		init();
+		init(props);
 	} else {
 		fprintf(stderr, "I would love to show %s but Idk what it is\n", mode);
 		exit(1);
 	}
+
+	map_free(props);
 }
 
 static void* start_thread(void* data) {
@@ -579,7 +603,8 @@ static void* start_thread(void* data) {
 	return NULL;
 }
 
-void wofi_init(struct map* config) {
+void wofi_init(struct map* _config) {
+	config = _config;
 	width = strtol(config_get(config, "width", "1000"), NULL, 10);
 	height = strtol(config_get(config, "height", "400"), NULL, 10);
 	x = strtol(config_get(config, "x", "-1"), NULL, 10);

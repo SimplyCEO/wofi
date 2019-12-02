@@ -81,6 +81,7 @@ void wofi_run_init(struct map* config) {
 	} while((str = strtok_r(NULL, ":", &save_ptr)) != NULL);
 	free(path);
 	map_free(cached);
+	map_free(entries);
 }
 
 void wofi_run_exec(const gchar* cmd) {

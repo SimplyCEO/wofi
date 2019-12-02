@@ -19,7 +19,13 @@
 
 #define MODE "run"
 
-void wofi_run_init() {
+static const char* arg_names[] = {"always_parse_args"};
+
+static bool always_parse_args;
+
+void wofi_run_init(struct map* config) {
+	always_parse_args = strcmp(config_get(config, arg_names[0], "false"), "true") == 0;
+
 	struct map* cached = map_init();
 	struct wl_list* cache = wofi_read_cache(MODE);
 
@@ -76,7 +82,7 @@ void wofi_run_exec(const gchar* cmd) {
 		wofi_write_cache(MODE, cmd);
 		wofi_term_run(cmd);
 	}
-	if(wofi_mod_control()) {
+	if(wofi_mod_control() || always_parse_args) {
 		char* tmp = strdup(cmd);
 		size_t space_count = 2;
 		char* space;
@@ -100,4 +106,12 @@ void wofi_run_exec(const gchar* cmd) {
 	}
 	fprintf(stderr, "%s cannot be executed\n", cmd);
 	exit(errno);
+}
+
+const char** wofi_run_get_arg_names() {
+	return arg_names;
+}
+
+size_t wofi_run_get_arg_count() {
+	return sizeof(arg_names) / sizeof(char*);
 }

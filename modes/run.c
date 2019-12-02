@@ -19,15 +19,19 @@
 
 #define MODE "run"
 
-static const char* arg_names[] = {"always_parse_args"};
+static const char* arg_names[] = {"always_parse_args", "show_all"};
 
 static bool always_parse_args;
+static bool show_all;
 
 void wofi_run_init(struct map* config) {
 	always_parse_args = strcmp(config_get(config, arg_names[0], "false"), "true") == 0;
+	show_all = strcmp(config_get(config, arg_names[1], "true"), "true") == 0;
 
 	struct map* cached = map_init();
 	struct wl_list* cache = wofi_read_cache(MODE);
+
+	struct map* entries = map_init();
 
 	struct cache_line* node, *tmp;
 	wl_list_for_each_safe(node, tmp, cache, link) {
@@ -38,8 +42,9 @@ void wofi_run_init(struct map* config) {
 		} else {
 			text = final_slash + 1;
 		}
-		wofi_insert_widget(MODE, &text, text, &node->line, 1);
+		wofi_insert_widget(MODE, &node->line, text, &node->line, 1);
 		map_put(cached, node->line, "true");
+		map_put(entries, text, "true");
 		free(node->line);
 		wl_list_remove(&node->link);
 		free(node);
@@ -64,9 +69,10 @@ void wofi_run_init(struct map* config) {
 			char* full_path = utils_concat(3, str, "/", entry->d_name);
 			struct stat info;
 			stat(full_path, &info);
-			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path)) {
+			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path) && (show_all || !map_contains(entries, entry->d_name))) {
 				char* text = strdup(entry->d_name);
-				wofi_insert_widget(MODE, &text, text, &full_path, 1);
+				map_put(entries, text, "true");
+				wofi_insert_widget(MODE, &full_path, text, &full_path, 1);
 				free(text);
 			}
 			free(full_path);

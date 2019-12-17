@@ -235,11 +235,18 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 		gtk_container_add(GTK_CONTAINER(box), label);
 	}
 	if(parse_search) {
-		search_text = parse_images(WOFI_PROPERTY_BOX(box), search_text, false);
-		char* out;
-		pango_parse_markup(search_text, -1, 0, NULL, &out, NULL, NULL);
-		free(search_text);
-		search_text = out;
+		search_text = strdup(search_text);
+		if(allow_images) {
+			char* tmp = search_text;
+			search_text = parse_images(WOFI_PROPERTY_BOX(box), search_text, false);
+			free(tmp);
+		}
+		if(allow_markup) {
+			char* out;
+			pango_parse_markup(search_text, -1, 0, NULL, &out, NULL, NULL);
+			free(search_text);
+			search_text = out;
+		}
 	}
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "filter", search_text);
 	if(parse_search) {
@@ -431,6 +438,10 @@ void wofi_insert_widget(char* mode, char** text, char* search_text, char** actio
 
 bool wofi_allow_images() {
 	return allow_images;
+}
+
+bool wofi_allow_markup() {
+	return allow_markup;
 }
 
 uint64_t wofi_get_image_size() {

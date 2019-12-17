@@ -54,6 +54,8 @@ void wofi_insert_widget(char* mode, char** text, char* search_text, char** actio
 
 bool wofi_allow_images();
 
+bool wofi_allow_markup();
+
 uint64_t wofi_get_image_size();
 
 bool wofi_mod_shift();

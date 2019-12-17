@@ -59,12 +59,16 @@ void wofi_dmenu_init(struct map* config) {
 void wofi_dmenu_exec(const gchar* cmd) {
 	char* action = strdup(cmd);
 	if(parse_action) {
-		free(action);
-		action = wofi_parse_image_escapes(cmd);
-		char* out;
-		pango_parse_markup(action, -1, 0, NULL, &out, NULL, NULL);
-		free(action);
-		action = out;
+		if(wofi_allow_images()) {
+			free(action);
+			action = wofi_parse_image_escapes(cmd);
+		}
+		if(wofi_allow_markup()) {
+			char* out;
+			pango_parse_markup(action, -1, 0, NULL, &out, NULL, NULL);
+			free(action);
+			action = out;
+		}
 	}
 	wofi_write_cache(MODE, cmd);
 	printf("%s\n", action);

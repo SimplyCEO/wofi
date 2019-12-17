@@ -71,6 +71,7 @@ static void print_usage(char** argv) {
 	printf("--matching\t-M\tSets the matching method, default is contains\n");
 	printf("--insensitive\t-i\tAllows case insensitive searching\n");
 	printf("--parse-search\t-q\tParses the search text removing image escapes and pango\n");
+	printf("--version\t\t-v\tPrints the version and then exits\n");
 	exit(0);
 }
 
@@ -319,6 +320,12 @@ int main(int argc, char** argv) {
 			.val = 'q'
 		},
 		{
+			.name = "version",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'v'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -347,7 +354,7 @@ int main(int argc, char** argv) {
 	char* insensitive = NULL;
 	char* parse_search = NULL;
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iq", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqv", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -422,6 +429,10 @@ int main(int argc, char** argv) {
 			break;
 		case 'q':
 			parse_search = "true";
+			break;
+		case 'v':
+			printf(VERSION"\n");
+			exit(0);
 			break;
 		}
 	}

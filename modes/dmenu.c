@@ -19,7 +19,13 @@
 
 #define MODE "dmenu"
 
-void wofi_dmenu_init() {
+static const char* arg_names[] = {"parse_action"};
+
+static bool parse_action;
+
+void wofi_dmenu_init(struct map* config) {
+	parse_action = strcmp(config_get(config, "parse_action", "false"), "true") == 0;
+
 	struct map* cached = map_init();
 	struct wl_list* cache = wofi_read_cache(MODE);
 
@@ -51,7 +57,25 @@ void wofi_dmenu_init() {
 }
 
 void wofi_dmenu_exec(const gchar* cmd) {
+	char* action = strdup(cmd);
+	if(parse_action) {
+		free(action);
+		action = wofi_parse_image_escapes(cmd);
+		char* out;
+		pango_parse_markup(action, -1, 0, NULL, &out, NULL, NULL);
+		free(action);
+		action = out;
+	}
 	wofi_write_cache(MODE, cmd);
-	printf("%s\n", cmd);
+	printf("%s\n", action);
+	free(action);
 	exit(0);
+}
+
+const char** wofi_dmenu_get_arg_names() {
+	return arg_names;
+}
+
+size_t wofi_dmenu_get_arg_count() {
+	return sizeof(arg_names) / sizeof(char*);
 }

@@ -95,7 +95,7 @@ static void get_search(GtkSearchEntry* entry, gpointer data) {
 	gtk_flow_box_invalidate_sort(GTK_FLOW_BOX(inner_box));
 }
 
-static char* parse_images(WofiPropertyBox* box, char* text, bool create_widgets) {
+static char* parse_images(WofiPropertyBox* box, const char* text, bool create_widgets) {
 	char* ret = strdup("");
 	struct map* mode_map = map_init();
 	map_put(mode_map, "img", "true");
@@ -212,6 +212,10 @@ static char* parse_images(WofiPropertyBox* box, char* text, bool create_widgets)
 	} else {
 		return ret;
 	}
+}
+
+char* wofi_parse_image_escapes(const char* text) {
+	return parse_images(NULL, text, false);
 }
 
 static GtkWidget* create_label(char* mode, char* text, char* search_text, char* action) {

@@ -44,6 +44,8 @@ struct cache_line {
 
 void wofi_init(struct map* config);
 
+char* wofi_parse_image_escapes(const char* text);
+
 void wofi_write_cache(const gchar* mode, const gchar* cmd);
 
 struct wl_list* wofi_read_cache(char* mode);

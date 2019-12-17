@@ -71,7 +71,7 @@ static void print_usage(char** argv) {
 	printf("--matching\t-M\tSets the matching method, default is contains\n");
 	printf("--insensitive\t-i\tAllows case insensitive searching\n");
 	printf("--parse-search\t-q\tParses the search text removing image escapes and pango\n");
-	printf("--version\t\t-v\tPrints the version and then exits\n");
+	printf("--version\t-v\tPrints the version and then exits\n");
 	exit(0);
 }
 

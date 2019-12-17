@@ -116,6 +116,9 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 	char* save_ptr;
 	char* str = strtok_r(tmp, ":", &save_ptr);
 	do {
+		if(str == NULL) {
+			break;
+		}
 		if(map_contains(mode_map, str) || data) {
 			struct node* node = malloc(sizeof(struct node));
 			node->str = str;

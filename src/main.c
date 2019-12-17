@@ -70,6 +70,7 @@ static void print_usage(char** argv) {
 	printf("--hide-scroll\t-b\tHides the scroll bars\n");
 	printf("--matching\t-M\tSets the matching method, default is contains\n");
 	printf("--insensitive\t-i\tAllows case insensitive searching\n");
+	printf("--parse-search\t-q\tParses the search text removing image escapes and pango\n");
 	exit(0);
 }
 
@@ -312,6 +313,12 @@ int main(int argc, char** argv) {
 			.val = 'i'
 		},
 		{
+			.name = "parse-search",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'q'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -338,8 +345,9 @@ int main(int argc, char** argv) {
 	char* hide_scroll = NULL;
 	char* matching = NULL;
 	char* insensitive = NULL;
+	char* parse_search = NULL;
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:i", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iq", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -411,6 +419,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'i':
 			insensitive = "true";
+			break;
+		case 'q':
+			parse_search = "true";
 			break;
 		}
 	}
@@ -553,6 +564,9 @@ int main(int argc, char** argv) {
 	}
 	if(insensitive != NULL) {
 		map_put(config, "insensitive", insensitive);
+	}
+	if(parse_search != NULL) {
+		map_put(config, "parse_search", parse_search);
 	}
 
 

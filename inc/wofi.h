@@ -30,6 +30,7 @@
 #include <sys/stat.h>
 
 #include <gtk/gtk.h>
+#include <pango/pango.h>
 #include <gdk/gdkwayland.h>
 #include <gio/gdesktopappinfo.h>
 

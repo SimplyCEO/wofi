@@ -44,6 +44,7 @@ static bool exec_search;
 static struct map* modes;
 static enum matching_mode matching;
 static bool insensitive;
+static bool parse_search;
 static struct map* config;
 
 struct node {
@@ -94,6 +95,125 @@ static void get_search(GtkSearchEntry* entry, gpointer data) {
 	gtk_flow_box_invalidate_sort(GTK_FLOW_BOX(inner_box));
 }
 
+static char* parse_images(WofiPropertyBox* box, char* text, bool create_widgets) {
+	char* ret = strdup("");
+	struct map* mode_map = map_init();
+	map_put(mode_map, "img", "true");
+	map_put(mode_map, "text", "true");
+
+	char* tmp = strdup(text);
+
+	struct wl_list modes;
+	struct node {
+		char* str;
+		struct wl_list link;
+	};
+
+	wl_list_init(&modes);
+
+	bool data = false;
+
+	char* save_ptr;
+	char* str = strtok_r(tmp, ":", &save_ptr);
+	do {
+		if(map_contains(mode_map, str) || data) {
+			struct node* node = malloc(sizeof(struct node));
+			node->str = str;
+			wl_list_insert(&modes, &node->link);
+			data = !data;
+		}
+	} while((str = strtok_r(NULL, ":", &save_ptr)) != NULL);
+
+	char* tmp2 = strdup(text);
+	char* start = tmp2;
+
+	char* mode = NULL;
+
+	struct node* node = wl_container_of(modes.prev, node, link);
+	while(true) {
+		if(mode == NULL) {
+			if(start == NULL) {
+				break;
+			}
+			char* tmp_start = (start - tmp2) + tmp;
+			if(!wl_list_empty(&modes) && tmp_start == node->str) {
+				if(node->link.prev == &modes) {
+					break;
+				}
+				mode = node->str;
+				node = wl_container_of(node->link.prev, node, link);
+				str = node->str;
+				start = ((str + strlen(str) + 1) - tmp) + tmp2;
+				if(((start - tmp2) + text) > (text + strlen(text))) {
+					start = NULL;
+				}
+				if(node->link.prev != &modes) {
+					node = wl_container_of(node->link.prev, node, link);
+				}
+			} else {
+				mode = "text";
+				str = start;
+				if(!wl_list_empty(&modes)) {
+					start = (node->str - tmp - 1) + tmp2;
+					*start = 0;
+					++start;
+				}
+			}
+		} else {
+			if(strcmp(mode, "img") == 0 && create_widgets) {
+				GdkPixbuf* buf = gdk_pixbuf_new_from_file(str, NULL);
+				int width = gdk_pixbuf_get_width(buf);
+				int height = gdk_pixbuf_get_height(buf);
+				if(height > width) {
+					float percent = (float) image_size / height;
+					GdkPixbuf* tmp = gdk_pixbuf_scale_simple(buf, width * percent, image_size, GDK_INTERP_BILINEAR);
+					g_object_unref(buf);
+					buf = tmp;
+				} else {
+					float percent = (float) image_size / width;
+					GdkPixbuf* tmp = gdk_pixbuf_scale_simple(buf, image_size, height * percent, GDK_INTERP_BILINEAR);
+					g_object_unref(buf);
+					buf = tmp;
+				}
+				GtkWidget* img = gtk_image_new_from_pixbuf(buf);
+				gtk_widget_set_name(img, "img");
+				gtk_container_add(GTK_CONTAINER(box), img);
+			} else if(strcmp(mode, "text") == 0) {
+				if(create_widgets) {
+					GtkWidget* label = gtk_label_new(str);
+					gtk_widget_set_name(label, "text");
+					gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
+					gtk_label_set_xalign(GTK_LABEL(label), 0);
+					gtk_container_add(GTK_CONTAINER(box), label);
+				} else {
+					char* tmp = ret;
+					ret = utils_concat(2, ret, str);
+					free(tmp);
+				}
+			}
+			mode = NULL;
+			if(wl_list_empty(&modes)) {
+				break;
+			}
+		}
+	}
+	free(tmp);
+	free(tmp2);
+	map_free(mode_map);
+
+	struct node* tmp_node;
+	wl_list_for_each_safe(node, tmp_node, &modes, link) {
+		wl_list_remove(&node->link);
+		free(node);
+	}
+	if(create_widgets) {
+		free(ret);
+		return NULL;
+	} else {
+		return ret;
+	}
+}
+
 static GtkWidget* create_label(char* mode, char* text, char* search_text, char* action) {
 	GtkWidget* box = wofi_property_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
 	gtk_widget_set_name(box, "unselected");
@@ -102,109 +222,7 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "mode", mode);
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "action", action);
 	if(allow_images) {
-		struct map* mode_map = map_init();
-		map_put(mode_map, "img", "true");
-		map_put(mode_map, "text", "true");
-
-		char* tmp = strdup(text);
-
-		struct wl_list modes;
-		struct node {
-			char* str;
-			struct wl_list link;
-		};
-
-		wl_list_init(&modes);
-
-		bool data = false;
-
-		char* save_ptr;
-		char* str = strtok_r(tmp, ":", &save_ptr);
-		do {
-			if(map_contains(mode_map, str) || data) {
-				struct node* node = malloc(sizeof(struct node));
-				node->str = str;
-				wl_list_insert(&modes, &node->link);
-				data = !data;
-			}
-		} while((str = strtok_r(NULL, ":", &save_ptr)) != NULL);
-
-		char* tmp2 = strdup(text);
-		char* start = tmp2;
-
-		char* mode = NULL;
-
-		struct node* node = wl_container_of(modes.prev, node, link);
-		while(true) {
-			if(mode == NULL) {
-				if(start == NULL) {
-					break;
-				}
-				char* tmp_start = (start - tmp2) + tmp;
-				if(!wl_list_empty(&modes) && tmp_start == node->str) {
-					if(node->link.prev == &modes) {
-						break;
-					}
-					mode = node->str;
-					node = wl_container_of(node->link.prev, node, link);
-					str = node->str;
-					start = ((str + strlen(str) + 1) - tmp) + tmp2;
-					if(((start - tmp2) + text) > (text + strlen(text))) {
-						start = NULL;
-					}
-					if(node->link.prev != &modes) {
-						node = wl_container_of(node->link.prev, node, link);
-					}
-				} else {
-					mode = "text";
-					str = start;
-					if(!wl_list_empty(&modes)) {
-						start = (node->str - tmp - 1) + tmp2;
-						*start = 0;
-						++start;
-					}
-				}
-			} else {
-				if(strcmp(mode, "img") == 0) {
-					GdkPixbuf* buf = gdk_pixbuf_new_from_file(str, NULL);
-					int width = gdk_pixbuf_get_width(buf);
-					int height = gdk_pixbuf_get_height(buf);
-					if(height > width) {
-						float percent = (float) image_size / height;
-						GdkPixbuf* tmp = gdk_pixbuf_scale_simple(buf, width * percent, image_size, GDK_INTERP_BILINEAR);
-						g_object_unref(buf);
-						buf = tmp;
-					} else {
-						float percent = (float) image_size / width;
-						GdkPixbuf* tmp = gdk_pixbuf_scale_simple(buf, image_size, height * percent, GDK_INTERP_BILINEAR);
-						g_object_unref(buf);
-						buf = tmp;
-					}
-					GtkWidget* img = gtk_image_new_from_pixbuf(buf);
-					gtk_widget_set_name(img, "img");
-					gtk_container_add(GTK_CONTAINER(box), img);
-				} else if(strcmp(mode, "text") == 0) {
-					GtkWidget* label = gtk_label_new(str);
-					gtk_widget_set_name(label, "text");
-					gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
-					gtk_label_set_xalign(GTK_LABEL(label), 0);
-					gtk_container_add(GTK_CONTAINER(box), label);
-				}
-				mode = NULL;
-				if(wl_list_empty(&modes)) {
-					break;
-				}
-			}
-		}
-		free(tmp);
-		free(tmp2);
-		map_free(mode_map);
-
-		struct node* tmp_node;
-		wl_list_for_each_safe(node, tmp_node, &modes, link) {
-			wl_list_remove(&node->link);
-			free(node);
-		}
+		parse_images(WOFI_PROPERTY_BOX(box), text, true);
 	} else {
 		GtkWidget* label = gtk_label_new(text);
 		gtk_widget_set_name(label, "text");
@@ -212,7 +230,17 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 		gtk_label_set_xalign(GTK_LABEL(label), 0);
 		gtk_container_add(GTK_CONTAINER(box), label);
 	}
+	if(parse_search) {
+		search_text = parse_images(WOFI_PROPERTY_BOX(box), search_text, false);
+		char* out;
+		pango_parse_markup(search_text, -1, 0, NULL, &out, NULL, NULL);
+		free(search_text);
+		search_text = out;
+	}
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "filter", search_text);
+	if(parse_search) {
+		free(search_text);
+	}
 	return box;
 }
 
@@ -673,6 +701,7 @@ void wofi_init(struct map* _config) {
 	bool hide_scroll = strcmp(config_get(config, "hide_scroll", "false"), "true") == 0;
 	matching = config_get_mnemonic(config, "matching", "contains", 2, "contains", "fuzzy");
 	insensitive = strcmp(config_get(config, "insensitive", "false"), "true") == 0;
+	parse_search = strcmp(config_get(config, "parse_search", "false"), "true") == 0;
 	modes = map_init_void();
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);

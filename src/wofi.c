@@ -342,17 +342,36 @@ void wofi_write_cache(const gchar* mode, const gchar* cmd) {
 		char* line = NULL;
 		size_t size = 0;
 		while(getline(&line, &size, file) != -1) {
-			struct cache_line* node = malloc(sizeof(struct cache_line));
-			if(strstr(line, cmd) != NULL) {
+			char* space = strchr(line, ' ');
+			char* nl = strchr(line, '\n');
+			if(nl != NULL) {
+				*nl = 0;
+			}
+			if(space != NULL && strcmp(cmd, space + 1) == 0) {
+				struct cache_line* node = malloc(sizeof(struct cache_line));
 				uint64_t count = strtol(line, NULL, 10) + 1;
 				char num[6];
 				snprintf(num, 5, "%" PRIu64, count);
 				node->line = utils_concat(4, num, " ", cmd, "\n");
 				inc_count = true;
-			} else {
-				node->line = strdup(line);
+				wl_list_insert(&lines, &node->link);
 			}
-			wl_list_insert(&lines, &node->link);
+		}
+		free(line);
+		line = NULL;
+		size = 0;
+		fseek(file, 0, SEEK_SET);
+		while(getline(&line, &size, file) != -1) {
+			char* space = strchr(line, ' ');
+			char* nl = strchr(line, '\n');
+			if(nl != NULL) {
+				*nl = 0;
+			}
+			if(space == NULL || strcmp(cmd, space + 1) != 0) {
+				struct cache_line* node = malloc(sizeof(struct cache_line));
+				node->line = utils_concat(2, line, "\n");
+				wl_list_insert(&lines, &node->link);
+			}
 		}
 		free(line);
 		fclose(file);

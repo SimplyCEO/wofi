@@ -102,37 +102,67 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "mode", mode);
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "action", action);
 	if(allow_images) {
-		struct map* modes = map_init();
-		map_put(modes, "img", "true");
-		map_put(modes, "text", "true");
+		struct map* mode_map = map_init();
+		map_put(mode_map, "img", "true");
+		map_put(mode_map, "text", "true");
 
 		char* tmp = strdup(text);
-		char* mode = NULL;
 
-		if(strchr(tmp, ':') == NULL) {
-			mode = "text";
-		}
+		struct wl_list modes;
+		struct node {
+			char* str;
+			struct wl_list link;
+		};
+
+		wl_list_init(&modes);
+
+		bool data = false;
+
 		char* save_ptr;
 		char* str = strtok_r(tmp, ":", &save_ptr);
 		do {
-			if(mode == NULL) {
-				if(map_contains(modes, str)) {
-					mode = str;
-				} else {
-					char* start = (str - tmp) + text;
-					if(start != text) {
-						--start;
-					}
-					long end = strlen(str) + 1;
-					str = strdup(start);
-					*(str + end) = 0;
+			if(map_contains(mode_map, str) || data) {
+				struct node* node = malloc(sizeof(struct node));
+				node->str = str;
+				wl_list_insert(&modes, &node->link);
+				data = !data;
+			}
+		} while((str = strtok_r(NULL, ":", &save_ptr)) != NULL);
 
-					GtkWidget* label = gtk_label_new(str);
-					gtk_widget_set_name(label, "text");
-					gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
-					gtk_label_set_xalign(GTK_LABEL(label), 0);
-					gtk_container_add(GTK_CONTAINER(box), label);
-					free(str);
+		char* tmp2 = strdup(text);
+		char* start = tmp2;
+
+		char* mode = NULL;
+
+		struct node* node = wl_container_of(modes.prev, node, link);
+		while(true) {
+			if(mode == NULL) {
+				if(start == NULL) {
+					break;
+				}
+				char* tmp_start = (start - tmp2) + tmp;
+				if(!wl_list_empty(&modes) && tmp_start == node->str) {
+					if(node->link.prev == &modes) {
+						break;
+					}
+					mode = node->str;
+					node = wl_container_of(node->link.prev, node, link);
+					str = node->str;
+					start = ((str + strlen(str) + 1) - tmp) + tmp2;
+					if(((start - tmp2) + text) > (text + strlen(text))) {
+						start = NULL;
+					}
+					if(node->link.prev != &modes) {
+						node = wl_container_of(node->link.prev, node, link);
+					}
+				} else {
+					mode = "text";
+					str = start;
+					if(!wl_list_empty(&modes)) {
+						start = (node->str - tmp - 1) + tmp2;
+						*start = 0;
+						++start;
+					}
 				}
 			} else {
 				if(strcmp(mode, "img") == 0) {
@@ -161,10 +191,20 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 					gtk_container_add(GTK_CONTAINER(box), label);
 				}
 				mode = NULL;
+				if(wl_list_empty(&modes)) {
+					break;
+				}
 			}
-		} while((str = strtok_r(NULL, ":", &save_ptr)) != NULL);
+		}
 		free(tmp);
-		map_free(modes);
+		free(tmp2);
+		map_free(mode_map);
+
+		struct node* tmp_node;
+		wl_list_for_each_safe(node, tmp_node, &modes, link) {
+			wl_list_remove(&node->link);
+			free(node);
+		}
 	} else {
 		GtkWidget* label = gtk_label_new(text);
 		gtk_widget_set_name(label, "text");

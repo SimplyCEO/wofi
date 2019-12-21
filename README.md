@@ -15,9 +15,9 @@ If you're having issues with -i not showing images refer to https://todo.sr.ht/~
 	meson build
 	ninja -C build
 ## Installing
-	sudo cp build/wofi /usr/bin
+	sudo ninja -C build install
 ## Uninstalling
-	sudo rm /usr/bin/wofi
+	sudo ninja -C build uninstall
 ## Bug Reports
 Please file bug reports at https://todo.sr.ht/~scoopta/wofi
 ## Contributing

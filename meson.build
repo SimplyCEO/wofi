@@ -24,4 +24,4 @@ executable('wofi',
 'proto/wlr-layer-shell-unstable-v1-protocol.c',
 'proto/xdg-shell-protocol.c',
 include_directories : inc,
-dependencies : [gtk, gio, threads, wayland, dl])
+dependencies : [gtk, gio, threads, wayland, dl], install : true)

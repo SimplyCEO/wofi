@@ -4,8 +4,10 @@ packages:
  - libwayland-dev
  - libgtk-3-dev
  - pkg-config
+ - meson
 
 tasks:
  - build: |
-    cd wofi/Release
-    make
+    cd wofi
+    meson build
+    ninja -C build

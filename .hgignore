@@ -1,8 +1,7 @@
 ^\.cproject$
 ^\.project$
 ^\.settings$
-^Debug/wofi$
-^Release/wofi$
+^build$
 .+\.o$
 .+\.d$
 ^\.hgrepos$

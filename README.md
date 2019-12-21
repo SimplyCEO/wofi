@@ -8,12 +8,14 @@ If you're having issues with -i not showing images refer to https://todo.sr.ht/~
 	libwayland-dev
 	libgtk-3-dev
 	pkg-config
+	meson
 ## Building
 	hg clone https://hg.sr.ht/~scoopta/wofi
-	cd wofi/Release
-	make
+	cd wofi
+	meson build
+	ninja -C build
 ## Installing
-	sudo cp wofi /usr/bin
+	sudo cp build/wofi /usr/bin
 ## Uninstalling
 	sudo rm /usr/bin/wofi
 ## Bug Reports

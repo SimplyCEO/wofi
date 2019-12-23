@@ -45,6 +45,7 @@ static struct map* modes;
 static enum matching_mode matching;
 static bool insensitive;
 static bool parse_search;
+static uint8_t content_halign;
 static struct map* config;
 
 struct node {
@@ -223,6 +224,7 @@ char* wofi_parse_image_escapes(const char* text) {
 
 static GtkWidget* create_label(char* mode, char* text, char* search_text, char* action) {
 	GtkWidget* box = wofi_property_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+	gtk_widget_set_halign(box, content_halign);
 	gtk_widget_set_name(box, "unselected");
 	GtkStyleContext* style = gtk_widget_get_style_context(box);
 	gtk_style_context_add_class(style, "entry");
@@ -719,6 +721,7 @@ void wofi_init(struct map* _config) {
 	uint8_t orientation = config_get_mnemonic(config, "orientation", "vertical", 2, "vertical", "horizontal");
 	outer_orientation = config_get_mnemonic(config, "orientation", "vertical", 2, "horizontal", "vertical");
 	uint8_t halign = config_get_mnemonic(config, "halign", "fill", 4, "fill", "start", "end", "center");
+	content_halign = config_get_mnemonic(config, "content_halign", "fill", 4, "fill", "start", "end", "center");
 	char* default_valign = "start";
 	if(outer_orientation == GTK_ORIENTATION_HORIZONTAL) {
 		default_valign = "center";

@@ -1,4 +1,4 @@
-project('wofi', 'c', version : 'v1.0', default_options : ['buildtype=release', 'warning_level=2'])
+project('wofi', 'c', version : run_command('hg', 'identify').stdout().strip(), default_options : ['buildtype=release', 'warning_level=2'])
 cc = meson.get_compiler('c')
 
 inc = include_directories('inc')
@@ -11,7 +11,7 @@ dl = cc.find_library('dl')
 add_project_arguments('-D_GNU_SOURCE', '-DVERSION="' + meson.project_version() + '"', language : 'c')
 add_project_link_arguments('-rdynamic', language : 'c')
 
-executable('wofi',
+executable(meson.project_name(),
 'src/config.c',
 'src/main.c',
 'src/map.c',

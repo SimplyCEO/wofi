@@ -1,4 +1,4 @@
-project('wofi', 'c', version : run_command('hg', 'identify').stdout().strip(), default_options : ['buildtype=release', 'warning_level=2'])
+project('wofi', 'c', default_options : ['buildtype=release', 'warning_level=2'])
 cc = meson.get_compiler('c')
 
 inc = include_directories('inc')
@@ -8,7 +8,15 @@ threads = dependency('threads')
 wayland = dependency('wayland-client')
 dl = cc.find_library('dl')
 
-add_project_arguments('-D_GNU_SOURCE', '-DVERSION="' + meson.project_version() + '"', language : 'c')
+hg = find_program('hg', native : true, required : false)
+
+version = get_option('version')
+
+if hg.found()
+	version = run_command(hg, 'identify').stdout().strip()
+endif
+
+add_project_arguments('-D_GNU_SOURCE', '-DVERSION="' + version + '"', language : 'c')
 add_project_link_arguments('-rdynamic', language : 'c')
 
 executable(meson.project_name(),

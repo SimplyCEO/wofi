@@ -29,16 +29,10 @@ void wofi_dmenu_init(struct map* config) {
 	struct map* cached = map_init();
 	struct wl_list* cache = wofi_read_cache(MODE);
 
-	struct cache_line* node, *tmp;
-	wl_list_for_each_safe(node, tmp, cache, link) {
-		wofi_insert_widget(MODE, &node->line, node->line, &node->line, 1);
-		map_put(cached, node->line, "true");
-		free(node->line);
-		wl_list_remove(&node->link);
-		free(node);
-	}
+	struct wl_list entries;
+	wl_list_init(&entries);
 
-	free(cache);
+	struct map* entry_map = map_init();
 
 	char* line = NULL;
 	size_t size = 0;
@@ -47,12 +41,37 @@ void wofi_dmenu_init(struct map* config) {
 		if(lf != NULL) {
 			*lf = 0;
 		}
-		if(map_contains(cached, line)) {
-			continue;
-		}
-		wofi_insert_widget(MODE, &line, line, &line, 1);
+		struct cache_line* node = malloc(sizeof(struct cache_line));
+		node->line = strdup(line);
+		wl_list_insert(&entries, &node->link);
+		map_put(entry_map, line, "true");
 	}
 	free(line);
+
+	struct cache_line* node, *tmp;
+	wl_list_for_each_safe(node, tmp, cache, link) {
+		if(map_contains(entry_map, node->line)) {
+			map_put(cached, node->line, "true");
+			wofi_insert_widget(MODE, &node->line, node->line, &node->line, 1);
+		} else {
+			wofi_remove_cache(MODE, node->line);
+		}
+		free(node->line);
+		wl_list_remove(&node->link);
+		free(node);
+	}
+
+	free(cache);
+	map_free(entry_map);
+
+	wl_list_for_each_reverse_safe(node, tmp, &entries, link) {
+		if(!map_contains(cached, node->line)) {
+			wofi_insert_widget(MODE, &node->line, node->line, &node->line, 1);
+		}
+		free(node->line);
+		wl_list_remove(&node->link);
+		free(node);
+	}
 	map_free(cached);
 }
 

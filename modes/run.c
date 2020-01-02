@@ -42,9 +42,15 @@ void wofi_run_init(struct map* config) {
 		} else {
 			text = final_slash + 1;
 		}
-		wofi_insert_widget(MODE, &text, text, &node->line, 1);
-		map_put(cached, node->line, "true");
-		map_put(entries, text, "true");
+		struct stat info;
+		stat(node->line, &info);
+		if(access(node->line, X_OK) == 0 && S_ISREG(info.st_mode)) {
+			wofi_insert_widget(MODE, &text, text, &node->line, 1);
+			map_put(cached, node->line, "true");
+			map_put(entries, text, "true");
+		} else {
+			wofi_remove_cache(MODE, node->line);
+		}
 		free(node->line);
 		wl_list_remove(&node->link);
 		free(node);

@@ -185,6 +185,7 @@ void wofi_drun_init() {
 		size_t action_count;
 		char** text = get_action_text(node->line, &action_count);
 		if(text == NULL) {
+			wofi_remove_cache(MODE, node->line);
 			goto cache_cont;
 		}
 

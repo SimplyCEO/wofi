@@ -342,7 +342,7 @@ void wofi_write_cache(const gchar* mode, const gchar* cmd) {
 	struct wl_list lines;
 	wl_list_init(&lines);
 	bool inc_count = false;
-	if(access(cache_path, R_OK) == 0) {
+	if(access(cache_path, R_OK | W_OK) == 0) {
 		FILE* file = fopen(cache_path, "r");
 		char* line = NULL;
 		size_t size = 0;
@@ -380,30 +380,30 @@ void wofi_write_cache(const gchar* mode, const gchar* cmd) {
 		}
 		free(line);
 		fclose(file);
-	}
-	if(!inc_count) {
-		struct cache_line* node = malloc(sizeof(struct cache_line));
-		node->line = utils_concat(3, "1 ", cmd, "\n");
-		wl_list_insert(&lines, &node->link);
-	}
 
-	FILE* file = fopen(cache_path, "w");
-	struct cache_line* node, *tmp;
-	wl_list_for_each_safe(node, tmp, &lines, link) {
-		fwrite(node->line, 1, strlen(node->line), file);
-		free(node->line);
-		wl_list_remove(&node->link);
-		free(node);
+		if(!inc_count) {
+			struct cache_line* node = malloc(sizeof(struct cache_line));
+			node->line = utils_concat(3, "1 ", cmd, "\n");
+			wl_list_insert(&lines, &node->link);
+		}
+
+		file = fopen(cache_path, "w");
+		struct cache_line* node, *tmp;
+		wl_list_for_each_safe(node, tmp, &lines, link) {
+			fwrite(node->line, 1, strlen(node->line), file);
+			free(node->line);
+			wl_list_remove(&node->link);
+			free(node);
+		}
+
+		fclose(file);
 	}
-
-	fclose(file);
-
 	free(cache_path);
 }
 
 void wofi_remove_cache(const gchar* mode, const gchar* cmd) {
 	char* cache_path = get_cache_path(mode);
-	if(access(cache_path, R_OK) == 0) {
+	if(access(cache_path, R_OK | W_OK) == 0) {
 		struct wl_list lines;
 		wl_list_init(&lines);
 

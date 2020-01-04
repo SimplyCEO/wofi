@@ -633,9 +633,6 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 	case GDK_KEY_Escape:
 		exit(0);
 		break;
-	case GDK_KEY_Up:
-	case GDK_KEY_Left:
-		break;
 	case GDK_KEY_Return:
 		mod_shift = (event->key.state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK;
 		mod_ctrl = (event->key.state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK;
@@ -664,8 +661,13 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 			return TRUE;
 		}
 		break;
-	case GDK_KEY_Shift_L:case GDK_KEY_Shift_R:
-	case GDK_KEY_Control_L:case GDK_KEY_Control_R:
+	case GDK_KEY_Up:
+	case GDK_KEY_Left:
+	case GDK_KEY_Shift_L:
+	case GDK_KEY_Shift_R:
+	case GDK_KEY_Control_L:
+	case GDK_KEY_Control_R:
+	case GDK_KEY_ISO_Left_Tab:
 		break;
 	default:
 		if(!gtk_widget_has_focus(entry)) {

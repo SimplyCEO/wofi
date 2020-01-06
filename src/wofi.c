@@ -24,8 +24,20 @@ enum matching_mode {
 	MATCHING_MODE_FUZZY
 };
 
+enum locations {
+	LOCATION_CENTER,
+	LOCATION_TOP_LEFT,
+	LOCATION_TOP,
+	LOCATION_TOP_RIGHT,
+	LOCATION_RIGHT,
+	LOCATION_BOTTOM_RIGHT,
+	LOCATION_BOTTOM,
+	LOCATION_BOTTOM_LEFT,
+	LOCATION_LEFT
+};
+
 static uint64_t width, height;
-static int64_t x, y;
+static char* x, *y;
 static struct zwlr_layer_shell_v1* shell;
 static GtkWidget* window, *outer_box, *scroll, *entry, *inner_box, *previous_selection = NULL;
 static const gchar* filter;
@@ -47,6 +59,7 @@ static bool insensitive;
 static bool parse_search;
 static uint8_t content_halign;
 static struct map* config;
+static enum locations location;
 
 struct node {
 	size_t action_count;
@@ -73,9 +86,54 @@ static void config_surface(void* data, struct zwlr_layer_surface_v1* surface, ui
 	zwlr_layer_surface_v1_ack_configure(surface, serial);
 	zwlr_layer_surface_v1_set_size(surface, width, height);
 	zwlr_layer_surface_v1_set_keyboard_interactivity(surface, true);
-	if(x >= 0 && y >= 0) {
-		zwlr_layer_surface_v1_set_margin(surface, y, 0, 0, x);
-		zwlr_layer_surface_v1_set_anchor(surface, ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT);
+
+	if(location > 8) {
+		location -= 9;
+	}
+
+	if(x != NULL || y != NULL) {
+		int64_t ix = x == NULL ? 0 : strtol(x, NULL, 10);
+		int64_t iy = y == NULL ? 0 : strtol(y, NULL, 10);
+
+		if(location == LOCATION_CENTER) {
+			location = LOCATION_TOP_LEFT;
+		}
+
+		zwlr_layer_surface_v1_set_margin(surface, iy, -ix, -iy, ix);
+	}
+
+	if(location > 0) {
+		enum zwlr_layer_surface_v1_anchor anchor;
+
+		switch(location) {
+		case LOCATION_CENTER:
+			break;
+		case LOCATION_TOP_LEFT:
+			anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
+			break;
+		case LOCATION_TOP:
+			anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP;
+			break;
+		case LOCATION_TOP_RIGHT:
+			anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+			break;
+		case LOCATION_LEFT:
+			anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
+			break;
+		case LOCATION_RIGHT:
+			anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+			break;
+		case LOCATION_BOTTOM_LEFT:
+			anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
+			break;
+		case LOCATION_BOTTOM:
+			anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM;
+			break;
+		case LOCATION_BOTTOM_RIGHT:
+			anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_BOTTOM | ZWLR_LAYER_SURFACE_V1_ANCHOR_RIGHT;
+			break;
+		}
+		zwlr_layer_surface_v1_set_anchor(surface, anchor);
 	}
 }
 
@@ -753,8 +811,8 @@ void wofi_init(struct map* _config) {
 	config = _config;
 	width = strtol(config_get(config, "width", "1000"), NULL, 10);
 	height = strtol(config_get(config, "height", "400"), NULL, 10);
-	x = strtol(config_get(config, "x", "-1"), NULL, 10);
-	y = strtol(config_get(config, "y", "-1"), NULL, 10);
+	x = map_get(config, "x");
+	y = map_get(config, "y");
 	bool normal_window = strcmp(config_get(config, "normal_window", "false"), "true") == 0;
 	mode = map_get(config, "mode");
 	uint8_t orientation = config_get_mnemonic(config, "orientation", "vertical", 2, "vertical", "horizontal");
@@ -781,6 +839,7 @@ void wofi_init(struct map* _config) {
 	matching = config_get_mnemonic(config, "matching", "contains", 2, "contains", "fuzzy");
 	insensitive = strcmp(config_get(config, "insensitive", "false"), "true") == 0;
 	parse_search = strcmp(config_get(config, "parse_search", "false"), "true") == 0;
+	location = config_get_mnemonic(config, "location", "center", 18, "center", "top_left", "top", "top_right", "right", "bottom_right", "bottom", "bottom_left", "left", "0", "1", "2", "3", "4", "5", "6", "7", "8");
 	modes = map_init_void();
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);

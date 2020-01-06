@@ -72,6 +72,7 @@ static void print_usage(char** argv) {
 	printf("--insensitive\t-i\tAllows case insensitive searching\n");
 	printf("--parse-search\t-q\tParses the search text removing image escapes and pango\n");
 	printf("--version\t-v\tPrints the version and then exits\n");
+	printf("--location\t-l\tSets the location\n");
 	exit(0);
 }
 
@@ -326,6 +327,12 @@ int main(int argc, char** argv) {
 			.val = 'v'
 		},
 		{
+			.name = "location",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'l'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -353,8 +360,9 @@ int main(int argc, char** argv) {
 	char* matching = NULL;
 	char* insensitive = NULL;
 	char* parse_search = NULL;
+	char* location = NULL;
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqv", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -433,6 +441,9 @@ int main(int argc, char** argv) {
 		case 'v':
 			printf(VERSION"\n");
 			exit(0);
+			break;
+		case 'l':
+			location = optarg;
 			break;
 		}
 	}
@@ -578,6 +589,9 @@ int main(int argc, char** argv) {
 	}
 	if(parse_search != NULL) {
 		map_put(config, "parse_search", parse_search);
+	}
+	if(location != NULL) {
+		map_put(config, "location", location);
 	}
 
 

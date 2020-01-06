@@ -76,7 +76,7 @@ static void print_usage(char** argv) {
 	exit(0);
 }
 
-static void load_css() {
+static void load_css(void) {
 	if(access(stylesheet, R_OK) == 0) {
 		FILE* file = fopen(stylesheet, "r");
 		fseek(file, 0, SEEK_END);

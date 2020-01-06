@@ -27,7 +27,7 @@
 
 #include <sys/time.h>
 
-time_t utils_get_time_millis();
+time_t utils_get_time_millis(void);
 
 void utils_sleep_millis(time_t millis);
 

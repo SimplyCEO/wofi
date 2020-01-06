@@ -25,14 +25,14 @@ struct map {
 	struct map* head, *left, *right;
 };
 
-struct map* map_init() {
+struct map* map_init(void) {
 	struct map* map = calloc(1, sizeof(struct map));
 	map->head = map;
 	map->mman = true;
 	return map;
 }
 
-struct map* map_init_void() {
+struct map* map_init_void(void) {
 	struct map* map = map_init();
 	map->mman = false;
 	return map;

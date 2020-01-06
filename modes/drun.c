@@ -175,7 +175,7 @@ static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
 	closedir(dir);
 }
 
-void wofi_drun_init() {
+void wofi_drun_init(void) {
 	struct map* cached = map_init();
 	struct map* entries = map_init();
 	struct wl_list* cache = wofi_read_cache(MODE);

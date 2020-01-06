@@ -555,23 +555,23 @@ void wofi_insert_widget(char* mode, char** text, char* search_text, char** actio
 	utils_sleep_millis(1);
 }
 
-bool wofi_allow_images() {
+bool wofi_allow_images(void) {
 	return allow_images;
 }
 
-bool wofi_allow_markup() {
+bool wofi_allow_markup(void) {
 	return allow_markup;
 }
 
-uint64_t wofi_get_image_size() {
+uint64_t wofi_get_image_size(void) {
 	return image_size;
 }
 
-bool wofi_mod_shift() {
+bool wofi_mod_shift(void) {
 	return mod_shift;
 }
 
-bool wofi_mod_control() {
+bool wofi_mod_control(void) {
 	return mod_ctrl;
 }
 

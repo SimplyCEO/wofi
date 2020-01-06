@@ -121,10 +121,10 @@ void wofi_run_exec(const gchar* cmd) {
 	exit(errno);
 }
 
-const char** wofi_run_get_arg_names() {
+const char** wofi_run_get_arg_names(void) {
 	return arg_names;
 }
 
-size_t wofi_run_get_arg_count() {
+size_t wofi_run_get_arg_count(void) {
 	return sizeof(arg_names) / sizeof(char*);
 }

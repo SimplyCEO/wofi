@@ -54,15 +54,15 @@ struct wl_list* wofi_read_cache(char* mode);
 
 void wofi_insert_widget(char* mode, char** text, char* search_text, char** actions, size_t action_count);
 
-bool wofi_allow_images();
+bool wofi_allow_images(void);
 
-bool wofi_allow_markup();
+bool wofi_allow_markup(void);
 
-uint64_t wofi_get_image_size();
+uint64_t wofi_get_image_size(void);
 
-bool wofi_mod_shift();
+bool wofi_mod_shift(void);
 
-bool wofi_mod_control();
+bool wofi_mod_control(void);
 
 void wofi_term_run(const char* cmd);
 #endif

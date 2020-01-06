@@ -23,11 +23,11 @@
 #include <string.h>
 #include <stdbool.h>
 
-struct map* map_init();
+struct map* map_init(void);
 
-struct map* map_init_void();
+struct map* map_init_void(void);
 
-void map_free();
+void map_free(struct map* map);
 
 bool map_put(struct map* map, const char* key, char* value);
 

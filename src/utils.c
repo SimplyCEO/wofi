@@ -17,7 +17,7 @@
 
 #include <utils.h>
 
-time_t utils_get_time_millis() {
+time_t utils_get_time_millis(void) {
 	struct timeval time;
 	gettimeofday(&time, NULL);
 	return (time.tv_sec * 1000) + (time.tv_usec / 1000);

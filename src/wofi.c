@@ -103,7 +103,7 @@ static void config_surface(void* data, struct zwlr_layer_surface_v1* surface, ui
 	}
 
 	if(location > 0) {
-		enum zwlr_layer_surface_v1_anchor anchor;
+		enum zwlr_layer_surface_v1_anchor anchor = ZWLR_LAYER_SURFACE_V1_ANCHOR_TOP | ZWLR_LAYER_SURFACE_V1_ANCHOR_LEFT;
 
 		switch(location) {
 		case LOCATION_CENTER:

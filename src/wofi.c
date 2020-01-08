@@ -57,7 +57,7 @@ static struct map* modes;
 static enum matching_mode matching;
 static bool insensitive;
 static bool parse_search;
-static uint8_t content_halign;
+static GtkAlign content_halign;
 static struct map* config;
 static enum locations location;
 
@@ -815,15 +815,15 @@ void wofi_init(struct map* _config) {
 	y = map_get(config, "y");
 	bool normal_window = strcmp(config_get(config, "normal_window", "false"), "true") == 0;
 	mode = map_get(config, "mode");
-	uint8_t orientation = config_get_mnemonic(config, "orientation", "vertical", 2, "vertical", "horizontal");
+	GtkOrientation orientation = config_get_mnemonic(config, "orientation", "vertical", 2, "vertical", "horizontal");
 	outer_orientation = config_get_mnemonic(config, "orientation", "vertical", 2, "horizontal", "vertical");
-	uint8_t halign = config_get_mnemonic(config, "halign", "fill", 4, "fill", "start", "end", "center");
+	GtkAlign halign = config_get_mnemonic(config, "halign", "fill", 4, "fill", "start", "end", "center");
 	content_halign = config_get_mnemonic(config, "content_halign", "fill", 4, "fill", "start", "end", "center");
 	char* default_valign = "start";
 	if(outer_orientation == GTK_ORIENTATION_HORIZONTAL) {
 		default_valign = "center";
 	}
-	uint8_t valign = config_get_mnemonic(config, "valign", default_valign, 4, "fill", "start", "end", "center");
+	GtkAlign valign = config_get_mnemonic(config, "valign", default_valign, 4, "fill", "start", "end", "center");
 	char* prompt = config_get(config, "prompt", mode);
 	filter_rate = strtol(config_get(config, "filter_rate", "100"), NULL, 10);
 	filter_time = utils_get_time_millis();

@@ -839,7 +839,9 @@ void wofi_init(struct map* _config) {
 	matching = config_get_mnemonic(config, "matching", "contains", 2, "contains", "fuzzy");
 	insensitive = strcmp(config_get(config, "insensitive", "false"), "true") == 0;
 	parse_search = strcmp(config_get(config, "parse_search", "false"), "true") == 0;
-	location = config_get_mnemonic(config, "location", "center", 18, "center", "top_left", "top", "top_right", "right", "bottom_right", "bottom", "bottom_left", "left", "0", "1", "2", "3", "4", "5", "6", "7", "8");
+	location = config_get_mnemonic(config, "location", "center", 18,
+			"center", "top_left", "top", "top_right", "right", "bottom_right", "bottom", "bottom_left", "left",
+			"0", "1", "2", "3", "4", "5", "6", "7", "8");
 	modes = map_init_void();
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);

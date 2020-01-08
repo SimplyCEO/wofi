@@ -76,7 +76,12 @@ static char* get_search_text(char* file) {
 		}
 	}
 
-	char* ret = utils_concat(7, name, file, exec == NULL ? "" : exec, description == NULL ? "" : description, categories == NULL ? "" : categories, keywords_str, generic_name == NULL ? "" : generic_name);
+	char* ret = utils_concat(7, name, file,
+			exec == NULL ? "" : exec,
+			description == NULL ? "" : description,
+			categories == NULL ? "" : categories,
+			keywords_str,
+			generic_name == NULL ? "" : generic_name);
 	free(keywords_str);
 	return ret;
 }

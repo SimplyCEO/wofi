@@ -64,6 +64,7 @@ static char* get_search_text(char* file) {
 	const char* description = g_app_info_get_description(G_APP_INFO(info));
 	const char* categories = g_desktop_app_info_get_categories(info);
 	const char* const* keywords = g_desktop_app_info_get_keywords(info);
+	const char* generic_name = g_desktop_app_info_get_generic_name(info);
 
 	char* keywords_str = strdup("");
 
@@ -75,7 +76,7 @@ static char* get_search_text(char* file) {
 		}
 	}
 
-	char* ret = utils_concat(6, name, file, exec == NULL ? "" : exec, description == NULL ? "" : description, categories == NULL ? "" : categories, keywords_str);
+	char* ret = utils_concat(7, name, file, exec == NULL ? "" : exec, description == NULL ? "" : description, categories == NULL ? "" : categories, keywords_str, generic_name == NULL ? "" : generic_name);
 	free(keywords_str);
 	return ret;
 }

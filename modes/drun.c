@@ -64,7 +64,20 @@ static char* get_search_text(char* file) {
 	const char* description = g_app_info_get_description(G_APP_INFO(info));
 	const char* categories = g_desktop_app_info_get_categories(info);
 	const char* const* keywords = g_desktop_app_info_get_keywords(info);
-	return utils_concat(6, name, file, exec == NULL ? "" : exec, description == NULL ? "" : description, categories == NULL ? "" : categories, keywords == NULL ? (const char* const*) "" : keywords);
+
+	char* keywords_str = strdup("");
+
+	if(keywords != NULL) {
+		for(size_t count = 0; keywords[count] != NULL; ++count) {
+			char* tmp = utils_concat(2, keywords_str, keywords[count]);
+			free(keywords_str);
+			keywords_str = tmp;
+		}
+	}
+
+	char* ret = utils_concat(6, name, file, exec == NULL ? "" : exec, description == NULL ? "" : description, categories == NULL ? "" : categories, keywords_str);
+	free(keywords_str);
+	return ret;
 }
 
 static const gchar* const* get_actions(char* file, size_t* action_count) {

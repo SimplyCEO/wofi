@@ -60,6 +60,7 @@ static bool parse_search;
 static GtkAlign content_halign;
 static struct map* config;
 static enum locations location;
+static bool no_actions;
 
 struct node {
 	size_t action_count;
@@ -356,7 +357,7 @@ static void expand(GtkExpander* expander, gpointer data) {
 static gboolean _insert_widget(gpointer data) {
 	struct node* node = data;
 	GtkWidget* parent;
-	if(node->action_count > 1) {
+	if(node->action_count > 1 && !no_actions) {
 		parent = gtk_expander_new("");
 		g_signal_connect(parent, "activate", G_CALLBACK(expand), NULL);
 		GtkWidget* box = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
@@ -842,6 +843,7 @@ void wofi_init(struct map* _config) {
 	location = config_get_mnemonic(config, "location", "center", 18,
 			"center", "top_left", "top", "top_right", "right", "bottom_right", "bottom", "bottom_left", "left",
 			"0", "1", "2", "3", "4", "5", "6", "7", "8");
+	no_actions = strcmp(config_get(config, "no_actions", "false"), "true") == 0;
 	modes = map_init_void();
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);

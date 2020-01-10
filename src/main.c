@@ -73,6 +73,7 @@ static void print_usage(char** argv) {
 	printf("--parse-search\t-q\tParses the search text removing image escapes and pango\n");
 	printf("--version\t-v\tPrints the version and then exits\n");
 	printf("--location\t-l\tSets the location\n");
+	printf("--no-actions\t-a\tDisables multiple actions for modes that support it\n");
 	exit(0);
 }
 
@@ -333,6 +334,12 @@ int main(int argc, char** argv) {
 			.val = 'l'
 		},
 		{
+			.name = "no-actions",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'a'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -361,8 +368,9 @@ int main(int argc, char** argv) {
 	char* insensitive = NULL;
 	char* parse_search = NULL;
 	char* location = NULL;
+	char* no_actions = NULL;
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:a", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -444,6 +452,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'l':
 			location = optarg;
+			break;
+		case 'a':
+			no_actions = "true";
 			break;
 		}
 	}
@@ -592,6 +603,9 @@ int main(int argc, char** argv) {
 	}
 	if(location != NULL) {
 		map_put(config, "location", location);
+	}
+	if(no_actions != NULL) {
+		map_put(config, "no_actions", no_actions);
 	}
 
 

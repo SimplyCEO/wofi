@@ -142,6 +142,18 @@ static char** get_action_actions(char* file, size_t* action_count) {
 	return actions;
 }
 
+static char* get_id(char* path) {
+	char* applications = strstr(path, "applications/");
+	char* name = strchr(applications, '/') + 1;
+	char* id = strdup(name);
+
+	char* slash;
+	while((slash = strchr(id, '/')) != NULL) {
+		*slash = '-';
+	}
+	return id;
+}
+
 static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
 	DIR* dir = opendir(app_dir);
 	if(dir == NULL) {
@@ -153,25 +165,31 @@ static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
 			continue;
 		}
 		char* full_path = utils_concat(3, app_dir, "/", entry->d_name);
+		char* id = get_id(full_path);
+
 		struct stat info;
 		stat(full_path, &info);
 		if(S_ISDIR(info.st_mode)) {
 			insert_dir(full_path, cached, entries);
+			free(id);
 			free(full_path);
 			continue;
 		}
-		if(map_contains(cached, full_path)) {
+		if(map_contains(cached, id)) {
+			free(id);
 			free(full_path);
 			continue;
 		}
-		if(map_contains(entries, entry->d_name)) {
+		if(map_contains(entries, id)) {
+			free(id);
 			free(full_path);
 			continue;
 		}
 		size_t action_count;
 		char** text = get_action_text(full_path, &action_count);
-		map_put(entries, entry->d_name, "true");
+		map_put(entries, id, "true");
 		if(text == NULL) {
+			free(id);
 			free(full_path);
 			continue;
 		}
@@ -186,6 +204,7 @@ static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
 			free(text[count]);
 		}
 
+		free(id);
 		free(text);
 		free(actions);
 		free(search_text);
@@ -212,7 +231,12 @@ void wofi_drun_init(void) {
 
 		char* search_text = get_search_text(node->line);
 		wofi_insert_widget(MODE, text, search_text, actions, action_count);
-		map_put(cached, node->line, "true");
+
+		char* id = get_id(node->line);
+
+		map_put(cached, id, "true");
+
+		free(id);
 
 		free(search_text);
 

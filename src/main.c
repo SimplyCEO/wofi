@@ -488,10 +488,13 @@ int main(int argc, char** argv) {
 	}
 	free(config_path);
 
+	if(style_str == NULL) {
+		style_str = map_get(config, "style");
+	}
+
 	//Check if --style was specified
 	if(style_str == NULL) {
 		style_str = map_get(config, "stylesheet");
-		style_str = style_str == NULL ? map_get(config, "style") : style_str;
 		if(style_str == NULL) {
 			const char* style_f = "/style.css";
 			stylesheet = utils_concat(2, CONFIG_LOCATION, style_f);
@@ -506,10 +509,13 @@ int main(int argc, char** argv) {
 		stylesheet = strdup(style_str);
 	}
 
+	if(color_str == NULL) {
+		color_str = map_get(config, "color");
+	}
+
 	//Check if --color was specified
 	if(color_str == NULL) {
 		color_str = map_get(config, "colors");
-		color_str = color_str == NULL ? map_get(config, "color") : color_str;
 		if(color_str == NULL) {
 			color_path = strdup(COLORS_LOCATION);
 		} else {

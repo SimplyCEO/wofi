@@ -5,7 +5,7 @@ wofi \- configuration file and styling
 .SH DESCRIPTION
 Wofi's configuration format is very simple, consisting of key value pairs in snake case. The majority of the config options are the command line options, there are however a small handful of options only accessible via wofi's config.
 
-Mode specific options for the built-in modes are documented in \fBwofi\fR(7). They are placed in the config file in the format \fBmode-example_opt=val\fR. For example dmenu has an option called \fBparse_action\fR which would be placed in the config as \fBdmenu-parse_action=true\fR.
+Mode specific options for the built\-in modes are documented in \fBwofi\fR(7). They are placed in the config file in the format \fBmode\-example_opt=val\fR. For example dmenu has an option called \fBparse_action\fR which would be placed in the config as \fBdmenu\-parse_action=true\fR.
 
 .SH CONFIG OPTIONS
 Most of the options here are the command flags as found in \fBwofi\fR(1) in snake case, however some are unique to the config.
@@ -60,10 +60,10 @@ If true allows image escape sequences to be processed and rendered, default is f
 If true allows pango markup to be processed and rendered, default is false.
 .TP
 .B cache_file=\fIPATH\fR
-Specifies the cache file to load/store cache, default is $XDG_CACHE_HOME/wofi-<mode name> where <mode name> is the name of the mode, if $XDG_CACHE_HOME is not specified ~/.cache is used.
+Specifies the cache file to load/store cache, default is $XDG_CACHE_HOME/wofi\-<mode name> where <mode name> is the name of the mode, if $XDG_CACHE_HOME is not specified ~/.cache is used.
 .TP
 .B term=\fITERM\fR
-Specifies the term to use when running a program in a terminal. This overrides the default terminal run order which is kitty, termite, gnome-terminal, weston-terminal in that order.
+Specifies the term to use when running a program in a terminal. This overrides the default terminal run order which is kitty, termite, gnome\-terminal, weston\-terminal in that order.
 .TP
 .B password=\fICHARACTER\fR
 Runs wofi in password mode using the specified character, default is false.

@@ -25,6 +25,12 @@ Please submit patches to https://lists.sr.ht/~scoopta/wofi
 
 You can find documentation here https://man.sr.ht/hg.sr.ht/email.md
 ## Packages
-If you're on Arch there's an unofficial AUR package https://aur.archlinux.org/packages/wofi-hg/
+Debian sid has a package in the official repos https://packages.debian.org/sid/wofi
+
+Arch has an AUR package for the current tip https://aur.archlinux.org/packages/wofi-hg/ and for the current stable https://aur.archlinux.org/packages/wofi/
+
+NixOS has a packge in unstable https://nixos.org/nixos/packages.html?attr=wofi&channel=nixos-unstable&query=wofi
+
+Void Linux also has a package
 ## Documentation
 Documentation on styling and general configuration can be found here https://cloudninja.pw/docs/wofi.html

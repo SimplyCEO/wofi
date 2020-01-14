@@ -1,0 +1,110 @@
+.TH wofi 1
+.SH NAME
+wofi \- A rofi inspired launcher for wlroots compositors
+
+.SH SYNOPSIS
+.B wofi
+[options]
+
+.SH DESCRIPTION
+.B wofi
+is a rofi inspired menu program for wlroots compositors such as sway. It is intended to be highly customizable and flexible with the help of CSS styling and a dmenu mode that allows for endless scriptability. Wofi can be run cacheless in dmenu mode automatically by invoking it as dmenu with symlink.
+
+Wofi was designed specifically for wlroots and makes use of the wlr\-layer\-shell protocol. If your compositor does not support this protocol or if you are in a non\-wayland environment then wofi must be run with \fB\-\-normal\-window\fR or it will crash. If you wish to run wofi this way you can also place \fBnormal_window=true\fR in your config file to avoid specifying the option on the command line.
+
+.SH OPTIONS
+.TP
+.B \-h, \-\-help
+Prints the help message and then exits.
+.TP
+.B \-f, \-\-fork
+Forks the menu so the terminal running it can be closed.
+.TP
+.B \-c, \-\-conf=\fIPATH\fR
+Specifies the config file to use.
+.TP
+.B \-s, \-\-style=\fIPATH\fR
+Specifies the CSS file to use as the stylesheet.
+.TP
+.B \-C, \-\-color=\fIPATH\fR
+Specifies the colors file to use.
+.TP
+.B \-d, \-\-dmenu
+Runs wofi in dmenu mode.
+.TP
+.B \-S, \-\-show=\fIMODE\fR
+Specifies the mode to run in. A list of modes can be found in \fBwofi\fR(7).
+.TP
+.B \-W, \-\-width=\fIWIDTH\fR
+Specifies the menu width in pixels, default is 1000.
+.TP
+.B \-H, \-\-height=\fIHEIGHT\fR
+Specifies the menu height in pixels, default is 400.
+.TP
+.B \-p, \-\-prompt=\fIPROMPT\fR
+Sets the prompt to be display in the search box, default is the name of the mode.
+.TP
+.B \-x, \-\-xoffset=\fIOFFSET\fR
+Sets the x offset from the location in pixels, default is 0.
+.TP
+.B \-y, \-\-yoffset=\fIOFFSET\fR
+Sets the y offset from the location in pixels, default is 0.
+.TP
+.B \-n, \-\-normal\-window
+Runs wofi in a normal window instead of using wlr\-layer\-shell.
+.TP
+.B \-I, \-\-allow\-images
+Allows image escape sequences to be processed and rendered.
+.TP
+.B \-m, \-\-allow\-markup
+Allows pango markup to be processed and rendered.
+.TP
+.B \-k, \-\-cache\-file=\fIPATH\fR
+Specifies the cache file to load/store cache, default is $XDG_CACHE_HOME/wofi-<mode name> where <mode name> is the name of the mode, if $XDG_CACHE_HOME is not specified ~/.cache is used.
+.TP
+.B \-t, \-\-term=\fITERM\fR
+Specifies the term to use when running a program in a terminal. This overrides the default terminal run order which is kitty, termite, gnome-terminal, weston-terminal in that order.
+.TP
+.B \-P, \-\-password \fR[character]
+Runs wofi in password mode with an optional password character to use. If no character is specified * is used by default.
+.TP
+.B \-e, \-\-exec\-search
+Activiating a seach with enter will execute the search not the first result.
+.TP
+.B \-b, \-\-hide\-scroll
+Hides the scroll bars.
+.TP
+.B \-M, \-\-matching=\fIMODE\fR
+Specifies the matching mode, it can be either contains or fuzzy, default is contains.
+.TP
+.B \-i, \-\-insensitive
+Enables case insensitive search.
+.TP
+.B \-q, \-\-parse\-search
+Parses out image escapes and pango preventing them from being used for searching.
+.TP
+.B \-v, \-\-version
+Prints the version and then exits.
+.TP
+.B \-l, \-\-location=\fILOCATION\fR
+Specifies the location. See \fBwofi\fR(7) for more information, default is center.
+.TP
+.B \-a, \-\-no\-actions
+Disables multiple actions for modes that support it.
+
+.SH CONFIGURATION
+Wofi has 3 main files used for configuration. All files are completely optional.
+.IP 1. 4
+The config file which defaults to $XDG_CONFIG_HOME/wofi/config.
+.IP 2. 4
+The CSS file which defaults to $XDG_CONFIG_HOME/wofi/style.css.
+.IP 3. 4
+The colors file which defaults to the pywal cache $XDG_CACHE_HOME/wal/colors.
+
+.P
+All 3 of these paths can be manually specified using the respective command line flag. In the case of the last 2 they can additionally be specified in the config file.
+
+In the event $XDG_CONFIG_HOME is not specified it defaults to ~/.config likewise if $XDG_CACHE_HOME is not specified it defaults to ~/.cache.
+
+Information about the formats for these files can be found in
+.B wofi\fR(5).

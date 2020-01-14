@@ -1,0 +1,155 @@
+.TH wofi 5
+.SH NAME
+wofi \- configuration file and styling
+
+.SH DESCRIPTION
+Wofi's configuration format is very simple, consisting of key value pairs in snake case. The majority of the config options are the command line options, there are however a small handful of options only accessible via wofi's config.
+
+Mode specific options for the built-in modes are documented in \fBwofi\fR(7). They are placed in the config file in the format \fBmode-example_opt=val\fR. For example dmenu has an option called \fBparse_action\fR which would be placed in the config as \fBdmenu-parse_action=true\fR.
+
+.SH CONFIG OPTIONS
+Most of the options here are the command flags as found in \fBwofi\fR(1) in snake case, however some are unique to the config.
+
+.TP
+.B style=\fIPATH\fR
+Specifies the CSS file to use as the stylesheet.
+.TP
+.B stylesheet=\fIPATH\fR
+Specifies the CSS file to use as the stylesheet. This option is NOT the same as \fBstyle\fR. Absolute paths are absolute however relative paths are relative to the wofi config folder location $XDG_CONFIG_HOME/wofi and NOT the current working directory as they are with \fBstyle\fR. They are also NOT relative to the path as specified by \fB\-\-conf\fR. This option comes from rootbar and is probably more confusing than it's worth. You should probably use \fBstyle\fR unless you're sure this is what you want.
+.TP
+.B color=\fIPATH\fR
+Specifies the colors file to use.
+.TP
+.B colors=\fIPATH\fR
+Specifies the colors file to use. This option is NOT the same as \fBcolor\fR. Absolute paths are absolute however relative paths are relative to the wofi config folder location $XDG_CONFIG_HOME/wofi and NOT the current working directory as they are with \fBcolor\fR. They are also NOT relative to the path as specified by \fB\-\-conf\fR. This option comes from rootbar and is probably more confusing than it's worth. You should probably use \fBcolor\fR unless you're sure this is what you want.
+.TP
+.B show=\fIMODE\fR
+Specifies the mode to run in. A list of modes can be found in \fBwofi\fR(7).
+.TP
+.B mode=\fIMODE\fR
+Identical to \fBshow\fR.
+.TP
+.B width=\fIWIDTH\fR
+Specifies the menu width in pixels, default is 1000.
+.TP
+.B height=\fIHEIGHT\fR
+Specifies the menu height in pixels, default is 400.
+.TP
+.B prompt=\fIPROMPT\fR
+Sets the prompt to be display in the search box, default is the name of the mode.
+.TP
+.B xoffset=\fIOFFSET\fR
+Sets the x offset from the location in pixels, default is 0.
+.TP
+.B x=\fIOFFSET\fR
+Identical to \fBxoffset\fR.
+.TP
+.B yoffset=\fIOFFSET\fR
+Sets the y offset from the location in pixels, default is 0.
+.TP
+.B y=\fIOFFSET\fR
+Identical to \fByoffset\fR.
+.TP
+.B normal_window=\fIBOOL\fR
+If true runs wofi in a normal window instead of using wlr\-layer\-shell, default is false.
+.TP
+.B allow_images=\fIBOOL\fR
+If true allows image escape sequences to be processed and rendered, default is false.
+.TP
+.B allow_markup=\fIBOOL\fR
+If true allows pango markup to be processed and rendered, default is false.
+.TP
+.B cache_file=\fIPATH\fR
+Specifies the cache file to load/store cache, default is $XDG_CACHE_HOME/wofi-<mode name> where <mode name> is the name of the mode, if $XDG_CACHE_HOME is not specified ~/.cache is used.
+.TP
+.B term=\fITERM\fR
+Specifies the term to use when running a program in a terminal. This overrides the default terminal run order which is kitty, termite, gnome-terminal, weston-terminal in that order.
+.TP
+.B password=\fICHARACTER\fR
+Runs wofi in password mode using the specified character, default is false.
+.TP
+.B exec_search=\fIBOOL\fR
+If true activiating a seach with enter will execute the search not the first result, default is false.
+.TP
+.B hide_scroll=\fIBOOL\fR
+If true hides the scroll bars, default is false.
+.TP
+.B matching=\fIMODE\fR
+Specifies the matching mode, it can be either contains or fuzzy, default is contains.
+.TP
+.B insensitive=\fIBOOL\fR
+If true enables case insensitive search, default is false.
+.TP
+.B parse_search=\fIBOOL\fR
+If true parses out image escapes and pango preventing them from being used for searching, default is false.
+.TP
+.B location=\fILOCATION\fR
+Specifies the location. See \fBwofi\fR(7) for more information, default is center.
+.TP
+.B no_actions=\fIBOOL\fR
+If true disables multiple actions for modes that support it, default is false.
+.TP
+.B orientation=\fIORIENTATION\fR
+Specifies the orientation, it can be either horizontal or vertical, default is vertical.
+.TP
+.B halign=\fIALIGN\fR
+Specifies the horizontal align for the entire scrolled area, it can be any of fill, start, end, or center, default is fill.
+.TP
+.B content_halign=\fIALIGN\fR
+Specifies the horizontal align for the individual entries, it can be any of fill, start, end, or center, default is fill.
+.TP
+.B valign=\fIALIGN\fR
+Specifies the vertical align for the entire scrolled area, it can be any of fill, start, end, or center, the default is orientation dependent. If vertical then it defaults to start, if horizontal it defaults to center.
+.TP
+.B filter_rate=\fIRATE\fR
+Specifies the rate at which search results are updated in milliseconds, default is 100.
+.TP
+.B image_size=\fISIZE\fR
+Specifies the size of images in pixels when images are enabled, default is 32.
+
+.SH CSS SELECTORS
+Any GTK widget can be selected by using the name of its CSS node, these however might change with updates and are not guarenteed to stay constant. Wofi also provides certain widgets with names and classes which can be referenced from CSS to give access to the most important widgets easily. \fBwofi\fR(7) contains the current widget layout used by wofi so if you want to get into CSS directly using GTK widget names look there for info.
+
+.TP
+.B #window
+.br
+The name of the window itself.
+.TP
+.B #outer\-box
+.br
+The name of the box that contains everything.
+.TP
+.B #input
+.br
+The name of the search bar.
+.TP
+.B #scroll
+.br
+The name of the scrolled window containing all of the entries.
+.TP
+.B #inner\-box
+.br
+The name of the box containing all of the entries.
+.TP
+.B #img
+.br
+The name of all images in entries displayed in image mode.
+.TP
+.B #text
+.br
+The name of all the text in entries.
+.TP
+.B #unselected
+.br
+The name of all entries currently unselected.
+.TP
+.B #selected
+.br
+The name of all entries currently selected.
+.TP
+.B .entry
+.br
+The class attached to all entries.
+
+.SH COLORS
+The colors file should be formatted as new line separated hex values. These values should be in the standard HTML format and begin with a hash.

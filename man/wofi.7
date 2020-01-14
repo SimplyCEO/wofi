@@ -1,0 +1,97 @@
+.TH wofi 7
+.SH NAME
+wofi \- Built in modes and other features
+
+.SH DESCRIPTION
+Wofi contains several built in modes as well as support for a combi like feature as well as a lot of other features which are documented here.
+
+.SH MODES
+Currently wofi has 3 built in modes
+.IP 1. 4
+run \- searches $PATH for executables and allows them to be run by selecting them.
+.IP 2. 4
+drun \- searches $XDG_DATA_HOME/applications and $XDG_DATA_DIRS/applications for desktop files and allows them to be run by selecting them.
+.IP 3. 4
+dmenu \- reads from stdin and displays options which when selected will be output to stdout.
+
+.P
+In the event $XDG_DATA_HOME is not specified it defaults to ~/.local/share. If $XDG_DATA_DIRS is not specified it defaults to /usr/local/share:/usr/share.
+
+Combi is not a mode however it does exist as a feature. You can use it by doing --show mode1,mode2,mode3,etc. You can mix and match any number of modes however each mode can only be loaded once so doing something like --show run,drun,run is not supported although I'm not sure why you'd do that in the first place.
+
+.SH DMENU CONFIG OPTIONS
+.TP
+.B parse_action=\fIBOOL\fR
+If true the result returned by dmenu will be stripped of image escape sequences and pango markup, default is false.
+
+.SH RUN CONFIG OPTIONS
+.TP
+.B always_parse_args=\fIBOOL\fR
+If true spaces will not be treated as part of the executable name but rather as an argument separator equivalent to holding control while pressing enter, default is false.
+.TP
+.B show_all=\fIBOOL\fR
+If true shows all the entries in path, this will show entries that have the same executable name, for example /bin/bash and /usr/bin/bash will be shown separately as bash instead of having one bash entry for the first one encountered, default is true.
+
+.SH LOCATIONS
+There are 9 possible locations which can be specified either by name or by number, the number scheme is the same as in rofi and the corresponding number is listed next to the names below, the default is center.
+.IP 1. 4
+center 0
+.IP 2. 4
+top_left 1
+.IP 3. 4
+top 2
+.IP 4. 4
+top_right 3
+.IP 5. 4
+right 4
+.IP 6. 4
+bottom_right 5
+.IP 7. 4
+bottom 6
+.IP 8. 4
+bottom_left 7
+.IP 9. 4
+left 8
+
+.P
+The x and y offsets are applied based on layer\-shell anchors which means an x offset can only be applied if wofi is anchored on the x axis, i.e. you can only use an x offset with the top_left, top_right, right, bottom_right, bottom_left, and left locations. center, top, and bottom can't have x offsets as they're not anchored on the x axis. Likewise y offsets can only be applied to top_left, top, top_right, bottom_right, bottom, and bottom_left locations. center, left, and right can't have y offsets because they're not anchored to the y axis. Since center can't have offsets on either as it's not anchored to any axis any x or y offset applied while using center will override the location to top_left for backwards compatiblity reasons seeing as not doing so would simply ignore the offsets anyway.
+
+.SH WIDGET LAYOUT
+This section is for advanced CSS which needs more control than the built in wofi CSS names/classes allow for. This widget layout is subject to change at any time and without warning so your CSS might very well break if you rely on this. Widgets which have their corresponding names next to them if they have them.
+
+.B window \- #window
+.RS 4
+.B box \- #outer\-box
+.RS 4
+.B entry \- #input
+
+.B scrolledwindow \- #scroll
+.RS 4
+.B viewport
+.RS 4
+.B box
+.RS 4
+.B flowbox \- #inner\-box
+.RS 4
+.B flowboxchild
+.RS 4
+.B .entry \- #unselected or #selected
+.br
+This is a WofiPropertyBox which has no CSS node however the .entry class is attached, the name is dependent on whether or not the entry is selected.
+
+.RS 4
+.B image
+.br
+This is only present if an image is present in the entry and might occur multiple times if multiple images are present.
+
+.B label
+.br
+This is only present if text is present in the entry and might occur multiple times if there are multiple text objects in a single entry.
+.RE
+.RE
+.RE
+.RE
+.B scrollbar
+.RE
+.RE
+.RE

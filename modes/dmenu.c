@@ -23,8 +23,17 @@ static const char* arg_names[] = {"parse_action"};
 
 static bool parse_action;
 
+struct node {
+	struct widget* widget;
+	struct wl_list link;
+};
+
+static struct wl_list widgets;
+
 void wofi_dmenu_init(struct map* config) {
 	parse_action = strcmp(config_get(config, "parse_action", "false"), "true") == 0;
+
+	wl_list_init(&widgets);
 
 	struct map* cached = map_init();
 	struct wl_list* cache = wofi_read_cache(MODE);
@@ -52,7 +61,9 @@ void wofi_dmenu_init(struct map* config) {
 	wl_list_for_each_safe(node, tmp, cache, link) {
 		if(map_contains(entry_map, node->line)) {
 			map_put(cached, node->line, "true");
-			wofi_insert_widget(MODE, &node->line, node->line, &node->line, 1);
+			struct node* widget = malloc(sizeof(struct node));
+			widget->widget = wofi_create_widget(MODE, &node->line, node->line, &node->line, 1);
+			wl_list_insert(&widgets, &widget->link);
 		} else {
 			wofi_remove_cache(MODE, node->line);
 		}
@@ -66,13 +77,26 @@ void wofi_dmenu_init(struct map* config) {
 
 	wl_list_for_each_reverse_safe(node, tmp, &entries, link) {
 		if(!map_contains(cached, node->line)) {
-			wofi_insert_widget(MODE, &node->line, node->line, &node->line, 1);
+			struct node* widget = malloc(sizeof(struct node));
+			widget->widget = wofi_create_widget(MODE, &node->line, node->line, &node->line, 1);
+			wl_list_insert(&widgets, &widget->link);
 		}
 		free(node->line);
 		wl_list_remove(&node->link);
 		free(node);
 	}
 	map_free(cached);
+}
+
+struct widget* wofi_dmenu_get_widget() {
+	struct node* node, *tmp;
+	wl_list_for_each_reverse_safe(node, tmp, &widgets, link) {
+		struct widget* widget = node->widget;
+		wl_list_remove(&node->link);
+		free(node);
+		return widget;
+	}
+	return NULL;
 }
 
 void wofi_dmenu_exec(const gchar* cmd) {

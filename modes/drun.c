@@ -19,6 +19,13 @@
 
 #define MODE "drun"
 
+struct node {
+	struct widget* widget;
+	struct wl_list link;
+};
+
+static struct wl_list widgets;
+
 static char* get_text(char* file, char* action) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(file);
 	if(info == NULL || g_desktop_app_info_get_is_hidden(info) || g_desktop_app_info_get_nodisplay(info)) {
@@ -197,7 +204,10 @@ static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
 		char** actions = get_action_actions(full_path, &action_count);
 
 		char* search_text = get_search_text(full_path);
-		wofi_insert_widget(MODE, text, search_text, actions, action_count);
+
+		struct node* node = malloc(sizeof(struct node));
+		node->widget = wofi_create_widget(MODE, text, search_text, actions, action_count);
+		wl_list_insert(&widgets, &node->link);
 
 		for(size_t count = 0; count < action_count; ++count) {
 			free(actions[count]);
@@ -218,6 +228,8 @@ void wofi_drun_init(void) {
 	struct map* entries = map_init();
 	struct wl_list* cache = wofi_read_cache(MODE);
 
+	wl_list_init(&widgets);
+
 	struct cache_line* node, *tmp;
 	wl_list_for_each_safe(node, tmp, cache, link) {
 		size_t action_count;
@@ -230,7 +242,9 @@ void wofi_drun_init(void) {
 		char** actions = get_action_actions(node->line, &action_count);
 
 		char* search_text = get_search_text(node->line);
-		wofi_insert_widget(MODE, text, search_text, actions, action_count);
+		struct node* widget = malloc(sizeof(struct node));
+		widget->widget = wofi_create_widget(MODE, text, search_text, actions, action_count);
+		wl_list_insert(&widgets, &widget->link);
 
 		char* id = get_id(node->line);
 
@@ -278,6 +292,17 @@ void wofi_drun_init(void) {
 	free(dirs);
 	map_free(cached);
 	map_free(entries);
+}
+
+struct widget* wofi_drun_get_widget() {
+	struct node* node, *tmp;
+	wl_list_for_each_reverse_safe(node, tmp, &widgets, link) {
+		struct widget* widget = node->widget;
+		wl_list_remove(&node->link);
+		free(node);
+		return widget;
+	}
+	return NULL;
 }
 
 static void launch_done(GObject* obj, GAsyncResult* result, gpointer data) {

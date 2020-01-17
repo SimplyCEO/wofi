@@ -52,7 +52,7 @@ void wofi_remove_cache(const gchar* mode, const gchar* cmd);
 
 struct wl_list* wofi_read_cache(char* mode);
 
-void wofi_insert_widget(char* mode, char** text, char* search_text, char** actions, size_t action_count);
+struct widget* wofi_create_widget(char* mode, char** text, char* search_text, char** actions, size_t action_count);
 
 bool wofi_allow_images(void);
 

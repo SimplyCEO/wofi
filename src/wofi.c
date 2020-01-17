@@ -62,13 +62,14 @@ static struct map* config;
 static enum locations location;
 static bool no_actions;
 
-struct node {
-	size_t action_count;
-	char* mode, **text, *search_text, **actions;
-};
-
 struct mode {
 	void (*mode_exec)(const gchar* cmd);
+	struct widget* (*mode_get_widget)();
+};
+
+struct widget {
+	size_t action_count;
+	char* mode, **text, *search_text, **actions;
 };
 
 static void nop() {}
@@ -355,7 +356,16 @@ static void expand(GtkExpander* expander, gpointer data) {
 }
 
 static gboolean _insert_widget(gpointer data) {
-	struct node* node = data;
+	struct mode* mode = data;
+	struct widget* node;
+	if(mode->mode_get_widget == NULL) {
+		return FALSE;
+	} else {
+		node = mode->mode_get_widget();
+	}
+	if(node == NULL) {
+		return FALSE;
+	}
 	GtkWidget* parent;
 	if(node->action_count > 1 && !no_actions) {
 		parent = gtk_expander_new("");
@@ -393,7 +403,7 @@ static gboolean _insert_widget(gpointer data) {
 	}
 	free(node->actions);
 	free(node);
-	return FALSE;
+	return TRUE;
 }
 
 void wofi_write_cache(const gchar* mode, const gchar* cmd) {
@@ -539,8 +549,8 @@ struct wl_list* wofi_read_cache(char* mode) {
 	return cache;
 }
 
-void wofi_insert_widget(char* mode, char** text, char* search_text, char** actions, size_t action_count) {
-	struct node* widget = malloc(sizeof(struct node));
+struct widget* wofi_create_widget(char* mode, char** text, char* search_text, char** actions, size_t action_count) {
+	struct widget* widget = malloc(sizeof(struct widget));
 	widget->mode = strdup(mode);
 	widget->text = malloc(action_count * sizeof(char*));
 	for(size_t count = 0; count < action_count; ++count) {
@@ -552,8 +562,7 @@ void wofi_insert_widget(char* mode, char** text, char* search_text, char** actio
 	for(size_t count = 0; count < action_count; ++count) {
 		widget->actions[count] = strdup(actions[count]);
 	}
-	g_idle_add(_insert_widget, widget);
-	utils_sleep_millis(1);
+	return widget;
 }
 
 bool wofi_allow_images(void) {
@@ -757,6 +766,7 @@ static void add_mode(char* mode) {
 		get_arg_names = get_plugin_proc(mode, "_get_arg_names");
 		get_arg_count = get_plugin_proc(mode, "_get_arg_count");
 		mode_ptr->mode_exec = get_plugin_proc(mode, "_exec");
+		mode_ptr->mode_get_widget = get_plugin_proc(mode, "_get_widget");
 	} else {
 		char* plugins_dir = utils_concat(2, config_dir, "/plugins/");
 		char* full_name = utils_concat(2, plugins_dir, mode);
@@ -767,6 +777,7 @@ static void add_mode(char* mode) {
 		get_arg_names = dlsym(plugin, "get_arg_names");
 		get_arg_count = dlsym(plugin, "get_arg_count");
 		mode_ptr->mode_exec = dlsym(plugin, "exec");
+		mode_ptr->mode_get_widget = dlsym(plugin, "get_widget");
 	}
 
 	const char** arg_names = NULL;
@@ -786,6 +797,7 @@ static void add_mode(char* mode) {
 
 	if(init != NULL) {
 		init(props);
+		gdk_threads_add_idle(_insert_widget, mode_ptr);
 	} else {
 		fprintf(stderr, "I would love to show %s but Idk what it is\n", mode);
 		exit(1);

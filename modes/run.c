@@ -24,9 +24,18 @@ static const char* arg_names[] = {"always_parse_args", "show_all"};
 static bool always_parse_args;
 static bool show_all;
 
+struct node {
+	struct widget* widget;
+	struct wl_list link;
+};
+
+static struct wl_list widgets;
+
 void wofi_run_init(struct map* config) {
 	always_parse_args = strcmp(config_get(config, arg_names[0], "false"), "true") == 0;
 	show_all = strcmp(config_get(config, arg_names[1], "true"), "true") == 0;
+
+	wl_list_init(&widgets);
 
 	struct map* cached = map_init();
 	struct wl_list* cache = wofi_read_cache(MODE);
@@ -45,7 +54,9 @@ void wofi_run_init(struct map* config) {
 		struct stat info;
 		stat(node->line, &info);
 		if(access(node->line, X_OK) == 0 && S_ISREG(info.st_mode)) {
-			wofi_insert_widget(MODE, &text, text, &node->line, 1);
+			struct node* widget = malloc(sizeof(struct node));
+			widget->widget = wofi_create_widget(MODE, &text, text, &node->line, 1);
+			wl_list_insert(&widgets, &widget->link);
 			map_put(cached, node->line, "true");
 			map_put(entries, text, "true");
 		} else {
@@ -78,7 +89,9 @@ void wofi_run_init(struct map* config) {
 			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path) && (show_all || !map_contains(entries, entry->d_name))) {
 				char* text = strdup(entry->d_name);
 				map_put(entries, text, "true");
-				wofi_insert_widget(MODE, &text, text, &full_path, 1);
+				struct node* widget = malloc(sizeof(struct node));
+				widget->widget = wofi_create_widget(MODE, &text, text, &full_path, 1);
+				wl_list_insert(&widgets, &widget->link);
 				free(text);
 			}
 			free(full_path);
@@ -88,6 +101,17 @@ void wofi_run_init(struct map* config) {
 	free(path);
 	map_free(cached);
 	map_free(entries);
+}
+
+struct widget* wofi_run_get_widget() {
+	struct node* node, *tmp;
+	wl_list_for_each_reverse_safe(node, tmp, &widgets, link) {
+		struct widget* widget = node->widget;
+		wl_list_remove(&node->link);
+		free(node);
+		return widget;
+	}
+	return NULL;
 }
 
 void wofi_run_exec(const gchar* cmd) {

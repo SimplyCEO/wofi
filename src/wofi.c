@@ -450,16 +450,15 @@ void wofi_write_cache(const gchar* mode, const gchar* cmd) {
 		free(line);
 		fclose(file);
 	}
-	if(!inc_count) {
-		struct cache_line* node = malloc(sizeof(struct cache_line));
-		node->line = utils_concat(3, "1 ", cmd, "\n");
-		wl_list_insert(&lines, &node->link);
-	}
-
 	char* tmp_path = strdup(cache_path);
 	char* dir = dirname(tmp_path);
 
 	if(access(dir, W_OK) == 0) {
+		if(!inc_count) {
+			struct cache_line* node = malloc(sizeof(struct cache_line));
+			node->line = utils_concat(3, "1 ", cmd, "\n");
+			wl_list_insert(&lines, &node->link);
+		}
 		FILE* file = fopen(cache_path, "w");
 		struct cache_line* node, *tmp;
 		wl_list_for_each_safe(node, tmp, &lines, link) {

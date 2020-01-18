@@ -379,13 +379,22 @@ static gboolean _insert_widget(gpointer data) {
 		gtk_container_add(GTK_CONTAINER(parent), exp_box);
 		for(size_t count = 1; count < node->action_count; ++count) {
 			box = create_label(node->mode, node->text[count], node->search_text, node->actions[count]);
-			gtk_container_add(GTK_CONTAINER(exp_box), box);
+
+			GtkWidget* row = gtk_list_box_row_new();
+			gtk_widget_set_name(row, "entry");
+
+			gtk_container_add(GTK_CONTAINER(row), box);
+			gtk_container_add(GTK_CONTAINER(exp_box), row);
 		}
 	} else {
 		parent = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
 	}
-	gtk_container_add(GTK_CONTAINER(inner_box), parent);
-	gtk_widget_show_all(parent);
+	GtkWidget* child = gtk_flow_box_child_new();
+	gtk_widget_set_name(child, "entry");
+
+	gtk_container_add(GTK_CONTAINER(child), parent);
+	gtk_container_add(GTK_CONTAINER(inner_box), child);
+	gtk_widget_show_all(child);
 
 	if(GTK_IS_EXPANDER(parent)) {
 		GtkWidget* box = gtk_bin_get_child(GTK_BIN(parent));

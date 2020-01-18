@@ -141,15 +141,19 @@ The name of all the text in entries.
 .TP
 .B #unselected
 .br
-The name of all entries currently unselected.
+The name of all entries currently unselected. A better way of doing this is to do #entry and combine that with #entry:selected
 .TP
 .B #selected
 .br
-The name of all entries currently selected.
+The name of all entries currently selected. A better way of doing this is to do #entry:selected
 .TP
 .B .entry
 .br
-The class attached to all entries.
+The class attached to all entries. This is attached to the inside property box and is old, you probably want #entry instead
+.TP
+.B #entry
+.br
+The name of all entries.
 
 .SH COLORS
 The colors file should be formatted as new line separated hex values. These values should be in the standard HTML format and begin with a hash.

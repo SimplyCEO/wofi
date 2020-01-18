@@ -60,7 +60,7 @@ left 8
 The x and y offsets are applied based on layer\-shell anchors which means an x offset can only be applied if wofi is anchored on the x axis, i.e. you can only use an x offset with the top_left, top_right, right, bottom_right, bottom_left, and left locations. center, top, and bottom can't have x offsets as they're not anchored on the x axis. Likewise y offsets can only be applied to top_left, top, top_right, bottom_right, bottom, and bottom_left locations. center, left, and right can't have y offsets because they're not anchored to the y axis. Since center can't have offsets on either as it's not anchored to any axis any x or y offset applied while using center will override the location to top_left for backwards compatiblity reasons seeing as not doing so would simply ignore the offsets anyway.
 
 .SH WIDGET LAYOUT
-This section is for advanced CSS which needs more control than the built in wofi CSS names/classes allow for. This widget layout is subject to change at any time and without warning so your CSS might very well break if you rely on this. Widgets which have their corresponding names next to them if they have them.
+This section is for advanced CSS which needs more control than the built in wofi CSS names/classes allow for. This widget layout is subject to change at any time and without warning so your CSS might very well break if you rely on this. Widgets have their corresponding names next to them if they have one.
 
 .B window \- #window
 .RS 4
@@ -78,6 +78,46 @@ This section is for advanced CSS which needs more control than the built in wofi
 .RS 4
 .B flowboxchild \- #entry
 .RS 4
+
+.B .entry \- #unselected or #selected
+.br
+This only exists if there's ONLY 1 action. This is a WofiPropertyBox which has no CSS node and should probably not be used, the name is dependent on whether or not the entry is selected. See \fBwofi\fR(5) on #selected and #unselected for info.
+
+.RS 4
+.B image
+.br
+This is only present if an image is present in the entry and might occur multiple times if multiple images are present.
+
+.B label
+.br
+This is only present if text is present in the entry and might occur multiple times if there are multiple text objects in a single entry.
+.RE
+
+.B expander
+.br
+This and its children only exist if there are multiple actions on the entry
+.RS 4
+
+.B .entry \- #unselected or #selected
+.br
+The main action. This is a WofiPropertyBox which has no CSS node and should probably not be used, the name is dependent on whether or not the entry is selected. See \fBwofi\fR(5) on #selected and #unselected for info.
+
+.RS 4
+.B image
+.br
+This is only present if an image is present in the entry and might occur multiple times if multiple images are present.
+
+.B label
+.br
+This is only present if text is present in the entry and might occur multiple times if there are multiple text objects in a single entry.
+.RE
+
+.B list
+.br
+This contains all the child nodes
+.RS 4
+.B row \- #entry
+.RS 4
 .B .entry \- #unselected or #selected
 .br
 This is a WofiPropertyBox which has no CSS node and should probably not be used, the name is dependent on whether or not the entry is selected. See \fBwofi\fR(5) on #selected and #unselected for info.
@@ -90,6 +130,10 @@ This is only present if an image is present in the entry and might occur multipl
 .B label
 .br
 This is only present if text is present in the entry and might occur multiple times if there are multiple text objects in a single entry.
+.RE
+.RE
+.RE
+.RE
 .RE
 .RE
 .RE

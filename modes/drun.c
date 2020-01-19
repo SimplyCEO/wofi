@@ -312,6 +312,7 @@ static void launch_done(GObject* obj, GAsyncResult* result, gpointer data) {
 	} else if(err != NULL) {
 		char* cmd = data;
 		fprintf(stderr, "%s cannot be executed: %s\n", cmd, err->message);
+		g_error_free(err);
 	} else {
 		char* cmd = data;
 		fprintf(stderr, "%s cannot be executed\n", cmd);

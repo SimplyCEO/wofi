@@ -306,13 +306,17 @@ struct widget* wofi_drun_get_widget() {
 }
 
 static void launch_done(GObject* obj, GAsyncResult* result, gpointer data) {
-	if(g_app_info_launch_uris_finish(G_APP_INFO(obj), result, NULL)) {
+	GError* err = NULL;
+	if(g_app_info_launch_uris_finish(G_APP_INFO(obj), result, &err)) {
 		exit(0);
+	} else if(err != NULL) {
+		char* cmd = data;
+		fprintf(stderr, "%s cannot be executed: %s\n", cmd, err->message);
 	} else {
 		char* cmd = data;
 		fprintf(stderr, "%s cannot be executed\n", cmd);
-		exit(1);
 	}
+	exit(1);
 }
 
 void wofi_drun_exec(const gchar* cmd) {

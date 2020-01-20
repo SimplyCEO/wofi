@@ -30,14 +30,14 @@ static gint compare(gconstpointer p1, gconstpointer p2, gpointer data) {
 }
 
 struct map* map_init(void) {
-	struct map* map = calloc(1, sizeof(struct map));
+	struct map* map = malloc(sizeof(struct map));
 	map->tree = g_tree_new_full(compare, NULL, free, free);
 	map->mman = true;
 	return map;
 }
 
 struct map* map_init_void(void) {
-	struct map* map = calloc(1, sizeof(struct map));
+	struct map* map = malloc(sizeof(struct map));
 	map->tree = g_tree_new_full(compare, NULL, free, NULL);
 	map->mman = false;
 	return map;

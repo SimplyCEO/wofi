@@ -18,77 +18,47 @@
 #include <map.h>
 
 struct map {
-	char* key;
-	void* value;
-	size_t size;
+	GTree* tree;
 	bool mman;
-	struct map* head, *left, *right;
 };
+
+static gint compare(gconstpointer p1, gconstpointer p2, gpointer data) {
+	(void) data;
+	const char* str1 = p1;
+	const char* str2 = p2;
+	return strcmp(str1, str2);
+}
 
 struct map* map_init(void) {
 	struct map* map = calloc(1, sizeof(struct map));
-	map->head = map;
+	map->tree = g_tree_new_full(compare, NULL, free, free);
 	map->mman = true;
 	return map;
 }
 
 struct map* map_init_void(void) {
-	struct map* map = map_init();
+	struct map* map = calloc(1, sizeof(struct map));
+	map->tree = g_tree_new_full(compare, NULL, free, NULL);
 	map->mman = false;
 	return map;
 }
 
 void map_free(struct map* map) {
-	if(map->left != NULL) {
-		map_free(map->left);
-	}
-	if(map->right != NULL) {
-		map_free(map->right);
-	}
-	if(map->key != NULL) {
-		free(map->key);
-	}
-	if(map->value != NULL && map->head->mman) {
-		free(map->value);
-	}
+	g_tree_destroy(map->tree);
 	free(map);
 }
 
 static void put(struct map* map, const char* key, void* value) {
-	if(map->key == NULL) {
-		map->key = strdup(key);
-		if(value != NULL && map->head->mman) {
-			map->value = strdup(value);
-		} else {
-			map->value = value;
-		}
-		++map->head->size;
-	} else if(strcmp(key, map->key) < 0) {
-		if(map->left == NULL) {
-			map->left = map_init();
-			map->left->head = map->head;
-		}
-		put(map->left, key, value);
-	} else if(strcmp(key, map->key) > 0) {
-		if(map->right == NULL) {
-			map->right = map_init();
-			map->right->head = map->head;
-		}
-		put(map->right, key, value);
-	} else {
-		if(map->value != NULL && map->head->mman) {
-			free(map->value);
-		}
-		if(value != NULL && map->head->mman) {
-			map->value = strdup(value);
-		} else {
-			map->value = value;
-		}
+	char* k = strdup(key);
+	char* v = value;
+	if(map->mman && value != NULL) {
+		v = strdup(value);
 	}
+	g_tree_insert(map->tree, k, v);
 }
 
 bool map_put(struct map* map, const char* key, char* value) {
-	if(map->head->mman) {
+	if(map->mman) {
 		put(map, key, value);
 		return true;
 	} else {
@@ -98,7 +68,7 @@ bool map_put(struct map* map, const char* key, char* value) {
 }
 
 bool map_put_void(struct map* map, const char* key, void* value) {
-	if(map->head->mman) {
+	if(map->mman) {
 		fprintf(stderr, "This is an managed map please use map_put\n");
 		return false;
 	} else {
@@ -108,21 +78,7 @@ bool map_put_void(struct map* map, const char* key, void* value) {
 }
 
 void* map_get(struct map* map, const char* key) {
-	if(map->key == NULL) {
-		return NULL;
-	} else if(strcmp(key, map->key) < 0) {
-		if(map->left == NULL) {
-			return NULL;
-		}
-		return map_get(map->left, key);
-	} else if(strcmp(key, map->key) > 0) {
-		if(map->right == NULL) {
-			return NULL;
-		}
-		return map_get(map->right, key);
-	} else {
-		return map->value;
-	}
+	return g_tree_lookup(map->tree, key);
 }
 
 bool map_contains(struct map* map, const char* key) {
@@ -130,5 +86,5 @@ bool map_contains(struct map* map, const char* key) {
 }
 
 size_t map_size(struct map* map) {
-	return map->size;
+	return g_tree_nnodes(map->tree);
 }

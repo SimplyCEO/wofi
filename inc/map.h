@@ -23,6 +23,8 @@
 #include <string.h>
 #include <stdbool.h>
 
+#include <gmodule.h>
+
 struct map* map_init(void);
 
 struct map* map_init_void(void);

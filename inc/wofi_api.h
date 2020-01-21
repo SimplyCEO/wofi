@@ -30,8 +30,6 @@ struct cache_line {
 	struct wl_list link;
 };
 
-void wofi_init(struct map* config);
-
 char* wofi_parse_image_escapes(const char* text);
 
 void wofi_write_cache(const char* mode, const char* cmd);

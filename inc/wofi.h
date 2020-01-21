@@ -37,4 +37,6 @@
 #include <gio/gdesktopappinfo.h>
 
 #include <wlr-layer-shell-unstable-v1-client-protocol.h>
+
+void wofi_init(struct map* config);
 #endif

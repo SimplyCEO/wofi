@@ -415,7 +415,7 @@ static gboolean _insert_widget(gpointer data) {
 	return TRUE;
 }
 
-void wofi_write_cache(const gchar* mode, const gchar* cmd) {
+void wofi_write_cache(const char* mode, const char* cmd) {
 	char* cache_path = get_cache_path(mode);
 	struct wl_list lines;
 	wl_list_init(&lines);
@@ -483,7 +483,7 @@ void wofi_write_cache(const gchar* mode, const gchar* cmd) {
 	free(tmp_path);
 }
 
-void wofi_remove_cache(const gchar* mode, const gchar* cmd) {
+void wofi_remove_cache(const char* mode, const char* cmd) {
 	char* cache_path = get_cache_path(mode);
 	if(access(cache_path, R_OK | W_OK) == 0) {
 		struct wl_list lines;

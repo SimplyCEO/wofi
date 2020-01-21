@@ -18,7 +18,8 @@
 #ifndef WAIFU_H
 #define WAIFU_H
 
-#include <map.h>
+#include <wofi_api.h>
+
 #include <config.h>
 #include <property_box.h>
 
@@ -35,35 +36,5 @@
 #include <gdk/gdkwayland.h>
 #include <gio/gdesktopappinfo.h>
 
-#include <wayland-client.h>
 #include <wlr-layer-shell-unstable-v1-client-protocol.h>
-
-struct cache_line {
-	char* line;
-	struct wl_list link;
-};
-
-void wofi_init(struct map* config);
-
-char* wofi_parse_image_escapes(const char* text);
-
-void wofi_write_cache(const gchar* mode, const gchar* cmd);
-
-void wofi_remove_cache(const gchar* mode, const gchar* cmd);
-
-struct wl_list* wofi_read_cache(char* mode);
-
-struct widget* wofi_create_widget(char* mode, char** text, char* search_text, char** actions, size_t action_count);
-
-bool wofi_allow_images(void);
-
-bool wofi_allow_markup(void);
-
-uint64_t wofi_get_image_size(void);
-
-bool wofi_mod_shift(void);
-
-bool wofi_mod_control(void);
-
-void wofi_term_run(const char* cmd);
 #endif

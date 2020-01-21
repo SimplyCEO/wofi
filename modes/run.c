@@ -17,12 +17,11 @@
 
 #include <wofi.h>
 
-#define MODE "run"
-
 static const char* arg_names[] = {"always_parse_args", "show_all"};
 
 static bool always_parse_args;
 static bool show_all;
+static struct mode* mode;
 
 struct node {
 	struct widget* widget;
@@ -31,14 +30,15 @@ struct node {
 
 static struct wl_list widgets;
 
-void wofi_run_init(struct map* config) {
+void wofi_run_init(struct mode* this, struct map* config) {
+	mode = this;
 	always_parse_args = strcmp(config_get(config, arg_names[0], "false"), "true") == 0;
 	show_all = strcmp(config_get(config, arg_names[1], "true"), "true") == 0;
 
 	wl_list_init(&widgets);
 
 	struct map* cached = map_init();
-	struct wl_list* cache = wofi_read_cache(MODE);
+	struct wl_list* cache = wofi_read_cache(mode);
 
 	struct map* entries = map_init();
 
@@ -55,12 +55,12 @@ void wofi_run_init(struct map* config) {
 		stat(node->line, &info);
 		if(access(node->line, X_OK) == 0 && S_ISREG(info.st_mode)) {
 			struct node* widget = malloc(sizeof(struct node));
-			widget->widget = wofi_create_widget(MODE, &text, text, &node->line, 1);
+			widget->widget = wofi_create_widget(mode, &text, text, &node->line, 1);
 			wl_list_insert(&widgets, &widget->link);
 			map_put(cached, node->line, "true");
 			map_put(entries, text, "true");
 		} else {
-			wofi_remove_cache(MODE, node->line);
+			wofi_remove_cache(mode, node->line);
 		}
 		free(node->line);
 		wl_list_remove(&node->link);
@@ -90,7 +90,7 @@ void wofi_run_init(struct map* config) {
 				char* text = strdup(entry->d_name);
 				map_put(entries, text, "true");
 				struct node* widget = malloc(sizeof(struct node));
-				widget->widget = wofi_create_widget(MODE, &text, text, &full_path, 1);
+				widget->widget = wofi_create_widget(mode, &text, text, &full_path, 1);
 				wl_list_insert(&widgets, &widget->link);
 				free(text);
 			}
@@ -116,7 +116,7 @@ struct widget* wofi_run_get_widget() {
 
 void wofi_run_exec(const gchar* cmd) {
 	if(wofi_mod_shift()) {
-		wofi_write_cache(MODE, cmd);
+		wofi_write_cache(mode, cmd);
 		wofi_term_run(cmd);
 	}
 	if(wofi_mod_control() || always_parse_args) {
@@ -135,10 +135,10 @@ void wofi_run_exec(const gchar* cmd) {
 			args[count++] = str;
 		} while((str = strtok_r(NULL, "\n", &save_ptr)) != NULL);
 		args[space_count - 1] = NULL;
-		wofi_write_cache(MODE, tmp);
+		wofi_write_cache(mode, tmp);
 		execvp(tmp, args);
 	} else {
-		wofi_write_cache(MODE, cmd);
+		wofi_write_cache(mode, cmd);
 		execl(cmd, cmd, NULL);
 	}
 	fprintf(stderr, "%s cannot be executed\n", cmd);

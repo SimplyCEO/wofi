@@ -65,6 +65,7 @@ static bool no_actions;
 struct mode {
 	void (*mode_exec)(const gchar* cmd);
 	struct widget* (*mode_get_widget)();
+	char* name;
 };
 
 struct widget {
@@ -415,8 +416,8 @@ static gboolean _insert_widget(gpointer data) {
 	return TRUE;
 }
 
-void wofi_write_cache(const char* mode, const char* cmd) {
-	char* cache_path = get_cache_path(mode);
+void wofi_write_cache(struct mode* mode, const char* cmd) {
+	char* cache_path = get_cache_path(mode->name);
 	struct wl_list lines;
 	wl_list_init(&lines);
 	bool inc_count = false;
@@ -483,8 +484,8 @@ void wofi_write_cache(const char* mode, const char* cmd) {
 	free(tmp_path);
 }
 
-void wofi_remove_cache(const char* mode, const char* cmd) {
-	char* cache_path = get_cache_path(mode);
+void wofi_remove_cache(struct mode* mode, const char* cmd) {
+	char* cache_path = get_cache_path(mode->name);
 	if(access(cache_path, R_OK | W_OK) == 0) {
 		struct wl_list lines;
 		wl_list_init(&lines);
@@ -520,8 +521,8 @@ void wofi_remove_cache(const char* mode, const char* cmd) {
 	free(cache_path);
 }
 
-struct wl_list* wofi_read_cache(char* mode) {
-	char* cache_path = get_cache_path(mode);
+struct wl_list* wofi_read_cache(struct mode* mode) {
+	char* cache_path = get_cache_path(mode->name);
 	struct wl_list* cache = malloc(sizeof(struct wl_list));
 	wl_list_init(cache);
 	struct wl_list lines;
@@ -562,9 +563,9 @@ struct wl_list* wofi_read_cache(char* mode) {
 	return cache;
 }
 
-struct widget* wofi_create_widget(char* mode, char** text, char* search_text, char** actions, size_t action_count) {
+struct widget* wofi_create_widget(struct mode* mode, char** text, char* search_text, char** actions, size_t action_count) {
 	struct widget* widget = malloc(sizeof(struct widget));
-	widget->mode = strdup(mode);
+	widget->mode = strdup(mode->name);
 	widget->text = malloc(action_count * sizeof(char*));
 	for(size_t count = 0; count < action_count; ++count) {
 		widget->text[count] = strdup(text[count]);
@@ -771,7 +772,9 @@ static void add_mode(char* mode) {
 	struct mode* mode_ptr = calloc(1, sizeof(struct mode));
 	map_put_void(modes, mode, mode_ptr);
 
-	void (*init)(struct map* props);
+	mode_ptr->name = strdup(mode);
+
+	void (*init)(struct mode* mode, struct map* props);
 	const char** (*get_arg_names)();
 	size_t (*get_arg_count)();
 	if(dso == NULL) {
@@ -809,7 +812,7 @@ static void add_mode(char* mode) {
 	}
 
 	if(init != NULL) {
-		init(props);
+		init(mode_ptr, props);
 		gdk_threads_add_idle(_insert_widget, mode_ptr);
 	} else {
 		fprintf(stderr, "I would love to show %s but Idk what it is\n", mode);

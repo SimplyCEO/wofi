@@ -30,15 +30,17 @@ struct cache_line {
 	struct wl_list link;
 };
 
+struct mode;
+
 char* wofi_parse_image_escapes(const char* text);
 
-void wofi_write_cache(const char* mode, const char* cmd);
+void wofi_write_cache(struct mode* mode, const char* cmd);
 
-void wofi_remove_cache(const char* mode, const char* cmd);
+void wofi_remove_cache(struct mode* mode, const char* cmd);
 
-struct wl_list* wofi_read_cache(char* mode);
+struct wl_list* wofi_read_cache(struct mode* mode);
 
-struct widget* wofi_create_widget(char* mode, char** text, char* search_text, char** actions, size_t action_count);
+struct widget* wofi_create_widget(struct mode* mode, char** text, char* search_text, char** actions, size_t action_count);
 
 bool wofi_allow_images(void);
 

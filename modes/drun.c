@@ -17,7 +17,7 @@
 
 #include <wofi.h>
 
-#define MODE "drun"
+static struct mode* mode;
 
 struct node {
 	struct widget* widget;
@@ -206,7 +206,7 @@ static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
 		char* search_text = get_search_text(full_path);
 
 		struct node* node = malloc(sizeof(struct node));
-		node->widget = wofi_create_widget(MODE, text, search_text, actions, action_count);
+		node->widget = wofi_create_widget(mode, text, search_text, actions, action_count);
 		wl_list_insert(&widgets, &node->link);
 
 		for(size_t count = 0; count < action_count; ++count) {
@@ -223,10 +223,13 @@ static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
 	closedir(dir);
 }
 
-void wofi_drun_init(void) {
+void wofi_drun_init(struct mode* this, struct map* config) {
+	(void) config;
+	mode = this;
+
 	struct map* cached = map_init();
 	struct map* entries = map_init();
-	struct wl_list* cache = wofi_read_cache(MODE);
+	struct wl_list* cache = wofi_read_cache(mode);
 
 	wl_list_init(&widgets);
 
@@ -235,7 +238,7 @@ void wofi_drun_init(void) {
 		size_t action_count;
 		char** text = get_action_text(node->line, &action_count);
 		if(text == NULL) {
-			wofi_remove_cache(MODE, node->line);
+			wofi_remove_cache(mode, node->line);
 			goto cache_cont;
 		}
 
@@ -243,7 +246,7 @@ void wofi_drun_init(void) {
 
 		char* search_text = get_search_text(node->line);
 		struct node* widget = malloc(sizeof(struct node));
-		widget->widget = wofi_create_widget(MODE, text, search_text, actions, action_count);
+		widget->widget = wofi_create_widget(mode, text, search_text, actions, action_count);
 		wl_list_insert(&widgets, &widget->link);
 
 		char* id = get_id(node->line);
@@ -323,12 +326,12 @@ static void launch_done(GObject* obj, GAsyncResult* result, gpointer data) {
 void wofi_drun_exec(const gchar* cmd) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(cmd);
 	if(G_IS_DESKTOP_APP_INFO(info)) {
-		wofi_write_cache(MODE, cmd);
+		wofi_write_cache(mode, cmd);
 		g_app_info_launch_uris_async(G_APP_INFO(info), NULL, NULL, NULL, launch_done, (gchar*) cmd);
 	} else if(strrchr(cmd, ' ') != NULL) {
 		char* space = strrchr(cmd, ' ');
 		*space = 0;
-		wofi_write_cache(MODE, cmd);
+		wofi_write_cache(mode, cmd);
 		info = g_desktop_app_info_new_from_filename(cmd);
 		char* action = space + 1;
 		g_desktop_app_info_launch_action(info, action, NULL);

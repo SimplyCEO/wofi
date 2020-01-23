@@ -34,3 +34,6 @@ NixOS has a packge in unstable https://nixos.org/nixos/packages.html?attr=wofi&c
 Void Linux also has a package
 ## Documentation
 The official documentation is provided by the man pages in this repository, sample styling can be found here https://cloudninja.pw/docs/wofi.html
+
+## Donating
+If you feel like supporting development you can either buy me a tea https://www.buymeacoffee.com/Scoopta or support be monthly https://liberapay.com/Scoopta

@@ -22,6 +22,7 @@ static const char* arg_names[] = {"always_parse_args", "show_all"};
 static bool always_parse_args;
 static bool show_all;
 static struct mode* mode;
+static const char* arg_str = "__args";
 
 struct node {
 	struct widget* widget;
@@ -51,11 +52,17 @@ void wofi_run_init(struct mode* this, struct map* config) {
 		} else {
 			text = final_slash + 1;
 		}
+
+		char* action = text;
+		if(strncmp(node->line, arg_str, strlen(arg_str)) == 0) {
+			text = strchr(text, ' ') + 1;
+		}
+
 		struct stat info;
 		stat(node->line, &info);
-		if(access(node->line, X_OK) == 0 && S_ISREG(info.st_mode)) {
+		if((access(node->line, X_OK) == 0 && S_ISREG(info.st_mode)) || strncmp(node->line, arg_str, strlen(arg_str)) == 0) {
 			struct node* widget = malloc(sizeof(struct node));
-			widget->widget = wofi_create_widget(mode, &text, text, &node->line, 1);
+			widget->widget = wofi_create_widget(mode, &text, action, &node->line, 1);
 			wl_list_insert(&widgets, &widget->link);
 			map_put(cached, node->line, "true");
 			map_put(entries, text, "true");
@@ -114,12 +121,19 @@ struct widget* wofi_run_get_widget() {
 	return NULL;
 }
 
+
 void wofi_run_exec(const gchar* cmd) {
+	bool arg_run = wofi_mod_control() || always_parse_args;
+	if(strncmp(cmd, arg_str, strlen(arg_str)) == 0) {
+		arg_run = true;
+		cmd = strchr(cmd, ' ') + 1;
+	}
+
 	if(wofi_mod_shift()) {
 		wofi_write_cache(mode, cmd);
 		wofi_term_run(cmd);
 	}
-	if(wofi_mod_control() || always_parse_args) {
+	if(arg_run) {
 		char* tmp = strdup(cmd);
 		size_t space_count = 2;
 		char* space;
@@ -135,7 +149,9 @@ void wofi_run_exec(const gchar* cmd) {
 			args[count++] = str;
 		} while((str = strtok_r(NULL, "\n", &save_ptr)) != NULL);
 		args[space_count - 1] = NULL;
-		wofi_write_cache(mode, tmp);
+		char* cache = utils_concat(2, "__args ", cmd);
+		wofi_write_cache(mode, cache);
+		free(cache);
 		execvp(tmp, args);
 	} else {
 		wofi_write_cache(mode, cmd);

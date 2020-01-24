@@ -126,3 +126,7 @@ const char** wofi_dmenu_get_arg_names(void) {
 size_t wofi_dmenu_get_arg_count(void) {
 	return sizeof(arg_names) / sizeof(char*);
 }
+
+bool wofi_dmenu_no_entry(void) {
+	return true;
+}

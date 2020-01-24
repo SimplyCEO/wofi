@@ -168,3 +168,7 @@ const char** wofi_run_get_arg_names(void) {
 size_t wofi_run_get_arg_count(void) {
 	return sizeof(arg_names) / sizeof(char*);
 }
+
+bool wofi_run_no_entry(void) {
+	return true;
+}

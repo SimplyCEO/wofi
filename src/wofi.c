@@ -64,7 +64,7 @@ static bool no_actions;
 
 struct mode {
 	void (*mode_exec)(const gchar* cmd);
-	struct widget* (*mode_get_widget)();
+	struct widget* (*mode_get_widget)(void);
 	char* name;
 };
 
@@ -646,9 +646,9 @@ static GtkWidget* get_first_child(GtkContainer* container) {
 static void activate_search(GtkEntry* entry, gpointer data) {
 	(void) data;
 	GtkWidget* child = get_first_child(GTK_CONTAINER(inner_box));
-	if(exec_search || child == NULL) {
+	if(mode != NULL && (exec_search || child == NULL)) {
 		execute_action(mode, gtk_entry_get_text(entry));
-	} else {
+	} else if(child != NULL) {
 		GtkWidget* box = gtk_bin_get_child(GTK_BIN(child));
 		bool primary_action = GTK_IS_EXPANDER(box);
 		if(primary_action) {
@@ -767,25 +767,27 @@ static void* get_plugin_proc(const char* prefix, const char* suffix) {
 	return proc;
 }
 
-static void add_mode(char* mode) {
-	char* dso = strstr(mode, ".so");
+static void add_mode(char* _mode) {
+	char* dso = strstr(_mode, ".so");
 	struct mode* mode_ptr = calloc(1, sizeof(struct mode));
-	map_put_void(modes, mode, mode_ptr);
+	map_put_void(modes, _mode, mode_ptr);
 
-	mode_ptr->name = strdup(mode);
+	mode_ptr->name = strdup(_mode);
 
-	void (*init)(struct mode* mode, struct map* props);
-	const char** (*get_arg_names)();
-	size_t (*get_arg_count)();
+	void (*init)(struct mode* _mode, struct map* props);
+	const char** (*get_arg_names)(void);
+	size_t (*get_arg_count)(void);
+	bool (*no_entry)(void);
 	if(dso == NULL) {
-		init = get_plugin_proc(mode, "_init");
-		get_arg_names = get_plugin_proc(mode, "_get_arg_names");
-		get_arg_count = get_plugin_proc(mode, "_get_arg_count");
-		mode_ptr->mode_exec = get_plugin_proc(mode, "_exec");
-		mode_ptr->mode_get_widget = get_plugin_proc(mode, "_get_widget");
+		init = get_plugin_proc(_mode, "_init");
+		get_arg_names = get_plugin_proc(_mode, "_get_arg_names");
+		get_arg_count = get_plugin_proc(_mode, "_get_arg_count");
+		mode_ptr->mode_exec = get_plugin_proc(_mode, "_exec");
+		mode_ptr->mode_get_widget = get_plugin_proc(_mode, "_get_widget");
+		no_entry = get_plugin_proc(_mode, "_no_entry");
 	} else {
 		char* plugins_dir = utils_concat(2, config_dir, "/plugins/");
-		char* full_name = utils_concat(2, plugins_dir, mode);
+		char* full_name = utils_concat(2, plugins_dir, _mode);
 		void* plugin = dlopen(full_name, RTLD_LAZY | RTLD_LOCAL);
 		free(full_name);
 		free(plugins_dir);
@@ -794,6 +796,7 @@ static void add_mode(char* mode) {
 		get_arg_count = dlsym(plugin, "get_arg_count");
 		mode_ptr->mode_exec = dlsym(plugin, "exec");
 		mode_ptr->mode_get_widget = dlsym(plugin, "get_widget");
+		no_entry = dlsym(plugin, "no_entry");
 	}
 
 	const char** arg_names = NULL;
@@ -803,10 +806,14 @@ static void add_mode(char* mode) {
 		arg_count = get_arg_count();
 	}
 
+	if(mode == NULL && no_entry != NULL && no_entry()) {
+		mode = _mode;
+	}
+
 	struct map* props = map_init();
 	for(size_t count = 0; count < arg_count; ++count) {
 		const char* arg = arg_names[count];
-		char* full_name = utils_concat(3, mode, "-", arg);
+		char* full_name = utils_concat(3, _mode, "-", arg);
 		map_put(props, arg, config_get(config, full_name, NULL));
 		free(full_name);
 	}
@@ -815,7 +822,7 @@ static void add_mode(char* mode) {
 		init(mode_ptr, props);
 		gdk_threads_add_idle(_insert_widget, mode_ptr);
 	} else {
-		fprintf(stderr, "I would love to show %s but Idk what it is\n", mode);
+		fprintf(stderr, "I would love to show %s but Idk what it is\n", _mode);
 		exit(1);
 	}
 
@@ -823,7 +830,7 @@ static void add_mode(char* mode) {
 }
 
 static void* start_thread(void* data) {
-	(void) data;
+	char* mode = data;
 	if(strchr(mode, ',') != NULL) {
 		char* save_ptr;
 		char* str = strtok_r(mode, ",", &save_ptr);
@@ -843,7 +850,7 @@ void wofi_init(struct map* _config) {
 	x = map_get(config, "x");
 	y = map_get(config, "y");
 	bool normal_window = strcmp(config_get(config, "normal_window", "false"), "true") == 0;
-	mode = map_get(config, "mode");
+	char* mode = map_get(config, "mode");
 	GtkOrientation orientation = config_get_mnemonic(config, "orientation", "vertical", 2, "vertical", "horizontal");
 	outer_orientation = config_get_mnemonic(config, "orientation", "vertical", 2, "horizontal", "vertical");
 	GtkAlign halign = config_get_mnemonic(config, "halign", "fill", 4, "fill", "start", "end", "center");
@@ -954,7 +961,7 @@ void wofi_init(struct map* _config) {
 	g_signal_connect(window, "key-press-event", G_CALLBACK(key_press), NULL);
 
 	pthread_t thread;
-	pthread_create(&thread, NULL, start_thread, NULL);
+	pthread_create(&thread, NULL, start_thread, mode);
 	gtk_widget_grab_focus(scroll);
 	gtk_window_set_title(GTK_WINDOW(window), prompt);
 	gtk_widget_show_all(window);

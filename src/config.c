@@ -17,51 +17,61 @@
 
 #include <config.h>
 
+void config_put(struct map* map, char* line) {
+	line = strdup(line);
+	char* hash = strchr(line, '#');
+	if(hash != NULL) {
+		if(hash == line || *(hash - 1) != '\\') {
+			*hash = 0;
+		}
+	}
+	char* backslash = strchr(line, '\\');
+	size_t backslash_count = 0;
+	while(backslash != NULL) {
+		++backslash_count;
+		backslash = strchr(backslash + 1, '\\');
+	}
+	size_t line_size = strlen(line);
+	char* new_line = calloc(1, line_size + 1 - backslash_count);
+	size_t new_line_count = 0;
+	for(size_t count = 0; count < line_size; ++count) {
+		if(line[count] == '\\') {
+			continue;
+		}
+		new_line[new_line_count++] = line[count];
+	}
+	free(line);
+	line = new_line;
+	char* equals = strchr(line, '=');
+	if(equals == NULL) {
+		free(line);
+		return;
+	}
+	*equals = 0;
+	char* key = equals - 1;
+	while(*key == ' ') {
+		--key;
+	}
+	*(key + 1) = 0;
+	char* value = equals + 1;
+	while(*value == ' ') {
+		++value;
+	}
+	size_t len = strlen(value);
+	char* end = value + len - 1;
+	if(*end == '\n' || *end == ' ') {
+		*end = 0;
+	}
+	map_put(map, line, value);
+	free(line);
+}
+
 void config_load(struct map* map, const char* config) {
 	FILE* file = fopen(config, "r");
 	char* line = NULL;
 	size_t size = 0;
 	while(getline(&line, &size, file) != -1) {
-		char* hash = strchr(line, '#');
-		if(hash != NULL) {
-			if(hash == line || *(hash - 1) != '\\') {
-				*hash = 0;
-			}
-		}
-		char* backslash = strchr(line, '\\');
-		size_t backslash_count = 0;
-		while(backslash != NULL) {
-			++backslash_count;
-			backslash = strchr(backslash + 1, '\\');
-		}
-		char* new_line = calloc(1, size - backslash_count);
-		size_t line_size = strlen(line);
-		size_t new_line_count = 0;
-		for(size_t count = 0; count < line_size; ++count) {
-			if(line[count] == '\\') {
-				continue;
-			}
-			new_line[new_line_count++] = line[count];
-		}
-		free(line);
-		line = new_line;
-		char* equals = strchr(line, '=');
-		if(equals == NULL) {
-			continue;
-		}
-		*equals = 0;
-		char* key = equals - 1;
-		while(*key == ' ') {
-			--key;
-		}
-		*(key + 1) = 0;
-		char* value = equals + 1;
-		while(*value == ' ') {
-			++value;
-		}
-		size_t len = strlen(value);
-		*(value + len - 1) = 0;
-		map_put(map, line, value);
+		config_put(map, line);
 	}
 	free(line);
 	fclose(file);

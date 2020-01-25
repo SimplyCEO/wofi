@@ -25,6 +25,8 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+void config_put(struct map* map, char* line);
+
 void config_load(struct map* map, const char* config);
 
 char* config_get(struct map* config, const char* key, char* def_opt);

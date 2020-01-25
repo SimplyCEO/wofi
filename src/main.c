@@ -34,6 +34,11 @@ static char* config_path;
 static char* stylesheet;
 static char* color_path;
 
+struct option_node {
+	char* option;
+	struct wl_list link;
+};
+
 static char* get_exec_name(char* path) {
 	char* slash = strrchr(path, '/');
 	uint64_t offset;
@@ -74,6 +79,7 @@ static void print_usage(char** argv) {
 	printf("--version\t-v\tPrints the version and then exits\n");
 	printf("--location\t-l\tSets the location\n");
 	printf("--no-actions\t-a\tDisables multiple actions for modes that support it\n");
+	printf("--define\t-D\tSets a config option\n");
 	exit(0);
 }
 
@@ -340,6 +346,12 @@ int main(int argc, char** argv) {
 			.val = 'a'
 		},
 		{
+			.name = "define",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'D'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -369,8 +381,13 @@ int main(int argc, char** argv) {
 	char* parse_search = NULL;
 	char* location = NULL;
 	char* no_actions = NULL;
+
+	struct wl_list options;
+	wl_list_init(&options);
+	struct option_node* node;
+
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:a", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -456,6 +473,11 @@ int main(int argc, char** argv) {
 		case 'a':
 			no_actions = "true";
 			break;
+		case 'D':
+			node = malloc(sizeof(struct option_node));
+			node->option = optarg;
+			wl_list_insert(&options, &node->link);
+			break;
 		}
 	}
 
@@ -530,6 +552,13 @@ int main(int argc, char** argv) {
 	}
 
 	free(COLORS_LOCATION);
+
+	struct option_node* tmp;
+	wl_list_for_each_safe(node, tmp, &options, link) {
+		config_put(config, node->option);
+		wl_list_remove(&node->link);
+		free(node);
+	}
 
 	if(map_get(config, "show") != NULL) {
 		map_put(config, "mode", map_get(config, "show"));

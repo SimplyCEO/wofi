@@ -45,26 +45,26 @@ void wofi_run_init(struct mode* this, struct map* config) {
 
 	struct cache_line* node, *tmp;
 	wl_list_for_each_safe(node, tmp, cache, link) {
-		char* text;
-		char* final_slash = strrchr(node->line, '/');
-		if(final_slash == NULL) {
-			text = node->line;
-		} else {
-			text = final_slash + 1;
-		}
-
-		char* action = text;
+		char* text = node->line;
 		if(strncmp(node->line, arg_str, strlen(arg_str)) == 0) {
 			text = strchr(text, ' ') + 1;
 		}
 
+		char* full_path = text;
+
+		char* final_slash = strrchr(text, '/');
+		if(final_slash != NULL) {
+			text = final_slash + 1;
+		}
+
 		struct stat info;
 		stat(node->line, &info);
-		if((access(node->line, X_OK) == 0 && S_ISREG(info.st_mode)) || strncmp(node->line, arg_str, strlen(arg_str)) == 0) {
+		if(((access(node->line, X_OK) == 0 && S_ISREG(info.st_mode)) ||
+				strncmp(node->line, arg_str, strlen(arg_str)) == 0) && !map_contains(cached, full_path)) {
 			struct node* widget = malloc(sizeof(struct node));
-			widget->widget = wofi_create_widget(mode, &text, action, &node->line, 1);
+			widget->widget = wofi_create_widget(mode, &text, text, &node->line, 1);
 			wl_list_insert(&widgets, &widget->link);
-			map_put(cached, node->line, "true");
+			map_put(cached, full_path, "true");
 			map_put(entries, text, "true");
 		} else {
 			wofi_remove_cache(mode, node->line);
@@ -93,7 +93,9 @@ void wofi_run_init(struct mode* this, struct map* config) {
 			char* full_path = utils_concat(3, str, "/", entry->d_name);
 			struct stat info;
 			stat(full_path, &info);
-			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) && !map_contains(cached, full_path) && (show_all || !map_contains(entries, entry->d_name))) {
+			if(access(full_path, X_OK) == 0 && S_ISREG(info.st_mode) &&
+					!map_contains(cached, full_path) &&
+					(show_all || !map_contains(entries, entry->d_name))) {
 				char* text = strdup(entry->d_name);
 				map_put(entries, text, "true");
 				struct node* widget = malloc(sizeof(struct node));

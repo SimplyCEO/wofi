@@ -27,6 +27,8 @@ You can find documentation here https://man.sr.ht/hg.sr.ht/email.md
 ## Packages
 Debian sid has a package in the official repos https://packages.debian.org/sid/wofi
 
+Ubuntu focal has a package in universe https://packages.ubuntu.com/focal/wofi
+
 Arch has an AUR package for the current tip https://aur.archlinux.org/packages/wofi-hg/ and for the current stable https://aur.archlinux.org/packages/wofi/
 
 NixOS has a packge in unstable https://nixos.org/nixos/packages.html?attr=wofi&channel=nixos-unstable&query=wofi

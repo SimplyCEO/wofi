@@ -17,9 +17,10 @@
 
 #include <wofi.h>
 
-static const char* arg_names[] = {"parse_action"};
+static const char* arg_names[] = {"parse_action", "separator"};
 
 static bool parse_action;
+static char* separator;
 static struct mode* mode;
 
 struct node {
@@ -32,6 +33,7 @@ static struct wl_list widgets;
 void wofi_dmenu_init(struct mode* this, struct map* config) {
 	mode = this;
 	parse_action = strcmp(config_get(config, "parse_action", "false"), "true") == 0;
+	separator = config_get(config, "separator", "\n");
 
 	wl_list_init(&widgets);
 
@@ -43,19 +45,30 @@ void wofi_dmenu_init(struct mode* this, struct map* config) {
 
 	struct map* entry_map = map_init();
 
+	char* buffer = NULL;
+
 	char* line = NULL;
 	size_t size = 0;
 	while(getline(&line, &size, stdin) != -1) {
-		char* lf = strchr(line, '\n');
-		if(lf != NULL) {
-			*lf = 0;
+		if(buffer == NULL) {
+			buffer = strdup(line);
+		} else {
+			char* old = buffer;
+			buffer = utils_concat(2, buffer, line);
+			free(old);
 		}
-		struct cache_line* node = malloc(sizeof(struct cache_line));
-		node->line = strdup(line);
-		wl_list_insert(&entries, &node->link);
-		map_put(entry_map, line, "true");
 	}
 	free(line);
+
+	char* save_ptr;
+	char* str = strtok_r(buffer, separator, &save_ptr);
+	do {
+		struct cache_line* node = malloc(sizeof(struct cache_line));
+		node->line = strdup(str);
+		wl_list_insert(&entries, &node->link);
+		map_put(entry_map, str, "true");
+	} while((str = strtok_r(NULL, separator, &save_ptr)) != NULL);
+	free(buffer);
 
 	struct cache_line* node, *tmp;
 	wl_list_for_each_safe(node, tmp, cache, link) {

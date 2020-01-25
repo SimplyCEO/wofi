@@ -341,7 +341,7 @@ int main(int argc, char** argv) {
 		},
 		{
 			.name = "no-actions",
-			.has_arg = required_argument,
+			.has_arg = no_argument,
 			.flag = NULL,
 			.val = 'a'
 		},

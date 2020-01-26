@@ -25,17 +25,12 @@ void config_put(struct map* map, char* line) {
 			*hash = 0;
 		}
 	}
-	char* backslash = strchr(line, '\\');
-	size_t backslash_count = 0;
-	while(backslash != NULL) {
-		++backslash_count;
-		backslash = strchr(backslash + 1, '\\');
-	}
+
 	size_t line_size = strlen(line);
-	char* new_line = calloc(1, line_size + 1 - backslash_count);
+	char* new_line = calloc(1, line_size + 1);
 	size_t new_line_count = 0;
 	for(size_t count = 0; count < line_size; ++count) {
-		if(line[count] == '\\') {
+		if(line[count] == '\\' && line[count + 1] != '\\') {
 			continue;
 		}
 		new_line[new_line_count++] = line[count];

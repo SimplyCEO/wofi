@@ -7,6 +7,8 @@ Wofi's configuration format is very simple, consisting of key value pairs in sna
 
 Mode specific options for the built\-in modes are documented in \fBwofi\fR(7). They are placed in the config file in the format \fBmode\-example_opt=val\fR. For example dmenu has an option called \fBparse_action\fR which would be placed in the config as \fBdmenu\-parse_action=true\fR.
 
+Anything following a # is considered to be a comment unless the # is prefixed with a \\. For this reason in order to put a backslash in the config it must be escaped as well giving \\\\.
+
 .SH CONFIG OPTIONS
 Most of the options here are the command flags as found in \fBwofi\fR(1) in snake case, however some are unique to the config.
 

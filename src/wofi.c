@@ -733,13 +733,7 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 	free(_filter);
 	free(t1);
 	free(t2);
-	if(dist1 < dist2) {
-		return -1;
-	} else if(dist1 > dist2) {
-		return 1;
-	} else {
-		return 0;
-	}
+	return dist1 - dist2;
 }
 
 static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {

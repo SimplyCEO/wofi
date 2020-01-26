@@ -697,8 +697,42 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 	if(text1 == NULL || text2 == NULL) {
 		return 0;
 	}
-	size_t dist1 = utils_distance(text1, filter);
-	size_t dist2 = utils_distance(text2, filter);
+
+	char* _filter = strdup(filter);
+	size_t len = strlen(_filter);
+
+	char* t1 = strdup(text1);
+	size_t t1l = strlen(t1);
+
+	char* t2 = strdup(text2);
+	size_t t2l = strlen(t2);
+
+	if(insensitive) {
+		for(size_t count = 0; count < len; ++count) {
+			char chr = _filter[count];
+			if(isalpha(chr)) {
+				_filter[count] = tolower(chr);
+			}
+		}
+		for(size_t count = 0; count < t1l; ++count) {
+			char chr = t1[count];
+			if(isalpha(chr)) {
+				t1[count] = tolower(chr);
+			}
+		}
+		for(size_t count = 0; count < t2l; ++count) {
+			char chr = t2[count];
+			if(isalpha(chr)) {
+				t2[count] = tolower(chr);
+			}
+		}
+	}
+
+	size_t dist1 = utils_distance(t1, _filter);
+	size_t dist2 = utils_distance(t2, _filter);
+	free(_filter);
+	free(t1);
+	free(t2);
 	if(dist1 < dist2) {
 		return -1;
 	} else if(dist1 > dist2) {

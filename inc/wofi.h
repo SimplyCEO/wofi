@@ -23,6 +23,7 @@
 #include <config.h>
 #include <property_box.h>
 
+#include <ctype.h>
 #include <dlfcn.h>
 #include <errno.h>
 #include <stddef.h>

@@ -35,6 +35,10 @@ void wofi_dmenu_init(struct mode* this, struct map* config) {
 	parse_action = strcmp(config_get(config, "parse_action", "false"), "true") == 0;
 	separator = config_get(config, "separator", "\n");
 
+	if(strcmp(separator, "\\n") == 0) {
+		separator = "\n";
+	}
+
 	wl_list_init(&widgets);
 
 	struct map* cached = map_init();

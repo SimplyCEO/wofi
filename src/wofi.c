@@ -713,7 +713,7 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 	(void) data;
 	switch(event->key.keyval) {
 	case GDK_KEY_Escape:
-		exit(0);
+		exit(1);
 		break;
 	case GDK_KEY_Return:
 		mod_shift = (event->key.state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK;

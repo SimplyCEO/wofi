@@ -18,24 +18,18 @@
 #include <config.h>
 
 void config_put(struct map* map, char* line) {
-	line = strdup(line);
-	char* hash = strchr(line, '#');
-	if(hash != NULL) {
-		if(hash == line || *(hash - 1) != '\\') {
-			*hash = 0;
-		}
-	}
-
 	size_t line_size = strlen(line);
 	char* new_line = calloc(1, line_size + 1);
 	size_t new_line_count = 0;
 	for(size_t count = 0; count < line_size; ++count) {
-		if(line[count] == '\\' && line[count + 1] != '\\') {
-			continue;
+		if(line[count] == '\\') {
+			new_line[new_line_count++] = line[++count];
+		} else if(line[count] == '#') {
+			break;
+		} else {
+			new_line[new_line_count++] = line[count];
 		}
-		new_line[new_line_count++] = line[count];
 	}
-	free(line);
 	line = new_line;
 	char* equals = strchr(line, '=');
 	if(equals == NULL) {

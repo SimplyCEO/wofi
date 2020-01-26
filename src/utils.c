@@ -91,5 +91,9 @@ size_t utils_distance(const char* str1, const char* str2) {
 		}
 	}
 
+	if(strstr(str1, str2) != NULL) {
+		arr[str1_len][str2_len] -= str2_len;
+	}
+
 	return arr[str1_len][str2_len];
 }

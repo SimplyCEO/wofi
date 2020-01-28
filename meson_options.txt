@@ -1,1 +1,4 @@
 option('version', type : 'string', value : 'hg', description : 'The version to use if mercurial cannot be found')
+option('enable_run', type : 'boolean', value : true, description : 'Whether run mode should be enabled')
+option('enable_drun', type : 'boolean', value : true, description : 'Whether drun mode should be enabled')
+option('enable_dmenu', type : 'boolean', value : true, description : 'Whether dmenu mode should be enabled')

@@ -29,6 +29,7 @@
 #include <stddef.h>
 #include <string.h>
 #include <libgen.h>
+#include <unistd.h>
 
 #include <sys/stat.h>
 

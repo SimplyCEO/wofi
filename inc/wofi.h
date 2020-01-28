@@ -36,7 +36,6 @@
 #include <gtk/gtk.h>
 #include <pango/pango.h>
 #include <gdk/gdkwayland.h>
-#include <gio/gdesktopappinfo.h>
 
 #include <wlr-layer-shell-unstable-v1-client-protocol.h>
 

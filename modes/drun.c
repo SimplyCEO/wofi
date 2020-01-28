@@ -17,6 +17,8 @@
 
 #include <wofi.h>
 
+#include <gio/gdesktopappinfo.h>
+
 static struct mode* mode;
 
 struct node {

@@ -78,9 +78,20 @@ void wofi_run_init(struct mode* this, struct map* config) {
 
 	char* path = strdup(getenv("PATH"));
 
+	struct map* paths = map_init();
+
 	char* save_ptr;
 	char* str = strtok_r(path, ":", &save_ptr);
 	do {
+
+		str = realpath(str, NULL);
+		if(map_contains(paths, str)) {
+			free(str);
+			continue;
+		}
+
+		map_put(paths, str, "true");
+
 		DIR* dir = opendir(str);
 		if(dir == NULL) {
 			continue;
@@ -105,9 +116,11 @@ void wofi_run_init(struct mode* this, struct map* config) {
 			}
 			free(full_path);
 		}
+		free(str);
 		closedir(dir);
 	} while((str = strtok_r(NULL, ":", &save_ptr)) != NULL);
 	free(path);
+	map_free(paths);
 	map_free(cached);
 	map_free(entries);
 }

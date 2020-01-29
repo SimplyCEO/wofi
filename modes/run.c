@@ -85,6 +85,9 @@ void wofi_run_init(struct mode* this, struct map* config) {
 	do {
 
 		str = realpath(str, NULL);
+		if(str == NULL) {
+			continue;
+		}
 		if(map_contains(paths, str)) {
 			free(str);
 			continue;

@@ -416,7 +416,50 @@ static gboolean _insert_widget(gpointer data) {
 	return TRUE;
 }
 
-void wofi_write_cache(struct mode* mode, const char* cmd) {
+static char* escape_lf(const char* cmd) {
+	size_t len = strlen(cmd);
+	char* buffer = calloc(1, (len + 1) * 2);
+
+	size_t buf_count = 0;
+	for(size_t count = 0; count < len; ++count) {
+		char chr = cmd[count];
+		if(chr == '\n') {
+			buffer[buf_count++] = '\\';
+			buffer[buf_count++] = 'n';
+		} else if(chr == '\\') {
+			buffer[buf_count++] = '\\';
+			buffer[buf_count++] = '\\';
+		} else {
+			buffer[buf_count++] = chr;
+		}
+	}
+	return buffer;
+}
+
+static char* remove_escapes(const char* cmd) {
+	size_t len = strlen(cmd);
+	char* buffer = calloc(1, len + 1);
+
+	size_t buf_count = 0;
+	for(size_t count = 0; count < len; ++count) {
+		char chr = cmd[count];
+		if(chr == '\\') {
+			chr = cmd[++count];
+			if(chr == 'n') {
+				buffer[buf_count++] = '\n';
+			} else if(chr == '\\') {
+				buffer[buf_count++] = '\\';
+			}
+		} else {
+			buffer[buf_count++] = chr;
+		}
+	}
+	return buffer;
+}
+
+void wofi_write_cache(struct mode* mode, const char* _cmd) {
+	char* cmd = escape_lf(_cmd);
+
 	char* cache_path = get_cache_path(mode->name);
 	struct wl_list lines;
 	wl_list_init(&lines);
@@ -431,15 +474,17 @@ void wofi_write_cache(struct mode* mode, const char* cmd) {
 			if(lf != NULL) {
 				*lf = 0;
 			}
+			char* entry = remove_escapes(line);
 			if(space != NULL && strcmp(cmd, space + 1) == 0) {
 				struct cache_line* node = malloc(sizeof(struct cache_line));
-				uint64_t count = strtol(line, NULL, 10) + 1;
+				uint64_t count = strtol(entry, NULL, 10) + 1;
 				char num[6];
 				snprintf(num, 5, "%" PRIu64, count);
 				node->line = utils_concat(4, num, " ", cmd, "\n");
 				inc_count = true;
 				wl_list_insert(&lines, &node->link);
 			}
+			free(entry);
 		}
 		free(line);
 		line = NULL;
@@ -451,11 +496,13 @@ void wofi_write_cache(struct mode* mode, const char* cmd) {
 			if(nl != NULL) {
 				*nl = 0;
 			}
+			char* entry = remove_escapes(line);
 			if(space == NULL || strcmp(cmd, space + 1) != 0) {
 				struct cache_line* node = malloc(sizeof(struct cache_line));
-				node->line = utils_concat(2, line, "\n");
+				node->line = utils_concat(2, entry, "\n");
 				wl_list_insert(&lines, &node->link);
 			}
+			free(entry);
 		}
 		free(line);
 		fclose(file);
@@ -482,9 +529,12 @@ void wofi_write_cache(struct mode* mode, const char* cmd) {
 	}
 	free(cache_path);
 	free(tmp_path);
+	free(cmd);
 }
 
-void wofi_remove_cache(struct mode* mode, const char* cmd) {
+void wofi_remove_cache(struct mode* mode, const char* _cmd) {
+	char* cmd = escape_lf(_cmd);
+
 	char* cache_path = get_cache_path(mode->name);
 	if(access(cache_path, R_OK | W_OK) == 0) {
 		struct wl_list lines;
@@ -537,7 +587,7 @@ struct wl_list* wofi_read_cache(struct mode* mode) {
 			if(lf != NULL) {
 				*lf = 0;
 			}
-			node->line = strdup(line);
+			node->line = remove_escapes(line);
 			wl_list_insert(&lines, &node->link);
 		}
 		free(line);

@@ -474,17 +474,15 @@ void wofi_write_cache(struct mode* mode, const char* _cmd) {
 			if(lf != NULL) {
 				*lf = 0;
 			}
-			char* entry = remove_escapes(line);
 			if(space != NULL && strcmp(cmd, space + 1) == 0) {
 				struct cache_line* node = malloc(sizeof(struct cache_line));
-				uint64_t count = strtol(entry, NULL, 10) + 1;
+				uint64_t count = strtol(line, NULL, 10) + 1;
 				char num[6];
 				snprintf(num, 5, "%" PRIu64, count);
 				node->line = utils_concat(4, num, " ", cmd, "\n");
 				inc_count = true;
 				wl_list_insert(&lines, &node->link);
 			}
-			free(entry);
 		}
 		free(line);
 		line = NULL;
@@ -496,13 +494,11 @@ void wofi_write_cache(struct mode* mode, const char* _cmd) {
 			if(nl != NULL) {
 				*nl = 0;
 			}
-			char* entry = remove_escapes(line);
 			if(space == NULL || strcmp(cmd, space + 1) != 0) {
 				struct cache_line* node = malloc(sizeof(struct cache_line));
-				node->line = utils_concat(2, entry, "\n");
+				node->line = utils_concat(2, line, "\n");
 				wl_list_insert(&lines, &node->link);
 			}
-			free(entry);
 		}
 		free(line);
 		fclose(file);

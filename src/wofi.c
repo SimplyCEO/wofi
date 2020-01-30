@@ -569,6 +569,7 @@ void wofi_remove_cache(struct mode* mode, const char* _cmd) {
 		fclose(file);
 	}
 	free(cache_path);
+	free(cmd);
 }
 
 struct wl_list* wofi_read_cache(struct mode* mode) {

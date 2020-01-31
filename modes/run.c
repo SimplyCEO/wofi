@@ -128,7 +128,7 @@ void wofi_run_init(struct mode* this, struct map* config) {
 	map_free(entries);
 }
 
-struct widget* wofi_run_get_widget() {
+struct widget* wofi_run_get_widget(void) {
 	struct node* node, *tmp;
 	wl_list_for_each_reverse_safe(node, tmp, &widgets, link) {
 		struct widget* widget = node->widget;

@@ -626,6 +626,10 @@ struct widget* wofi_create_widget(struct mode* mode, char** text, char* search_t
 	return widget;
 }
 
+void wofi_insert_widgets(struct mode* mode) {
+	gdk_threads_add_idle(_insert_widget, mode);
+}
+
 bool wofi_allow_images(void) {
 	return allow_images;
 }

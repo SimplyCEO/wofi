@@ -42,6 +42,8 @@ struct wl_list* wofi_read_cache(struct mode* mode);
 
 struct widget* wofi_create_widget(struct mode* mode, char** text, char* search_text, char** actions, size_t action_count);
 
+void wofi_insert_widgets(struct mode* mode);
+
 bool wofi_allow_images(void);
 
 bool wofi_allow_markup(void);

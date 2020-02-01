@@ -37,6 +37,8 @@ void wofi_dmenu_init(struct mode* this, struct map* config) {
 
 	if(strcmp(separator, "\\n") == 0) {
 		separator = "\n";
+	} else if(strcmp(separator, "\\0") == 0) {
+		separator = "\0";
 	}
 
 	wl_list_init(&widgets);
@@ -49,30 +51,19 @@ void wofi_dmenu_init(struct mode* this, struct map* config) {
 
 	struct map* entry_map = map_init();
 
-	char* buffer = NULL;
-
 	char* line = NULL;
 	size_t size = 0;
-	while(getline(&line, &size, stdin) != -1) {
-		if(buffer == NULL) {
-			buffer = strdup(line);
-		} else {
-			char* old = buffer;
-			buffer = utils_concat(2, buffer, line);
-			free(old);
+	while(getdelim(&line, &size, separator[0], stdin) != -1) {
+		char* delim = strchr(line, separator[0]);
+		if(delim != NULL) {
+			*delim = 0;
 		}
+		struct cache_line* node = malloc(sizeof(struct cache_line));
+		node->line = strdup(line);
+		wl_list_insert(&entries, &node->link);
+		map_put(entry_map, line, "true");
 	}
 	free(line);
-
-	char* save_ptr;
-	char* str = strtok_r(buffer, separator, &save_ptr);
-	do {
-		struct cache_line* node = malloc(sizeof(struct cache_line));
-		node->line = strdup(str);
-		wl_list_insert(&entries, &node->link);
-		map_put(entry_map, str, "true");
-	} while((str = strtok_r(NULL, separator, &save_ptr)) != NULL);
-	free(buffer);
 
 	struct cache_line* node, *tmp;
 	wl_list_for_each_safe(node, tmp, cache, link) {

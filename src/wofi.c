@@ -66,6 +66,7 @@ struct mode {
 	void (*mode_exec)(const gchar* cmd);
 	struct widget* (*mode_get_widget)(void);
 	char* name;
+	struct wl_list link;
 };
 
 struct widget {
@@ -414,6 +415,20 @@ static gboolean _insert_widget(gpointer data) {
 	free(node->actions);
 	free(node);
 	return TRUE;
+}
+
+static gboolean insert_all_widgets(gpointer data) {
+	struct wl_list* modes = data;
+	if(modes->prev == modes) {
+		free(modes);
+		return FALSE;
+	} else {
+		struct mode* mode = wl_container_of(modes->prev, mode, link);
+		if(!_insert_widget(mode)) {
+			wl_list_remove(&mode->link);
+		}
+		return TRUE;
+	}
 }
 
 static char* escape_lf(const char* cmd) {
@@ -906,7 +921,7 @@ static void* load_mode(char* _mode, struct mode* mode_ptr, struct map* props) {
 	return init;
 }
 
-static void add_mode(char* _mode) {
+static struct mode* add_mode(char* _mode) {
 	struct mode* mode_ptr = calloc(1, sizeof(struct mode));
 	struct map* props = map_init();
 	void (*init)(struct mode* _mode, struct map* props) = load_mode(_mode, mode_ptr, props);
@@ -930,22 +945,29 @@ static void add_mode(char* _mode) {
 	}
 	map_put_void(modes, _mode, mode_ptr);
 	init(mode_ptr, props);
-	gdk_threads_add_idle(_insert_widget, mode_ptr);
 
 	map_free(props);
+	return mode_ptr;
 }
 
 static void* start_thread(void* data) {
 	char* mode = data;
+
+	struct wl_list* modes = malloc(sizeof(struct wl_list));
+	wl_list_init(modes);
+
 	if(strchr(mode, ',') != NULL) {
 		char* save_ptr;
 		char* str = strtok_r(mode, ",", &save_ptr);
 		do {
-			add_mode(str);
+			struct mode* mode_ptr = add_mode(str);
+			wl_list_insert(modes, &mode_ptr->link);
 		} while((str = strtok_r(NULL, ",", &save_ptr)) != NULL);
 	} else {
-		add_mode(mode);
+		struct mode* mode_ptr = add_mode(mode);
+		wl_list_insert(modes, &mode_ptr->link);
 	}
+	gdk_threads_add_idle(insert_all_widgets, modes);
 	return NULL;
 }
 

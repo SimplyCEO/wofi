@@ -839,6 +839,16 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 	return FALSE;
 }
 
+static gboolean focus(GtkWidget* widget, GdkEvent* event, gpointer data) {
+	(void) data;
+	if(event->focus_change.in) {
+		gtk_widget_set_state_flags(widget, GTK_STATE_FLAG_FOCUSED, TRUE);
+	} else {
+		gtk_widget_set_state_flags(widget, GTK_STATE_FLAG_NORMAL, TRUE);
+	}
+	return FALSE;
+}
+
 static void* get_plugin_proc(const char* prefix, const char* suffix) {
 	char* proc_name = utils_concat(3, "wofi_", prefix, suffix);
 	void* proc = dlsym(RTLD_DEFAULT, proc_name);
@@ -1055,6 +1065,8 @@ void wofi_init(struct map* _config) {
 	g_signal_connect(inner_box, "selected-children-changed", G_CALLBACK(select_item), NULL);
 	g_signal_connect(entry, "activate", G_CALLBACK(activate_search), NULL);
 	g_signal_connect(window, "key-press-event", G_CALLBACK(key_press), NULL);
+	g_signal_connect(window, "focus-in-event", G_CALLBACK(focus), NULL);
+	g_signal_connect(window, "focus-out-event", G_CALLBACK(focus), NULL);
 
 	pthread_t thread;
 	pthread_create(&thread, NULL, start_thread, mode);

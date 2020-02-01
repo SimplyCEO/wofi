@@ -186,6 +186,14 @@ static void load_css(void) {
 	}
 }
 
+static void sig(int32_t signum) {
+	switch(signum) {
+	case SIGTERM:
+		exit(1);
+		break;
+	}
+}
+
 int main(int argc, char** argv) {
 
 	const struct option opts[] = {
@@ -642,6 +650,11 @@ int main(int argc, char** argv) {
 	if(no_actions != NULL) {
 		map_put(config, "no_actions", no_actions);
 	}
+
+	struct sigaction sigact;
+	memset(&sigact, 0, sizeof(sigact));
+	sigact.sa_handler = sig;
+	sigaction(SIGTERM, &sigact, NULL);
 
 
 	gtk_init(&argc, &argv);

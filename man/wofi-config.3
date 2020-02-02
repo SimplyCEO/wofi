@@ -1,0 +1,61 @@
+.TH wofi\-config 3
+.SH NAME
+wofi \- Config functions and documentation
+
+.SH DESCRIPTION
+The functions documented here are used for manipulating maps that represent config entries. They are defined in config.h.
+
+.SH CONFIG FUNCTIONS
+The following functions are used to work with configs.
+
+.TP
+.B void config_put(struct map* map, char* line)
+Parses a single config line and inserts the result into the map
+
+.B struct map* map
+\- The map to insert into.
+
+.B char* line
+\- The config line to insert. Should be in the format of \fBkey=\fIvalue\fR.
+
+.TP
+.B void config_load(struct map* map, const char* config)
+Loads a config file into the given map
+
+.B struct map* map
+\- The map to load the config into.
+
+.B const char* config
+\- The path to a config file. Should contain lines with the format of \fBkey=\fIvalue\fR.
+
+.TP
+.B char* config_get(struct map* config, const char* key, char* def_opt)
+Gets a config entry, if the entry is not set then it returns \fBdef_opt\fR.
+
+.B struct map* config
+\- The map to get the value from.
+
+.B const char* key
+\- The key to lookup.
+
+.B char* def_opt
+\- The default value to be returned if the key does not exist.
+
+.TP
+.B uint8_t config_get_mnemonic(struct map* config, const char* key, char* def_opt, uint8_t num_choices, ...)
+Gets an enum value from the config. If the value is not set then it returns \fBdef_opt\fR.
+
+.B struct map* config
+\- The map to get the value from.
+
+.B const char* key
+\- The key to lookup.
+
+.B char* def_opt
+\- The default value to be returned if the key does not exist.
+
+.B uint8_t num_choices
+\- The number of enum options available.
+
+.B varargs
+\- The list of enum options available.

@@ -37,6 +37,6 @@ size_t utils_min(size_t n1, size_t n2);
 
 size_t utils_min3(size_t n1, size_t n2, size_t n3);
 
-size_t utils_distance(const char* str1, const char* str2);
+size_t utils_distance(const char* haystack, const char* needle);
 
 #endif

@@ -66,9 +66,9 @@ size_t utils_min3(size_t n1, size_t n2, size_t n3) {
 	}
 }
 
-size_t utils_distance(const char* str1, const char* str2) {
-	size_t str1_len = strlen(str1);
-	size_t str2_len = strlen(str2);
+size_t utils_distance(const char* haystack, const char* needle) {
+	size_t str1_len = strlen(haystack);
+	size_t str2_len = strlen(needle);
 
 	size_t arr[str1_len + 1][str2_len + 1];
 	arr[0][0] = 0;
@@ -82,7 +82,7 @@ size_t utils_distance(const char* str1, const char* str2) {
 	uint8_t cost;
 	for(size_t c1 = 1; c1 <= str1_len; ++c1) {
 		for(size_t c2 = 1; c2 <= str2_len; ++c2) {
-			if(str1[c1 - 1] == str2[c2 - 1]) {
+			if(haystack[c1 - 1] == needle[c2 - 1]) {
 				cost = 0;
 			} else {
 				cost = 1;
@@ -91,7 +91,7 @@ size_t utils_distance(const char* str1, const char* str2) {
 		}
 	}
 
-	if(strstr(str1, str2) != NULL) {
+	if(strstr(haystack, needle) != NULL) {
 		arr[str1_len][str2_len] -= str2_len;
 	}
 

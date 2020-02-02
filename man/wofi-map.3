@@ -1,0 +1,74 @@
+.TH wofi\-map 3
+.SH NAME
+wofi \- Map API functions and documentation
+
+.SH DESCRIPTION
+The functions documented here are used for interacting with wofi's config and map. They are defined in map.h.
+
+.SH MAP FUNCTIONS
+The following functions are used to interact with a \fBstruct map*\fR
+
+.TP
+.B struct map* map_init(void)
+Allocates and returns a new string map. String maps only support string values.
+
+.TP
+.B struct map* map_init_void(void)
+Allocates and returns a new void map. A void map supports values of any type.
+
+.TP
+.B void map_free(struct map* map)
+Frees the provided map and all it's keys. Values are only freed if it is a string map.
+
+.TP
+.B bool map_put(struct map* map, const char* key, char* value)
+Returns true if the given map is a string map, otherwise returns false and prints a message to stderr.
+
+.B struct map* map
+\- The map to insert into.
+
+.B const char* key
+\- The key to store the value under. This key is given to \fBstrdup()\fR before being saved and will be freed when running \fBmap_free()\fR.
+
+.B char* value
+\- The value to store. This value is given to \fBstrdup()\fR before being saved and will be freed when running \fBmap_free()\fR. If the value is \fBNULL\fR it will not be given to \fBstrdup()\fR.
+
+.TP
+.B bool map_put_void(struct map* map, const char* key, void* value)
+Returns true if the given map is a void map, otherwise returns false and prints a message to stderr.
+
+.B struct map* map
+\- The map to insert into.
+
+.B const char* key
+\- The key to store the value under. This key is given to \fBstrdup()\fR before being saved and will be freed when running \fBmap_free()\fR.
+
+.B void* value
+\- The value to store. This pointer is stored in the map, it is on the caller to free this and it will not be freed when running \fBmap_free()\fR.
+
+.TP
+.B void* map_get(struct map* map, const char* key)
+Returns the value stored under \fBkey\fR or \fBNULL\fR if no key exists. \fBNULL\fR can also be returned if it was stored there with \fBmap_put()\fR or \fBmap_put_void()\fR.
+
+.B struct map* map
+\- The map to get the value from.
+
+.B const char* key
+\- The key to lookup.
+
+.TP
+.B bool map_contains(struct map* map, const char* key)
+Returns true if the key exists, false otherwise. This is implemented as a \fBvalue != NULL\fR check so a \fBNULL\fR value is considered to not exist.
+
+.B struct map* map
+\- The map to check against.
+
+.B const char* key
+\- The key to check for.
+
+.TP
+.B size_t map_size(struct map* map)
+Returns the number of entries in this map.
+
+.B struct map* map
+\- The map to get the size of.

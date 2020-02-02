@@ -1,0 +1,105 @@
+.TH wofi\-api 3
+.SH NAME
+wofi \- API functions and documentation
+
+.SH DESCRIPTION
+The functions documented here are used for interacting with wofi. They are defined in wofi_api.h.
+
+.SH STRUCTURES
+struct cache_line {
+.RS 4
+char* line;
+.br
+struct wl_list link;
+.RE
+};
+
+.SH API FUNCTIONS
+The following functions are used to interact with wofi.
+
+.TP
+.B char* wofi_parse_image_escapes(const char* text)
+This function takes in text containing image escapes and pango markup and will return the plain text with all of that stripped. The string returned is newly allocated and should be freed by the caller when they are done with it.
+
+.B const char* text
+\- The input text containing image escapes and pango markup.
+
+.TP
+.B void wofi_write_cache(struct mode* mode, const char* cmd)
+Writes an entry to the cache file.
+
+.B struct mode* mode
+\- The \fBstruct mode*\fR given to your mode's \fBinit()\fR function.
+
+.B const char* cmd
+\- The entry to write to the cache file. If this entry already exists the number of times it has been written will be incremented.
+
+.TP
+.B void wofi_remove_cache(struct mode* mode, const char* cmd)
+Removes an entry from the cache file.
+
+.B struct mode* mode
+\- The \fBstruct mode*\fR given to your mode's \fBinit()\fR function.
+
+.B const char* cmd
+\- The entry to remove from the cache file. This does NOT decrement the number of times written, it fully removes the entry.
+
+.TP
+.B struct wl_list* wofi_read_cache(struct mode* mode)
+Reads the cache and returns a \fBstruct wl_list*\fR containing the entires. The list is made up of \fBstruct cache_line*\fR entries. The wayland documentation should be referred to for the usage of a wl_list.
+
+.B struct mode* mode
+\- The \fBstruct mode*\fR given to your mode's \fBinit()\fR function.
+
+.TP
+.B struct widget* wofi_create_widget(struct mode* mode, char* text[], char* search_text, char* actions[], size_t action_count)
+Creates a widget from the specified information. This widget should be returned by the mode's \fBget_widget()\fR function in order to be displayed.
+
+.B struct mode* mode
+\- The \fBstruct mode*\fR given to your mode's \fBinit()\fR function.
+
+.B char* text[]
+\- The array of text to display on the entry in wofi. Each element in the array represents the text for 1 action. The array should only be larger than 1 if you're creating a multi\-action entry. Multi\-action entries need to provide 1 string for every action the entry has.
+
+.B char* search_text
+\- The text which the user can search for to find this widget.
+
+.B char* actions[]
+\- The array of actions for the entry. An action is the text given to a mode's \fBexec()\fR function when the user selects an entry. Multi\-action entries need to provide 1 action string for every action the entry has.
+
+.B size_t action_count
+\- The number of actions the entry will have.
+
+.TP
+.B void wofi_insert_widgets(struct mode* mode)
+This will requery the mode for more widgets.
+
+.B struct mode* mode
+\- The \fBstruct mode*\fR given to your mode's \fBinit()\fR function.
+
+.TP
+.B bool wofi_allow_images(void)
+Returns true if the user enabled images, false otherwise.
+
+.TP
+.B bool wofi_allow_markup(void)
+Returns true if the user enabled pango markup, false otherwise.
+
+.TP
+.B uint64_t wofi_get_image_size(void)
+Returns the user specified image size, 32 by default. Wofi will scale images for you, this is just informational and is not required but can be helpful if multiple sizes are available.
+
+.TP
+.B bool wofi_mod_shift(void)
+Returns true if the user was holding shift when selecting an entry, false otherwise.
+
+.TP
+.B bool wofi_mod_control(void)
+Returns true if the user was holding control when selecting an entry, false otherwise.
+
+.TP
+.B void wofi_term_run(const char* cmd)
+Runs the provided cmd in a terminal emulator. The following order is used for picking a terminal emulator: The user specified terminal, kitty, termite, gnome\-terminal, weston\-terminal. If none of these can be found execution will fail.
+
+.B const char* cmd
+\- The command to run, this is invoked by doing \fBterm \-\- cmd\fR.

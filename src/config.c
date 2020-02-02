@@ -81,7 +81,7 @@ uint8_t config_get_mnemonic(struct map* config, const char* key, char* def_opt, 
 	uint8_t result = 0;
 	for(uint8_t i = 0; i < num_choices; i++) {
 		char* cmp_str = va_arg(ap, char*);
-		if (strcmp(opt, cmp_str) == 0) {
+		if(strcmp(opt, cmp_str) == 0) {
 			result = i;
 			break;
 		}

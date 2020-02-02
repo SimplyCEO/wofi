@@ -20,6 +20,7 @@
 
 #include <wofi_api.h>
 
+#include <utils.h>
 #include <config.h>
 #include <property_box.h>
 

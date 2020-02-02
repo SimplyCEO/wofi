@@ -19,11 +19,12 @@
 #define CONFIG_H
 
 #include <map.h>
-#include <utils.h>
 
+#include <stdio.h>
 #include <stdint.h>
 #include <stdarg.h>
-#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 void config_put(struct map* map, char* line);
 

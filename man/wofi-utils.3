@@ -1,0 +1,63 @@
+.TH wofi\-utils 3
+.SH NAME
+wofi \- Utility functions and documentation
+
+.SH DESCRIPTION
+The functions documented here are general utility functions. They are defined in utils.h.
+
+.SH UTILITY FUNCTIONS
+The following functions are general convenience functions.
+
+.TP
+.B time_t utils_get_time_millis(void)
+Returns the current unix time in milliseconds.
+
+.TP
+.B void utils_sleep_millis(time_t millis)
+Sleeps for the specified amount of time.
+
+.B time_t millis
+\- The time to sleep for in milliseconds.
+
+.TP
+.B char* utils_concat(size_t arg_count, ...)
+Concatenates strings together. The returned result is newly allocated and must be freed by the caller when finished using it.
+
+.B size_t arg_count
+\- The number of arguments provided
+
+.B varargs
+\- The list of strings to be concatenated.
+
+.TP
+.B size_t utils_min(size_t n1, size_t n2)
+Returns the smaller of the two inputs.
+
+.B size_t n1
+\- The first number.
+
+.B size_t n2
+\- The second number.
+
+.TP
+.B size_t utils_min3(size_t n1, size_t n2, size_t n3)
+Returns the smallest of the three inputs.
+
+.B size_t n1
+\- The first number.
+
+.B size_t n2
+\- The second number.
+
+.B size_t n3
+\- The third number.
+
+.TP
+.B size_t utils_distance(const char* haystack, const char* needle)
+Computes the Levenshtein distance between the two inputs.
+
+.B const char* haystack
+\- The string to search in.
+
+.B const char* needle
+\- The string to search for.

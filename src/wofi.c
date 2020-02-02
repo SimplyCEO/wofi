@@ -625,7 +625,7 @@ struct wl_list* wofi_read_cache(struct mode* mode) {
 	return cache;
 }
 
-struct widget* wofi_create_widget(struct mode* mode, char** text, char* search_text, char** actions, size_t action_count) {
+struct widget* wofi_create_widget(struct mode* mode, char* text[], char* search_text, char* actions[], size_t action_count) {
 	struct widget* widget = malloc(sizeof(struct widget));
 	widget->mode = strdup(mode->name);
 	widget->text = malloc(action_count * sizeof(char*));

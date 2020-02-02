@@ -40,7 +40,7 @@ void wofi_remove_cache(struct mode* mode, const char* cmd);
 
 struct wl_list* wofi_read_cache(struct mode* mode);
 
-struct widget* wofi_create_widget(struct mode* mode, char** text, char* search_text, char** actions, size_t action_count);
+struct widget* wofi_create_widget(struct mode* mode, char* text[], char* search_text, char* actions[], size_t action_count);
 
 void wofi_insert_widgets(struct mode* mode);
 

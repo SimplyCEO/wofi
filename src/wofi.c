@@ -744,26 +744,7 @@ static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
 	}
 }
 
-static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer data) {
-	(void) data;
-	GtkWidget* box1 = gtk_bin_get_child(GTK_BIN(child1));
-	GtkWidget* box2 = gtk_bin_get_child(GTK_BIN(child2));
-	if(GTK_IS_EXPANDER(box1)) {
-		box1 = gtk_expander_get_label_widget(GTK_EXPANDER(box1));
-	}
-	if(GTK_IS_EXPANDER(box2)) {
-		box2 = gtk_expander_get_label_widget(GTK_EXPANDER(box2));
-	}
-
-	const gchar* text1 = wofi_property_box_get_property(WOFI_PROPERTY_BOX(box1), "filter");
-	const gchar* text2 = wofi_property_box_get_property(WOFI_PROPERTY_BOX(box2), "filter");
-	if(filter == NULL || strcmp(filter, "") == 0) {
-		return 0;
-	}
-	if(text1 == NULL || text2 == NULL) {
-		return 0;
-	}
-
+static gint fuzzy_sort(const gchar* text1, const gchar* text2) {
 	char* _filter = strdup(filter);
 	size_t len = strlen(_filter);
 
@@ -800,6 +781,58 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 	free(t1);
 	free(t2);
 	return dist1 - dist2;
+}
+
+static gint contains_sort(const gchar* text1, const gchar* text2) {
+	size_t filter_len = strlen(filter);
+	bool tx1, tx2;
+
+	if(insensitive) {
+		tx1 = strncasecmp(text1, filter, filter_len) == 0;
+		tx2 = strncasecmp(text2, filter, filter_len) == 0;
+	} else {
+		tx1 = strncmp(text1, filter, filter_len) == 0;
+		tx2 = strncmp(text2, filter, filter_len) == 0;
+	}
+	if(tx1 && tx2) {
+		return 0;
+	} else if(tx1) {
+		return -1;
+	} else if(tx2) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer data) {
+	(void) data;
+	GtkWidget* box1 = gtk_bin_get_child(GTK_BIN(child1));
+	GtkWidget* box2 = gtk_bin_get_child(GTK_BIN(child2));
+	if(GTK_IS_EXPANDER(box1)) {
+		box1 = gtk_expander_get_label_widget(GTK_EXPANDER(box1));
+	}
+	if(GTK_IS_EXPANDER(box2)) {
+		box2 = gtk_expander_get_label_widget(GTK_EXPANDER(box2));
+	}
+
+	const gchar* text1 = wofi_property_box_get_property(WOFI_PROPERTY_BOX(box1), "filter");
+	const gchar* text2 = wofi_property_box_get_property(WOFI_PROPERTY_BOX(box2), "filter");
+	if(filter == NULL || strcmp(filter, "") == 0) {
+		return 0;
+	}
+	if(text1 == NULL || text2 == NULL) {
+		return 0;
+	}
+
+	switch(matching) {
+	case MATCHING_MODE_CONTAINS:
+		return contains_sort(text1, text2);
+	case MATCHING_MODE_FUZZY:
+		return fuzzy_sort(text1, text2);
+	default:
+		return 0;
+	}
 }
 
 static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
@@ -1075,6 +1108,7 @@ void wofi_init(struct map* _config) {
 	switch(matching) {
 	case MATCHING_MODE_CONTAINS:
 		gtk_flow_box_set_filter_func(GTK_FLOW_BOX(inner_box), do_filter, NULL, NULL);
+		gtk_flow_box_set_sort_func(GTK_FLOW_BOX(inner_box), do_sort, NULL, NULL);
 		break;
 	case MATCHING_MODE_FUZZY:
 		gtk_flow_box_set_sort_func(GTK_FLOW_BOX(inner_box), do_sort, NULL, NULL);

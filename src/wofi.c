@@ -17,6 +17,8 @@
 
 #include <wofi.h>
 
+#define LINE_HEIGHT 25
+
 static const char* terminals[] = {"kitty", "termite", "gnome-terminal", "weston-terminal"};
 
 enum matching_mode {
@@ -393,6 +395,20 @@ static gboolean _insert_widget(gpointer data) {
 	}
 	GtkWidget* child = gtk_flow_box_child_new();
 	gtk_widget_set_name(child, "entry");
+
+	size_t lf_count = 1;
+	size_t text_len = strlen(node->text[0]);
+	for(size_t count = 0; count < text_len; ++count) {
+		if(node->text[0][count] == '\n') {
+			++lf_count;
+		}
+	}
+
+	if(allow_images) {
+		gtk_widget_set_size_request(child, width, (image_size + 10) * lf_count);
+	} else {
+		gtk_widget_set_size_request(child, width, LINE_HEIGHT * lf_count);
+	}
 
 	gtk_container_add(GTK_CONTAINER(child), parent);
 	gtk_container_add(GTK_CONTAINER(inner_box), child);
@@ -1040,7 +1056,16 @@ void wofi_init(struct map* _config) {
 			"center", "top_left", "top", "top_right", "right", "bottom_right", "bottom", "bottom_left", "left",
 			"0", "1", "2", "3", "4", "5", "6", "7", "8");
 	no_actions = strcmp(config_get(config, "no_actions", "false"), "true") == 0;
+	uint64_t lines = strtol(config_get(config, "lines", "0"), NULL, 10);
 	modes = map_init_void();
+
+	if(lines > 0) {
+		if(allow_images) {
+			height = lines * (image_size + 10);
+		} else {
+			height = lines * LINE_HEIGHT;
+		}
+	}
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
 	gtk_widget_realize(window);
@@ -1075,6 +1100,7 @@ void wofi_init(struct map* _config) {
 	gtk_widget_set_name(outer_box, "outer-box");
 	gtk_container_add(GTK_CONTAINER(window), outer_box);
 	entry = gtk_search_entry_new();
+
 	gtk_widget_set_name(entry, "input");
 	gtk_entry_set_placeholder_text(GTK_ENTRY(entry), prompt);
 	gtk_container_add(GTK_CONTAINER(outer_box), entry);

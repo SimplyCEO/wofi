@@ -80,6 +80,7 @@ static void print_usage(char** argv) {
 	printf("--location\t-l\tSets the location\n");
 	printf("--no-actions\t-a\tDisables multiple actions for modes that support it\n");
 	printf("--define\t-D\tSets a config option\n");
+	printf("--lines\t\t-L\tSets the height in number of lines\n");
 	exit(0);
 }
 
@@ -360,6 +361,12 @@ int main(int argc, char** argv) {
 			.val = 'D'
 		},
 		{
+			.name = "lines",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'L'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -389,13 +396,14 @@ int main(int argc, char** argv) {
 	char* parse_search = NULL;
 	char* location = NULL;
 	char* no_actions = NULL;
+	char* lines = NULL;
 
 	struct wl_list options;
 	wl_list_init(&options);
 	struct option_node* node;
 
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -485,6 +493,9 @@ int main(int argc, char** argv) {
 			node = malloc(sizeof(struct option_node));
 			node->option = optarg;
 			wl_list_insert(&options, &node->link);
+			break;
+		case 'L':
+			lines = optarg;
 			break;
 		}
 	}
@@ -649,6 +660,9 @@ int main(int argc, char** argv) {
 	}
 	if(no_actions != NULL) {
 		map_put(config, "no_actions", no_actions);
+	}
+	if(lines != NULL) {
+		map_put(config, "lines", lines);
 	}
 
 	struct sigaction sigact;

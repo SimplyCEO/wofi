@@ -161,4 +161,10 @@ The class attached to all entries. This is attached to the inside property box a
 The name of all entries.
 
 .SH COLORS
-The colors file should be formatted as new line separated hex values. These values should be in the standard HTML format and begin with a hash.
+The colors file should be formatted as new line separated hex values. These values should be in the standard HTML format and begin with a hash. These colors will be loaded however wofi doesn't know what color should be used for what so you must reference them from your CSS.
+
+You can reference these from your CSS by doing \-\-wofi\-color<n> where <n> is the line number \- 1. For example to reference the color on line 1 you would do \fB\-\-wofi\-color0\fR.
+
+The colors can also be referenced by doing \-\-wofi\-rgb\-color<n> where <n> is the line number \- 1. The difference between these is the format used to replace the macro.
+
+\-\-wofi\-color<n> is replaced with an HTML color code in the format #FFFFFF. \-\-wofi\-rgb\-color<n> is replaced with comma separated rgb values in the format 255, 255, 255. The correct usage of \-\-wofi\-rgb\-color<n> is to wrap it in rgb() or rgba(). Note that it does not return an alpha value so combining it with rgba() should be done like so \fBrgba(\-\-wofi\-rgb\-color0, 0.8)\fR. This would set the color to line 1 with an opacity of 80%.

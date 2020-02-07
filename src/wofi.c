@@ -63,6 +63,7 @@ static GtkAlign content_halign;
 static struct map* config;
 static enum locations location;
 static bool no_actions;
+static uint64_t columns;
 
 struct mode {
 	void (*mode_exec)(const gchar* cmd);
@@ -405,9 +406,9 @@ static gboolean _insert_widget(gpointer data) {
 	}
 
 	if(allow_images) {
-		gtk_widget_set_size_request(child, width, (image_size + 10) * lf_count);
+		gtk_widget_set_size_request(child, width / columns, (image_size + 10) * lf_count);
 	} else {
-		gtk_widget_set_size_request(child, width, LINE_HEIGHT * lf_count);
+		gtk_widget_set_size_request(child, width / columns, LINE_HEIGHT * lf_count);
 	}
 
 	gtk_container_add(GTK_CONTAINER(child), parent);
@@ -1057,6 +1058,7 @@ void wofi_init(struct map* _config) {
 			"0", "1", "2", "3", "4", "5", "6", "7", "8");
 	no_actions = strcmp(config_get(config, "no_actions", "false"), "true") == 0;
 	uint64_t lines = strtol(config_get(config, "lines", "0"), NULL, 10);
+	columns = strtol(config_get(config, "columns", "1"), NULL, 10);
 	modes = map_init_void();
 
 	if(lines > 0) {
@@ -1118,7 +1120,7 @@ void wofi_init(struct map* _config) {
 	}
 
 	inner_box = gtk_flow_box_new();
-	gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(inner_box), 1);
+	gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(inner_box), columns);
 	gtk_orientable_set_orientation(GTK_ORIENTABLE(inner_box), orientation);
 	gtk_widget_set_halign(inner_box, halign);
 	gtk_widget_set_valign(inner_box, valign);

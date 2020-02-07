@@ -65,6 +65,7 @@ static enum locations location;
 static bool no_actions;
 static uint64_t columns;
 static bool is_first = true;
+static uint64_t widget_count = 0;
 
 struct mode {
 	void (*mode_exec)(const gchar* cmd);
@@ -298,6 +299,10 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 	gtk_style_context_add_class(style, "entry");
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "mode", mode);
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "action", action);
+	char index[6];
+	snprintf(index, sizeof(index), "%lu", ++widget_count);
+	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "index", index);
+
 	if(allow_images) {
 		parse_images(WOFI_PROPERTY_BOX(box), text, true);
 	} else {
@@ -835,11 +840,13 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 
 	const gchar* text1 = wofi_property_box_get_property(WOFI_PROPERTY_BOX(box1), "filter");
 	const gchar* text2 = wofi_property_box_get_property(WOFI_PROPERTY_BOX(box2), "filter");
+	uint64_t index1 = strtol(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box1), "index"), NULL, 10);
+	uint64_t index2 = strtol(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box2), "index"), NULL, 10);
 	if(filter == NULL || strcmp(filter, "") == 0) {
-		return 0;
+		return index1 - index2;
 	}
 	if(text1 == NULL || text2 == NULL) {
-		return 0;
+		return index1 - index2;
 	}
 
 	switch(matching) {

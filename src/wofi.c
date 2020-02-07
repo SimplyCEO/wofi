@@ -65,7 +65,7 @@ static enum locations location;
 static bool no_actions;
 static uint64_t columns;
 static bool is_first = true;
-static uint64_t widget_count = 0;
+static uint16_t widget_count = 0;
 
 struct mode {
 	void (*mode_exec)(const gchar* cmd);
@@ -300,7 +300,7 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "mode", mode);
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "action", action);
 	char index[6];
-	snprintf(index, sizeof(index), "%lu", ++widget_count);
+	snprintf(index, sizeof(index), "%u", ++widget_count);
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "index", index);
 
 	if(allow_images) {

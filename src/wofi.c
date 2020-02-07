@@ -44,7 +44,6 @@ static struct zwlr_layer_shell_v1* shell;
 static GtkWidget* window, *outer_box, *scroll, *entry, *inner_box, *previous_selection = NULL;
 static gchar* filter = NULL;
 static char* mode = NULL;
-static int64_t filter_rate;
 static bool allow_images, allow_markup;
 static uint64_t image_size;
 static char* cache_file = NULL;
@@ -1041,7 +1040,7 @@ void wofi_init(struct map* _config) {
 	}
 	GtkAlign valign = config_get_mnemonic(config, "valign", default_valign, 4, "fill", "start", "end", "center");
 	char* prompt = config_get(config, "prompt", mode);
-	filter_rate = strtol(config_get(config, "filter_rate", "100"), NULL, 10);
+	uint64_t filter_rate = strtol(config_get(config, "filter_rate", "100"), NULL, 10);
 	allow_images = strcmp(config_get(config, "allow_images", "false"), "true") == 0;
 	allow_markup = strcmp(config_get(config, "allow_markup", "false"), "true") == 0;
 	image_size = strtol(config_get(config, "image_size", "32"), NULL, 10);

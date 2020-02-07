@@ -42,9 +42,8 @@ static uint64_t width, height;
 static char* x, *y;
 static struct zwlr_layer_shell_v1* shell;
 static GtkWidget* window, *outer_box, *scroll, *entry, *inner_box, *previous_selection = NULL;
-static const gchar* filter;
+static gchar* filter = NULL;
 static char* mode = NULL;
-static time_t filter_time;
 static int64_t filter_rate;
 static bool allow_images, allow_markup;
 static uint64_t image_size;
@@ -146,23 +145,19 @@ static void config_surface(void* data, struct zwlr_layer_surface_v1* surface, ui
 	}
 }
 
-static void get_input(GtkSearchEntry* entry, gpointer data) {
+static gboolean do_search(gpointer data) {
 	(void) data;
-	if(utils_get_time_millis() - filter_time > filter_rate) {
-		filter = gtk_entry_get_text(GTK_ENTRY(entry));
-		filter_time = utils_get_time_millis();
+	const gchar* new_filter = gtk_entry_get_text(GTK_ENTRY(entry));
+	if(filter == NULL || strcmp(new_filter, filter) != 0) {
+		if(filter != NULL) {
+			free(filter);
+		}
+		filter = strdup(new_filter);
 		gtk_flow_box_invalidate_filter(GTK_FLOW_BOX(inner_box));
 		gtk_flow_box_invalidate_sort(GTK_FLOW_BOX(inner_box));
 		gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0));
 	}
-}
-
-static void get_search(GtkSearchEntry* entry, gpointer data) {
-	(void) data;
-	filter = gtk_entry_get_text(GTK_ENTRY(entry));
-	gtk_flow_box_invalidate_filter(GTK_FLOW_BOX(inner_box));
-	gtk_flow_box_invalidate_sort(GTK_FLOW_BOX(inner_box));
-	gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0));
+	return G_SOURCE_CONTINUE;
 }
 
 static char* parse_images(WofiPropertyBox* box, const char* text, bool create_widgets) {
@@ -1047,7 +1042,6 @@ void wofi_init(struct map* _config) {
 	GtkAlign valign = config_get_mnemonic(config, "valign", default_valign, 4, "fill", "start", "end", "center");
 	char* prompt = config_get(config, "prompt", mode);
 	filter_rate = strtol(config_get(config, "filter_rate", "100"), NULL, 10);
-	filter_time = utils_get_time_millis();
 	allow_images = strcmp(config_get(config, "allow_images", "false"), "true") == 0;
 	allow_markup = strcmp(config_get(config, "allow_markup", "false"), "true") == 0;
 	image_size = strtol(config_get(config, "image_size", "32"), NULL, 10);
@@ -1150,14 +1144,14 @@ void wofi_init(struct map* _config) {
 		break;
 	}
 
-	g_signal_connect(entry, "changed", G_CALLBACK(get_input), NULL);
-	g_signal_connect(entry, "search-changed", G_CALLBACK(get_search), NULL);
 	g_signal_connect(inner_box, "child-activated", G_CALLBACK(activate_item), NULL);
 	g_signal_connect(inner_box, "selected-children-changed", G_CALLBACK(select_item), NULL);
 	g_signal_connect(entry, "activate", G_CALLBACK(activate_search), NULL);
 	g_signal_connect(window, "key-press-event", G_CALLBACK(key_press), NULL);
 	g_signal_connect(window, "focus-in-event", G_CALLBACK(focus), NULL);
 	g_signal_connect(window, "focus-out-event", G_CALLBACK(focus), NULL);
+
+	g_timeout_add(filter_rate, do_search, NULL);
 
 	pthread_t thread;
 	pthread_create(&thread, NULL, start_thread, mode);

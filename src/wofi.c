@@ -64,6 +64,7 @@ static struct map* config;
 static enum locations location;
 static bool no_actions;
 static uint64_t columns;
+static bool is_first = true;
 
 struct mode {
 	void (*mode_exec)(const gchar* cmd);
@@ -151,6 +152,7 @@ static void get_input(GtkSearchEntry* entry, gpointer data) {
 		filter_time = utils_get_time_millis();
 		gtk_flow_box_invalidate_filter(GTK_FLOW_BOX(inner_box));
 		gtk_flow_box_invalidate_sort(GTK_FLOW_BOX(inner_box));
+		gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0));
 	}
 }
 
@@ -159,6 +161,7 @@ static void get_search(GtkSearchEntry* entry, gpointer data) {
 	filter = gtk_entry_get_text(GTK_ENTRY(entry));
 	gtk_flow_box_invalidate_filter(GTK_FLOW_BOX(inner_box));
 	gtk_flow_box_invalidate_sort(GTK_FLOW_BOX(inner_box));
+	gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0));
 }
 
 static char* parse_images(WofiPropertyBox* box, const char* text, bool create_widgets) {
@@ -414,6 +417,11 @@ static gboolean _insert_widget(gpointer data) {
 	gtk_container_add(GTK_CONTAINER(child), parent);
 	gtk_container_add(GTK_CONTAINER(inner_box), child);
 	gtk_widget_show_all(child);
+
+	if(is_first) {
+		gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), GTK_FLOW_BOX_CHILD(child));
+		is_first = false;
+	}
 
 	if(GTK_IS_EXPANDER(parent)) {
 		GtkWidget* box = gtk_bin_get_child(GTK_BIN(parent));
@@ -706,29 +714,9 @@ static void select_item(GtkFlowBox* flow_box, gpointer data) {
 	previous_selection = box;
 }
 
-static GtkWidget* get_first_child(GtkContainer* container) {
-	GList* children = gtk_container_get_children(container);
-	GList* list = children;
-	GtkWidget* min_child = NULL;
-	int64_t x = INT64_MAX;
-	int64_t y = INT64_MAX;
-	for(; list != NULL; list = list->next) {
-		GtkWidget* child = list->data;
-		GtkAllocation alloc;
-		gtk_widget_get_allocation(child, &alloc);
-		if(alloc.x <= x && alloc.y <= y && alloc.x != -1 && alloc.y != -1 && alloc.width != 1 && alloc.height != 1 && gtk_widget_get_child_visible(child)) {
-			x = alloc.x;
-			y = alloc.y;
-			min_child = child;
-		}
-	}
-	g_list_free(children);
-	return min_child;
-}
-
 static void activate_search(GtkEntry* entry, gpointer data) {
 	(void) data;
-	GtkWidget* child = get_first_child(GTK_CONTAINER(inner_box));
+	GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0);
 	if(mode != NULL && (exec_search || child == NULL)) {
 		execute_action(mode, gtk_entry_get_text(entry));
 	} else if(child != NULL) {
@@ -801,21 +789,31 @@ static gint fuzzy_sort(const gchar* text1, const gchar* text2) {
 }
 
 static gint contains_sort(const gchar* text1, const gchar* text2) {
-	size_t filter_len = strlen(filter);
-	bool tx1, tx2;
+	char* str1, *str2;
 
 	if(insensitive) {
-		tx1 = strncasecmp(text1, filter, filter_len) == 0;
-		tx2 = strncasecmp(text2, filter, filter_len) == 0;
+		str1 = strcasestr(text1, filter);
+		str2 = strcasestr(text2, filter);
 	} else {
-		tx1 = strncmp(text1, filter, filter_len) == 0;
-		tx2 = strncmp(text2, filter, filter_len) == 0;
+		str1 = strstr(text1, filter);
+		str2 = strstr(text2, filter);
 	}
+	bool tx1 = str1 == text1;
+	bool tx2 = str2 == text2;
+	bool txc1 = str1 != NULL;
+	bool txc2 = str2 != NULL;
+
 	if(tx1 && tx2) {
 		return 0;
 	} else if(tx1) {
 		return -1;
 	} else if(tx2) {
+		return 1;
+	} else if(txc1 && txc2) {
+		return 0;
+	} else if(txc1) {
+		return -1;
+	} else if(txc2) {
 		return 1;
 	} else {
 		return 0;
@@ -824,6 +822,8 @@ static gint contains_sort(const gchar* text1, const gchar* text2) {
 
 static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer data) {
 	(void) data;
+	gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0);
+
 	GtkWidget* box1 = gtk_bin_get_child(GTK_BIN(child1));
 	GtkWidget* box2 = gtk_bin_get_child(GTK_BIN(child2));
 	if(GTK_IS_EXPANDER(box1)) {
@@ -881,8 +881,8 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 			return FALSE;
 		}
 		if(gtk_widget_has_focus(entry) || gtk_widget_has_focus(scroll)) {
-			GtkWidget* child = get_first_child(GTK_CONTAINER(inner_box));
-			gtk_widget_grab_focus(child);
+			GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0);
+			gtk_widget_grab_focus(GTK_WIDGET(child));
 			gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), GTK_FLOW_BOX_CHILD(child));
 			return TRUE;
 		}

@@ -841,6 +841,9 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 	const gchar* text2 = wofi_property_box_get_property(WOFI_PROPERTY_BOX(box2), "filter");
 	uint64_t index1 = strtol(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box1), "index"), NULL, 10);
 	uint64_t index2 = strtol(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box2), "index"), NULL, 10);
+	if(text1 == NULL || text2 == NULL) {
+		return index1 - index2;
+	}
 	if(filter == NULL || strcmp(filter, "") == 0) {
 		switch(sort_order) {
 		case SORT_ORDER_DEFAULT:
@@ -848,9 +851,6 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 		case SORT_ORDER_ALPHABETICAL:
 			return strcmp(text1, text2);
 		}
-	}
-	if(text1 == NULL || text2 == NULL) {
-		return index1 - index2;
 	}
 
 	switch(matching) {

@@ -160,7 +160,10 @@ static gboolean do_search(gpointer data) {
 		filter = strdup(new_filter);
 		gtk_flow_box_invalidate_filter(GTK_FLOW_BOX(inner_box));
 		gtk_flow_box_invalidate_sort(GTK_FLOW_BOX(inner_box));
-		gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0));
+		GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0);
+		if(child != NULL) {
+			gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), child);
+		}
 	}
 	return G_SOURCE_CONTINUE;
 }

@@ -850,12 +850,7 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 		}
 	}
 	if(text1 == NULL || text2 == NULL) {
-		switch(sort_order) {
-		case SORT_ORDER_DEFAULT:
-			return index1 - index2;
-		case SORT_ORDER_ALPHABETICAL:
-			return strcmp(text1, text2);
-		}
+		return index1 - index2;
 	}
 
 	switch(matching) {

@@ -293,7 +293,6 @@ char* wofi_parse_image_escapes(const char* text) {
 
 static GtkWidget* create_label(char* mode, char* text, char* search_text, char* action) {
 	GtkWidget* box = wofi_property_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-	gtk_widget_set_halign(box, content_halign);
 	gtk_widget_set_name(box, "unselected");
 	GtkStyleContext* style = gtk_widget_get_style_context(box);
 	gtk_style_context_add_class(style, "entry");
@@ -402,6 +401,7 @@ static gboolean _insert_widget(gpointer data) {
 	} else {
 		parent = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
 	}
+	gtk_widget_set_halign(parent, content_halign);
 	GtkWidget* child = gtk_flow_box_child_new();
 	gtk_widget_set_name(child, "entry");
 

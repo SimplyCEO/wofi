@@ -62,6 +62,9 @@ left 8
 .P
 The x and y offsets are applied based on layer\-shell anchors which means an x offset can only be applied if wofi is anchored on the x axis, i.e. you can only use an x offset with the top_left, top_right, right, bottom_right, bottom_left, and left locations. center, top, and bottom can't have x offsets as they're not anchored on the x axis. Likewise y offsets can only be applied to top_left, top, top_right, bottom_right, bottom, and bottom_left locations. center, left, and right can't have y offsets because they're not anchored to the y axis. Since center can't have offsets on either as it's not anchored to any axis any x or y offset applied while using center will override the location to top_left for backwards compatiblity reasons seeing as not doing so would simply ignore the offsets anyway.
 
+.SH ORDER
+There are 2 order options currently, default and alphabetical. Default means the entries are displayed in the order they are added by the mode, for all built in modes this is cached items first, followed by other entries in no specific order. Alphabetical means entries are alphabetical sorted period. These orders only affect the order when no search has been entered. Once a search is entered the order is re-arranged based on the current matching preference and this order is ignored.
+
 .SH WIDGET LAYOUT
 This section is for advanced CSS which needs more control than the built in wofi CSS names/classes allow for. This widget layout is subject to change at any time and without warning so your CSS might very well break if you rely on this. Widgets have their corresponding names next to them if they have one.
 

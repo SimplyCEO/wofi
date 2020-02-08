@@ -38,6 +38,11 @@ enum locations {
 	LOCATION_LEFT
 };
 
+enum sort_order {
+	SORT_ORDER_DEFAULT,
+	SORT_ORDER_ALPHABETICAL
+};
+
 static uint64_t width, height;
 static char* x, *y;
 static struct zwlr_layer_shell_v1* shell;
@@ -62,8 +67,9 @@ static struct map* config;
 static enum locations location;
 static bool no_actions;
 static uint64_t columns;
-static bool is_first = true;
+static bool user_moved = false;
 static uint16_t widget_count = 0;
+static enum sort_order sort_order;
 
 struct mode {
 	void (*mode_exec)(const gchar* cmd);
@@ -417,9 +423,8 @@ static gboolean _insert_widget(gpointer data) {
 	gtk_container_add(GTK_CONTAINER(inner_box), child);
 	gtk_widget_show_all(child);
 
-	if(is_first) {
-		gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), GTK_FLOW_BOX_CHILD(child));
-		is_first = false;
+	if(!user_moved) {
+		gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0));
 	}
 
 	if(GTK_IS_EXPANDER(parent)) {
@@ -837,10 +842,20 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 	uint64_t index1 = strtol(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box1), "index"), NULL, 10);
 	uint64_t index2 = strtol(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box2), "index"), NULL, 10);
 	if(filter == NULL || strcmp(filter, "") == 0) {
-		return index1 - index2;
+		switch(sort_order) {
+		case SORT_ORDER_DEFAULT:
+			return index1 - index2;
+		case SORT_ORDER_ALPHABETICAL:
+			return strcmp(text1, text2);
+		}
 	}
 	if(text1 == NULL || text2 == NULL) {
-		return index1 - index2;
+		switch(sort_order) {
+		case SORT_ORDER_DEFAULT:
+			return index1 - index2;
+		case SORT_ORDER_ALPHABETICAL:
+			return strcmp(text1, text2);
+		}
 	}
 
 	switch(matching) {
@@ -881,6 +896,7 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		} else if(event->key.keyval == GDK_KEY_Right && outer_orientation == GTK_ORIENTATION_VERTICAL) {
 			return FALSE;
 		}
+		user_moved = true;
 		if(gtk_widget_has_focus(entry) || gtk_widget_has_focus(scroll)) {
 			GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0);
 			gtk_widget_grab_focus(GTK_WIDGET(child));
@@ -1059,6 +1075,7 @@ void wofi_init(struct map* _config) {
 	no_actions = strcmp(config_get(config, "no_actions", "false"), "true") == 0;
 	uint64_t lines = strtol(config_get(config, "lines", "0"), NULL, 10);
 	columns = strtol(config_get(config, "columns", "1"), NULL, 10);
+	sort_order = config_get_mnemonic(config, "sort_order", "default", 2, "default", "alphabetical");
 	modes = map_init_void();
 
 	if(lines > 0) {

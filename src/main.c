@@ -82,6 +82,7 @@ static void print_usage(char** argv) {
 	printf("--define\t-D\tSets a config option\n");
 	printf("--lines\t\t-L\tSets the height in number of lines\n");
 	printf("--columns\t-w\tSets the number of columns to display\n");
+	printf("--sort-order\t-O\tSets the sort order\n");
 	exit(0);
 }
 
@@ -374,6 +375,12 @@ int main(int argc, char** argv) {
 			.val = 'w'
 		},
 		{
+			.name = "sort-order",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'O'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -405,13 +412,14 @@ int main(int argc, char** argv) {
 	char* no_actions = NULL;
 	char* lines = NULL;
 	char* columns = NULL;
+	char* sort_order = NULL;
 
 	struct wl_list options;
 	wl_list_init(&options);
 	struct option_node* node;
 
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -507,6 +515,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'w':
 			columns = optarg;
+			break;
+		case 'O':
+			sort_order = optarg;
 			break;
 		}
 	}
@@ -677,6 +688,9 @@ int main(int argc, char** argv) {
 	}
 	if(columns != NULL) {
 		map_put(config, "columns", columns);
+	}
+	if(sort_order != NULL) {
+		map_put(config, "sort_order", sort_order);
 	}
 
 	struct sigaction sigact;

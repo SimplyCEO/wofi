@@ -17,8 +17,6 @@
 
 #include <wofi.h>
 
-#define LINE_HEIGHT 25
-
 static const char* terminals[] = {"kitty", "termite", "gnome-terminal", "weston-terminal"};
 
 enum matching_mode {
@@ -70,6 +68,12 @@ static uint64_t columns;
 static bool user_moved = false;
 static uint16_t widget_count = 0;
 static enum sort_order sort_order;
+static int64_t min_height = INT64_MAX;
+static uint64_t lines;
+
+static struct wl_display* wl = NULL;
+static struct wl_surface* wl_surface;
+static struct zwlr_layer_surface_v1* wlr_surface;
 
 struct mode {
 	void (*mode_exec)(const gchar* cmd);
@@ -370,6 +374,20 @@ static void expand(GtkExpander* expander, gpointer data) {
 	gtk_widget_set_visible(box, !gtk_expander_get_expanded(expander));
 }
 
+static void widget_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointer data) {
+	(void) widget;
+	(void) data;
+	min_height = allocation->height < min_height ? allocation->height : min_height;
+	if(wl != NULL) {
+		zwlr_layer_surface_v1_set_size(wlr_surface, width, min_height * lines);
+		wl_surface_commit(wl_surface);
+		wl_display_roundtrip(wl);
+	}
+
+	gtk_window_resize(GTK_WINDOW(window), width, min_height * lines);
+	gtk_widget_set_size_request(scroll, width, min_height * lines);
+}
+
 static gboolean _insert_widget(gpointer data) {
 	struct mode* mode = data;
 	struct widget* node;
@@ -407,6 +425,9 @@ static gboolean _insert_widget(gpointer data) {
 	gtk_widget_set_halign(parent, content_halign);
 	GtkWidget* child = gtk_flow_box_child_new();
 	gtk_widget_set_name(child, "entry");
+	if(lines > 0) {
+		g_signal_connect(child, "size-allocate", G_CALLBACK(widget_allocate), NULL);
+	}
 
 	size_t lf_count = 1;
 	size_t text_len = strlen(node->text[0]);
@@ -414,12 +435,6 @@ static gboolean _insert_widget(gpointer data) {
 		if(node->text[0][count] == '\n') {
 			++lf_count;
 		}
-	}
-
-	if(allow_images) {
-		gtk_widget_set_size_request(child, width / columns, (image_size + 10) * lf_count);
-	} else {
-		gtk_widget_set_size_request(child, width / columns, LINE_HEIGHT * lf_count);
 	}
 
 	gtk_container_add(GTK_CONTAINER(child), parent);
@@ -1071,17 +1086,13 @@ void wofi_init(struct map* _config) {
 			"center", "top_left", "top", "top_right", "right", "bottom_right", "bottom", "bottom_left", "left",
 			"0", "1", "2", "3", "4", "5", "6", "7", "8");
 	no_actions = strcmp(config_get(config, "no_actions", "false"), "true") == 0;
-	uint64_t lines = strtol(config_get(config, "lines", "0"), NULL, 10);
+	lines = strtol(config_get(config, "lines", "0"), NULL, 10);
 	columns = strtol(config_get(config, "columns", "1"), NULL, 10);
 	sort_order = config_get_mnemonic(config, "sort_order", "default", 2, "default", "alphabetical");
 	modes = map_init_void();
 
 	if(lines > 0) {
-		if(allow_images) {
-			height = lines * (image_size + 10);
-		} else {
-			height = lines * LINE_HEIGHT;
-		}
+		height = 1;
 	}
 
 	window = gtk_window_new(GTK_WINDOW_TOPLEVEL);
@@ -1093,7 +1104,7 @@ void wofi_init(struct map* _config) {
 	gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
 	if(!normal_window) {
 		GdkDisplay* disp = gdk_display_get_default();
-		struct wl_display* wl = gdk_wayland_display_get_wl_display(disp);
+		wl = gdk_wayland_display_get_wl_display(disp);
 		struct wl_registry* registry = wl_display_get_registry(wl);
 		struct wl_registry_listener listener = {
 			.global = add_interface,
@@ -1103,12 +1114,12 @@ void wofi_init(struct map* _config) {
 		wl_display_roundtrip(wl);
 		GdkWindow* gdk_win = gtk_widget_get_window(window);
 		gdk_wayland_window_set_use_custom_surface(gdk_win);
-		struct wl_surface* wl_surface = gdk_wayland_window_get_wl_surface(gdk_win);
-		struct zwlr_layer_surface_v1* surface = zwlr_layer_shell_v1_get_layer_surface(shell, wl_surface, NULL, ZWLR_LAYER_SHELL_V1_LAYER_TOP, "wofi");
+		wl_surface = gdk_wayland_window_get_wl_surface(gdk_win);
+		wlr_surface = zwlr_layer_shell_v1_get_layer_surface(shell, wl_surface, NULL, ZWLR_LAYER_SHELL_V1_LAYER_TOP, "wofi");
 		struct zwlr_layer_surface_v1_listener* surface_listener = malloc(sizeof(struct zwlr_layer_surface_v1_listener));
 		surface_listener->configure = config_surface;
 		surface_listener->closed = nop;
-		zwlr_layer_surface_v1_add_listener(surface, surface_listener, NULL);
+		zwlr_layer_surface_v1_add_listener(wlr_surface, surface_listener, NULL);
 		wl_surface_commit(wl_surface);
 		wl_display_roundtrip(wl);
 	}

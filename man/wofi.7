@@ -65,6 +65,9 @@ The x and y offsets are applied based on layer\-shell anchors which means an x o
 .SH ORDER
 There are 2 order options currently, default and alphabetical. Default means the entries are displayed in the order they are added by the mode, for all built in modes this is cached items first, followed by other entries in no specific order. Alphabetical means entries are alphabetical sorted period. These orders only affect the order when no search has been entered. Once a search is entered the order is re-arranged based on the current matching preference and this order is ignored.
 
+.SH CACHING
+Caching cannot be disabled however the cache file can be set to /dev/null to effectively disable it.
+
 .SH WIDGET LAYOUT
 This section is for advanced CSS which needs more control than the built in wofi CSS names/classes allow for. This widget layout is subject to change at any time and without warning so your CSS might very well break if you rely on this. Widgets have their corresponding names next to them if they have one.
 

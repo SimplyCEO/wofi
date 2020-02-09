@@ -377,7 +377,7 @@ static void expand(GtkExpander* expander, gpointer data) {
 static void widget_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointer data) {
 	(void) widget;
 	(void) data;
-	min_height = allocation->height < min_height ? allocation->height : min_height;
+	min_height = utils_min(min_height, allocation->height);
 	if(wl != NULL) {
 		zwlr_layer_surface_v1_set_size(wlr_surface, width, min_height * lines);
 		wl_surface_commit(wl_surface);

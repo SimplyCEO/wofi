@@ -26,6 +26,9 @@ If true the result returned by dmenu will be stripped of image escape sequences 
 .TP
 .B separator=\fICHAR\fR
 The character used to separate dmenu entries, default is \\n.
+.TP
+.B print_line_num=\fIBOOL\fR
+When an entry is selected the number of the line the entry was on is printed instead of the entry itself. This disables caching as it's fundamentally incompatible with it.
 
 .SH RUN CONFIG OPTIONS
 .TP

@@ -70,6 +70,7 @@ static uint16_t widget_count = 0;
 static enum sort_order sort_order;
 static int64_t min_height = INT64_MAX;
 static uint64_t lines;
+static char* key_up, *key_down, *key_left, *key_right, *key_forward, *key_backward, *key_submit, *key_exit;
 
 static struct wl_display* wl = NULL;
 static struct wl_surface* wl_surface;
@@ -881,14 +882,58 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 	}
 }
 
+static void select_first(void) {
+	GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0);
+	gtk_widget_grab_focus(GTK_WIDGET(child));
+	gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), GTK_FLOW_BOX_CHILD(child));
+}
+
 static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 	(void) widget;
 	(void) data;
-	switch(event->key.keyval) {
-	case GDK_KEY_Escape:
-		exit(1);
-		break;
-	case GDK_KEY_Return:
+	gchar* name = gdk_keyval_name(event->key.keyval);
+	bool printable = strlen(name) == 1 && isprint(name[0]);
+	bool use_first = gtk_widget_has_focus(entry) || gtk_widget_has_focus(scroll);
+
+	if(gtk_widget_has_focus(entry) && printable) {
+		return FALSE;
+	}
+
+	if(event->key.keyval == gdk_keyval_from_name(key_up)) {
+		user_moved = true;
+		gtk_widget_child_focus(window, GTK_DIR_UP);
+	} else if(event->key.keyval == gdk_keyval_from_name(key_down)) {
+		user_moved = true;
+		if(outer_orientation == GTK_ORIENTATION_VERTICAL) {
+			if(use_first) {
+				select_first();
+				return TRUE;
+			}
+		}
+		gtk_widget_child_focus(window, GTK_DIR_DOWN);
+	} else if(event->key.keyval == gdk_keyval_from_name(key_left)) {
+		user_moved = true;
+		gtk_widget_child_focus(window, GTK_DIR_LEFT);
+	} else if(event->key.keyval == gdk_keyval_from_name(key_right)) {
+		user_moved = true;
+		if(outer_orientation == GTK_ORIENTATION_HORIZONTAL) {
+			if(use_first) {
+				select_first();
+				return TRUE;
+			}
+		}
+		gtk_widget_child_focus(window, GTK_DIR_RIGHT);
+	} else if(event->key.keyval == gdk_keyval_from_name(key_forward)) {
+		user_moved = true;
+		if(use_first) {
+			select_first();
+			return TRUE;
+		}
+		gtk_widget_child_focus(window, GTK_DIR_TAB_FORWARD);
+	} else if(event->key.keyval == gdk_keyval_from_name(key_backward)) {
+		user_moved = true;
+		gtk_widget_child_focus(window, GTK_DIR_TAB_BACKWARD);
+	} else if(event->key.keyval == gdk_keyval_from_name(key_submit)) {
 		mod_shift = (event->key.state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK;
 		mod_ctrl = (event->key.state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK;
 		if(mod_shift) {
@@ -900,38 +945,26 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		if(gtk_widget_has_focus(scroll)) {
 			gtk_entry_grab_focus_without_selecting(GTK_ENTRY(entry));
 		}
-		break;
-	case GDK_KEY_Tab:
-	case GDK_KEY_Down:
-	case GDK_KEY_Right:
-		if(event->key.keyval == GDK_KEY_Down && outer_orientation == GTK_ORIENTATION_HORIZONTAL) {
-			return FALSE;
-		} else if(event->key.keyval == GDK_KEY_Right && outer_orientation == GTK_ORIENTATION_VERTICAL) {
-			return FALSE;
+		GList* children = gtk_flow_box_get_selected_children(GTK_FLOW_BOX(inner_box));
+		if(gtk_widget_has_focus(entry)) {
+			g_signal_emit_by_name(entry, "activate", entry, NULL);
+		} else if(gtk_widget_has_focus(inner_box) || (children->data != NULL && gtk_widget_has_focus(children->data))) {
+			if(children->data != NULL) {
+				g_signal_emit_by_name(children->data, "activate", children->data, NULL);
+			}
 		}
-		user_moved = true;
-		if(gtk_widget_has_focus(entry) || gtk_widget_has_focus(scroll)) {
-			GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0);
-			gtk_widget_grab_focus(GTK_WIDGET(child));
-			gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), GTK_FLOW_BOX_CHILD(child));
-			return TRUE;
-		}
-		break;
-	case GDK_KEY_Up:
-	case GDK_KEY_Left:
-	case GDK_KEY_Shift_L:
-	case GDK_KEY_Shift_R:
-	case GDK_KEY_Control_L:
-	case GDK_KEY_Control_R:
-	case GDK_KEY_ISO_Left_Tab:
-		break;
-	default:
+		g_list_free(children);
+	} else if(event->key.keyval == gdk_keyval_from_name(key_exit)) {
+		exit(1);
+	} else if(event->key.keyval == GDK_KEY_Shift_L || event->key.keyval == GDK_KEY_Control_L) {
+	} else if(event->key.keyval == GDK_KEY_Shift_R || event->key.keyval == GDK_KEY_Control_R) {
+	} else {
 		if(!gtk_widget_has_focus(entry)) {
 			gtk_entry_grab_focus_without_selecting(GTK_ENTRY(entry));
 		}
-		break;
+		return FALSE;
 	}
-	return FALSE;
+	return TRUE;
 }
 
 static gboolean focus(GtkWidget* widget, GdkEvent* event, gpointer data) {
@@ -1089,6 +1122,14 @@ void wofi_init(struct map* _config) {
 	lines = strtol(config_get(config, "lines", "0"), NULL, 10);
 	columns = strtol(config_get(config, "columns", "1"), NULL, 10);
 	sort_order = config_get_mnemonic(config, "sort_order", "default", 2, "default", "alphabetical");
+	key_up = config_get(config, "key_up", "Up");
+	key_down = config_get(config, "key_down", "Down");
+	key_left = config_get(config, "key_left", "Left");
+	key_right = config_get(config, "key_right", "Right");
+	key_forward = config_get(config, "key_forward", "Tab");
+	key_backward = config_get(config, "key_backward", "ISO_Left_Tab");
+	key_submit = config_get(config, "key_submit", "Return");
+	key_exit = config_get(config, "key_exit", "Escape");
 	modes = map_init_void();
 
 	if(lines > 0) {

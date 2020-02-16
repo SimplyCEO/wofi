@@ -71,6 +71,7 @@ static enum sort_order sort_order;
 static int64_t min_height = INT64_MAX;
 static uint64_t lines;
 static char* key_up, *key_down, *key_left, *key_right, *key_forward, *key_backward, *key_submit, *key_exit;
+static char* mod_up, *mod_down, *mod_left, *mod_right, *mod_forward, *mod_backward, *mod_exit;
 
 static struct wl_display* wl = NULL;
 static struct wl_surface* wl_surface;
@@ -888,51 +889,111 @@ static void select_first(void) {
 	gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), GTK_FLOW_BOX_CHILD(child));
 }
 
+static GdkModifierType get_mask_from_keyval(guint keyval) {
+	switch(keyval) {
+	case GDK_KEY_Shift_L:
+	case GDK_KEY_Shift_R:
+		return GDK_SHIFT_MASK;
+	case GDK_KEY_Control_L:
+	case GDK_KEY_Control_R:
+		return GDK_CONTROL_MASK;
+	default:
+		return 0;
+	}
+}
+
+static GdkModifierType get_mask_from_name(char* name) {
+	return get_mask_from_keyval(gdk_keyval_from_name(name));
+}
+
+static void move_up(void) {
+	user_moved = true;
+	gtk_widget_child_focus(window, GTK_DIR_UP);
+}
+
+static void move_down(void) {
+	user_moved = true;
+	if(outer_orientation == GTK_ORIENTATION_VERTICAL) {
+		if(gtk_widget_has_focus(entry) || gtk_widget_has_focus(scroll)) {
+			select_first();
+			return;
+		}
+	}
+	gtk_widget_child_focus(window, GTK_DIR_DOWN);
+}
+
+static void move_left(void) {
+	user_moved = true;
+	gtk_widget_child_focus(window, GTK_DIR_LEFT);
+}
+
+static void move_right(void) {
+	user_moved = true;
+	if(outer_orientation == GTK_ORIENTATION_HORIZONTAL) {
+		if(gtk_widget_has_focus(entry) || gtk_widget_has_focus(scroll)) {
+			select_first();
+			return;
+		}
+	}
+	gtk_widget_child_focus(window, GTK_DIR_RIGHT);
+}
+
+static void move_forward(void) {
+	user_moved = true;
+	if(gtk_widget_has_focus(entry) || gtk_widget_has_focus(scroll)) {
+		select_first();
+		return;
+	}
+	gtk_widget_child_focus(window, GTK_DIR_TAB_FORWARD);
+}
+
+static void move_backward(void) {
+	user_moved = true;
+	gtk_widget_child_focus(window, GTK_DIR_TAB_BACKWARD);
+}
+
+static void do_exit(void) {
+	exit(1);
+}
+
+static void do_key_action(GdkEvent* event, char* mod, void (*action)(void)) {
+	if(mod != NULL) {
+		GdkModifierType mask = get_mask_from_name(mod);
+		if((event->key.state & mask) == mask) {
+			event->key.state &= ~mask;
+			action();
+		}
+	} else {
+		action();
+	}
+}
+
+static bool has_mod(guint state) {
+	return (state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK || (state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK;
+}
+
 static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 	(void) widget;
 	(void) data;
 	gchar* name = gdk_keyval_name(event->key.keyval);
-	bool printable = strlen(name) == 1 && isprint(name[0]);
-	bool use_first = gtk_widget_has_focus(entry) || gtk_widget_has_focus(scroll);
+	bool printable = strlen(name) == 1 && isprint(name[0]) && !has_mod(event->key.state);
 
 	if(gtk_widget_has_focus(entry) && printable) {
 		return FALSE;
 	}
 
 	if(event->key.keyval == gdk_keyval_from_name(key_up)) {
-		user_moved = true;
-		gtk_widget_child_focus(window, GTK_DIR_UP);
+		do_key_action(event, mod_up, move_up);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_down)) {
-		user_moved = true;
-		if(outer_orientation == GTK_ORIENTATION_VERTICAL) {
-			if(use_first) {
-				select_first();
-				return TRUE;
-			}
-		}
-		gtk_widget_child_focus(window, GTK_DIR_DOWN);
+		do_key_action(event, mod_down, move_down);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_left)) {
-		user_moved = true;
-		gtk_widget_child_focus(window, GTK_DIR_LEFT);
+		do_key_action(event, mod_left, move_left);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_right)) {
-		user_moved = true;
-		if(outer_orientation == GTK_ORIENTATION_HORIZONTAL) {
-			if(use_first) {
-				select_first();
-				return TRUE;
-			}
-		}
-		gtk_widget_child_focus(window, GTK_DIR_RIGHT);
+		do_key_action(event, mod_right, move_right);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_forward)) {
-		user_moved = true;
-		if(use_first) {
-			select_first();
-			return TRUE;
-		}
-		gtk_widget_child_focus(window, GTK_DIR_TAB_FORWARD);
+		do_key_action(event, mod_forward, move_forward);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_backward)) {
-		user_moved = true;
-		gtk_widget_child_focus(window, GTK_DIR_TAB_BACKWARD);
+		do_key_action(event, mod_backward, move_backward);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_submit)) {
 		mod_shift = (event->key.state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK;
 		mod_ctrl = (event->key.state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK;
@@ -955,7 +1016,7 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		}
 		g_list_free(children);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_exit)) {
-		exit(1);
+		do_key_action(event, mod_exit, do_exit);
 	} else if(event->key.keyval == GDK_KEY_Shift_L || event->key.keyval == GDK_KEY_Control_L) {
 	} else if(event->key.keyval == GDK_KEY_Shift_R || event->key.keyval == GDK_KEY_Control_R) {
 	} else {
@@ -1084,6 +1145,26 @@ static void* start_thread(void* data) {
 	return NULL;
 }
 
+static void parse_mods(char** key, char** mod) {
+	char* hyphen = strchr(*key, '-');
+	if(hyphen != NULL) {
+		*hyphen = 0;
+		guint key1 = gdk_keyval_from_name(*key);
+		guint key2 = gdk_keyval_from_name(hyphen + 1);
+		if(get_mask_from_keyval(key1) != 0) {
+			*mod = *key;
+			*key = hyphen + 1;
+		} else if(get_mask_from_keyval(key2) != 0) {
+			*mod = hyphen + 1;
+		} else {
+			fprintf(stderr, "Neither %s nor %s is a modifier, this is not supported\n", *key, hyphen + 1);
+			*mod = NULL;
+		}
+	} else {
+		*mod = NULL;
+	}
+}
+
 void wofi_init(struct map* _config) {
 	config = _config;
 	width = strtol(config_get(config, "width", "1000"), NULL, 10);
@@ -1122,6 +1203,7 @@ void wofi_init(struct map* _config) {
 	lines = strtol(config_get(config, "lines", "0"), NULL, 10);
 	columns = strtol(config_get(config, "columns", "1"), NULL, 10);
 	sort_order = config_get_mnemonic(config, "sort_order", "default", 2, "default", "alphabetical");
+
 	key_up = config_get(config, "key_up", "Up");
 	key_down = config_get(config, "key_down", "Down");
 	key_left = config_get(config, "key_left", "Left");
@@ -1130,6 +1212,15 @@ void wofi_init(struct map* _config) {
 	key_backward = config_get(config, "key_backward", "ISO_Left_Tab");
 	key_submit = config_get(config, "key_submit", "Return");
 	key_exit = config_get(config, "key_exit", "Escape");
+
+	parse_mods(&key_up, &mod_up);
+	parse_mods(&key_down, &mod_down);
+	parse_mods(&key_left, &mod_left);
+	parse_mods(&key_right, &mod_right);
+	parse_mods(&key_forward, &mod_forward);
+	parse_mods(&key_backward, &mod_backward);
+	parse_mods(&key_exit, &mod_exit);
+
 	modes = map_init_void();
 
 	if(lines > 0) {

@@ -3,7 +3,7 @@
 wofi \- Key names for custom binds
 
 .SH DESCRIPTION
-This is a list of the key names that can be used for custom binding, these are taken from gdk/gdkkeysyms.h
+This is a list of the key names that can be used for custom binding, these are taken from gdk/gdkkeysyms.h. Certain keys cannot have the shift modifier attached as holding shift while using these keys causes a completely different key press to be registered. For example Shift_L\-j is invalid as holding shift while pressing j changes the key into J so J should be registered as the key instead of Shift_L\-j. This is the case with all alphanumeric chars as well as Tab which turns into ISO_Left_Tab.
 
 .SH KEY NAMES
 .B BackSpace

@@ -741,7 +741,7 @@ static void select_item(GtkFlowBox* flow_box, gpointer data) {
 static void activate_search(GtkEntry* entry, gpointer data) {
 	(void) data;
 	GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0);
-	gboolean is_visible = gtk_widget_get_child_visible(GTK_WIDGET(child));
+	gboolean is_visible = gtk_widget_get_visible(GTK_WIDGET(child));
 	if(mode != NULL && (exec_search || child == NULL || !is_visible)) {
 		execute_action(mode, gtk_entry_get_text(entry));
 	} else if(child != NULL) {
@@ -754,8 +754,7 @@ static void activate_search(GtkEntry* entry, gpointer data) {
 	}
 }
 
-static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
-	(void) data;
+static gboolean filter_proxy(GtkFlowBoxChild* row) {
 	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
 	if(GTK_IS_EXPANDER(box)) {
 		box = gtk_expander_get_label_widget(GTK_EXPANDER(box));
@@ -772,6 +771,13 @@ static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
 	} else {
 		return strstr(text, filter) != NULL;
 	}
+}
+
+static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
+	(void) data;
+	gboolean ret = filter_proxy(row);
+	gtk_widget_set_visible(GTK_WIDGET(row), ret);
+	return ret;
 }
 
 static gint fuzzy_sort(const gchar* text1, const gchar* text2) {

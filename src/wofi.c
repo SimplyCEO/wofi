@@ -741,7 +741,8 @@ static void select_item(GtkFlowBox* flow_box, gpointer data) {
 static void activate_search(GtkEntry* entry, gpointer data) {
 	(void) data;
 	GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0);
-	if(mode != NULL && (exec_search || child == NULL)) {
+	gboolean is_visible = gtk_widget_get_child_visible(GTK_WIDGET(child));
+	if(mode != NULL && (exec_search || child == NULL || !is_visible)) {
 		execute_action(mode, gtk_entry_get_text(entry));
 	} else if(child != NULL) {
 		GtkWidget* box = gtk_bin_get_child(GTK_BIN(child));

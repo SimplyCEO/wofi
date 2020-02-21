@@ -141,6 +141,9 @@ Specifies the key to use in order to submit an action. Default is Return. See \f
 .TP
 .B key_exit=\fIKEY\fR
 Specifies the key to use in order to exit wofi. Default is Escape. See \fBwofi\-keys\fR(7) for the key codes.
+.TP
+.B line_wrap=\fIBOOL\fR
+Enables line wrap mode. If enabled lines will be wrapped to avoid scrolling. Default is false.
 
 .SH CSS SELECTORS
 Any GTK widget can be selected by using the name of its CSS node, these however might change with updates and are not guarenteed to stay constant. Wofi also provides certain widgets with names and classes which can be referenced from CSS to give access to the most important widgets easily. \fBwofi\fR(7) contains the current widget layout used by wofi so if you want to get into CSS directly using GTK widget names look there for info.

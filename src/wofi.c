@@ -70,6 +70,8 @@ static uint16_t widget_count = 0;
 static enum sort_order sort_order;
 static int64_t min_height = INT64_MAX;
 static uint64_t lines;
+static bool line_wrap;
+
 static char* key_up, *key_down, *key_left, *key_right, *key_forward, *key_backward, *key_submit, *key_exit;
 static char* mod_up, *mod_down, *mod_left, *mod_right, *mod_forward, *mod_backward, *mod_exit;
 
@@ -266,6 +268,7 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 					gtk_widget_set_name(label, "text");
 					gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
 					gtk_label_set_xalign(GTK_LABEL(label), 0);
+					gtk_label_set_line_wrap(GTK_LABEL(label), line_wrap);
 					gtk_container_add(GTK_CONTAINER(box), label);
 				} else {
 					char* tmp = ret;
@@ -318,6 +321,7 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 		gtk_widget_set_name(label, "text");
 		gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
 		gtk_label_set_xalign(GTK_LABEL(label), 0);
+		gtk_label_set_line_wrap(GTK_LABEL(label), line_wrap);
 		gtk_container_add(GTK_CONTAINER(box), label);
 	}
 	if(parse_search) {
@@ -1210,6 +1214,7 @@ void wofi_init(struct map* _config) {
 	lines = strtol(config_get(config, "lines", "0"), NULL, 10);
 	columns = strtol(config_get(config, "columns", "1"), NULL, 10);
 	sort_order = config_get_mnemonic(config, "sort_order", "default", 2, "default", "alphabetical");
+	line_wrap = strcmp(config_get(config, "line_wrap", "false"), "true") == 0;
 
 	key_up = config_get(config, "key_up", "Up");
 	key_down = config_get(config, "key_down", "Down");

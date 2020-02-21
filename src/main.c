@@ -608,6 +608,11 @@ int main(int argc, char** argv) {
 	if(strcmp(get_exec_name(argv[0]), "dmenu") == 0) {
 		map_put(config, "mode", "dmenu");
 		cache_file = "/dev/null";
+	} else if(strcmp(get_exec_name(argv[0]), "wofi-askpass") == 0) {
+		map_put(config, "mode", "dmenu");
+		cache_file = "/dev/null";
+		password_char = "*";
+		prompt = "Password";
 	} else if(mode != NULL) {
 		map_put(config, "mode", mode);
 	} else if(map_get(config, "mode") == NULL) {

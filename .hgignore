@@ -3,4 +3,5 @@
 ^\.settings$
 ^\.hgrepos$
 ^build$
+^debug$
 ^Debug$

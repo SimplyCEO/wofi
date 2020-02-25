@@ -68,7 +68,7 @@ static uint64_t columns;
 static bool user_moved = false;
 static uint16_t widget_count = 0;
 static enum sort_order sort_order;
-static int64_t min_height = INT64_MAX;
+static int64_t max_height = 0;
 static uint64_t lines;
 static int8_t line_wrap;
 
@@ -387,17 +387,33 @@ static void expand(GtkExpander* expander, gpointer data) {
 }
 
 static void widget_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointer data) {
-	(void) widget;
 	(void) data;
-	min_height = utils_min(min_height, allocation->height);
+	if(max_height > 0) {
+		if(allocation->height > max_height) {
+			int64_t ratio = allocation->height / max_height;
+			int64_t mod = allocation->height % max_height;
+			if(mod >= max_height / 2) {
+				++ratio;
+			}
+			if(ratio > 1) {
+				gtk_widget_set_size_request(widget, width, max_height * ratio);
+			} else {
+				max_height = allocation->height;
+			}
+		} else {
+			gtk_widget_set_size_request(widget, width, max_height);
+		}
+	} else {
+		max_height = allocation->height;
+	}
 	if(wl != NULL) {
-		zwlr_layer_surface_v1_set_size(wlr_surface, width, min_height * lines);
+		zwlr_layer_surface_v1_set_size(wlr_surface, width, max_height * lines);
 		wl_surface_commit(wl_surface);
 		wl_display_roundtrip(wl);
 	}
 
-	gtk_window_resize(GTK_WINDOW(window), width, min_height * lines);
-	gtk_widget_set_size_request(scroll, width, min_height * lines);
+	gtk_window_resize(GTK_WINDOW(window), width, max_height * lines);
+	gtk_widget_set_size_request(scroll, width, max_height * lines);
 }
 
 static gboolean _insert_widget(gpointer data) {

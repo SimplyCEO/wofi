@@ -49,11 +49,11 @@ char* utils_concat(size_t arg_count, ...) {
 }
 
 size_t utils_min(size_t n1, size_t n2) {
-	if(n1 < n2) {
-		return n1;
-	} else {
-		return n2;
-	}
+	return n1 < n2 ? n1 : n2;
+}
+
+size_t utils_max(size_t n1, size_t n2) {
+	return n1 > n2 ? n1 : n2;
 }
 
 size_t utils_min3(size_t n1, size_t n2, size_t n3) {

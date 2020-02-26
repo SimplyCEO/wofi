@@ -44,4 +44,14 @@ if get_option('enable_dmenu')
 	sources += ['modes/dmenu.c']
 endif
 
+install_man('man/wofi.1',
+			'man/wofi.3',
+			'man/wofi.5',
+			'man/wofi.7',
+			'man/wofi-api.3',
+			'man/wofi-config.3',
+			'man/wofi-keys.7',
+			'man/wofi-map.3',
+			'man/wofi-utils.3')
+
 executable(meson.project_name(), sources, include_directories : inc, dependencies : deps, install : true)

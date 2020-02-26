@@ -144,6 +144,9 @@ Specifies the key to use in order to exit wofi. Default is Escape. See \fBwofi\-
 .TP
 .B line_wrap=\fIMODE\fR
 Specifies the line wrap mode to use. The options are off, word, char, and word_char. Default is off.
+.TP
+.B global_coords=\fIBOOL\fR
+Specifies whether x and y offsets should be calculated using the global compositor space instead of the current monitor. Default is false. This does not play well with locations and using it with them is not advised.
 
 .SH CSS SELECTORS
 Any GTK widget can be selected by using the name of its CSS node, these however might change with updates and are not guarenteed to stay constant. Wofi also provides certain widgets with names and classes which can be referenced from CSS to give access to the most important widgets easily. \fBwofi\fR(7) contains the current widget layout used by wofi so if you want to get into CSS directly using GTK widget names look there for info.

@@ -38,6 +38,7 @@
 #include <pango/pango.h>
 #include <gdk/gdkwayland.h>
 
+#include <xdg-output-unstable-v1-client-protocol.h>
 #include <wlr-layer-shell-unstable-v1-client-protocol.h>
 
 void wofi_init(struct map* config);

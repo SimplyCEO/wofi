@@ -71,12 +71,15 @@ static enum sort_order sort_order;
 static int64_t max_height = 0;
 static uint64_t lines;
 static int8_t line_wrap;
+static int64_t ix, iy;
 
 static char* key_up, *key_down, *key_left, *key_right, *key_forward, *key_backward, *key_submit, *key_exit;
 static char* mod_up, *mod_down, *mod_left, *mod_right, *mod_forward, *mod_backward, *mod_exit;
 
 static struct wl_display* wl = NULL;
 static struct wl_surface* wl_surface;
+static struct wl_list outputs;
+static struct zxdg_output_manager_v1* output_manager;
 static struct zwlr_layer_surface_v1* wlr_surface;
 
 struct mode {
@@ -91,12 +94,25 @@ struct widget {
 	char* mode, **text, *search_text, **actions;
 };
 
+struct output_node {
+	char* name;
+	struct wl_output* output;
+	int32_t width, height, x, y;
+	struct wl_list link;
+};
+
 static void nop() {}
 
 static void add_interface(void* data, struct wl_registry* registry, uint32_t name, const char* interface, uint32_t version) {
 	(void) data;
 	if(strcmp(interface, zwlr_layer_shell_v1_interface.name) == 0) {
 		shell = wl_registry_bind(registry, name, &zwlr_layer_shell_v1_interface, version);
+	} else if(strcmp(interface, wl_output_interface.name) == 0) {
+		struct output_node* node = malloc(sizeof(struct output_node));
+		node->output = wl_registry_bind(registry, name, &wl_output_interface, version);
+		wl_list_insert(&outputs, &node->link);
+	} else if(strcmp(interface, zxdg_output_manager_v1_interface.name) == 0) {
+		output_manager = wl_registry_bind(registry, name, &zxdg_output_manager_v1_interface, version);
 	}
 }
 
@@ -113,9 +129,6 @@ static void config_surface(void* data, struct zwlr_layer_surface_v1* surface, ui
 	}
 
 	if(x != NULL || y != NULL) {
-		int64_t ix = x == NULL ? 0 : strtol(x, NULL, 10);
-		int64_t iy = y == NULL ? 0 : strtol(y, NULL, 10);
-
 		if(location == LOCATION_CENTER) {
 			location = LOCATION_TOP_LEFT;
 		}
@@ -1198,6 +1211,26 @@ static void parse_mods(char** key, char** mod) {
 	}
 }
 
+static void get_output_name(void* data, struct zxdg_output_v1* output, const char* name) {
+	(void) output;
+	struct output_node* node = data;
+	node->name = strdup(name);
+}
+
+static void get_output_res(void* data, struct zxdg_output_v1* output, int32_t width, int32_t height) {
+	(void) output;
+	struct output_node* node = data;
+	node->width = width;
+	node->height = height;
+}
+
+static void get_output_pos(void* data, struct zxdg_output_v1* output, int32_t x, int32_t y) {
+	(void) output;
+	struct output_node* node = data;
+	node->x = x;
+	node->y = y;
+}
+
 void wofi_init(struct map* _config) {
 	config = _config;
 	width = strtol(config_get(config, "width", "1000"), NULL, 10);
@@ -1237,6 +1270,7 @@ void wofi_init(struct map* _config) {
 	columns = strtol(config_get(config, "columns", "1"), NULL, 10);
 	sort_order = config_get_mnemonic(config, "sort_order", "default", 2, "default", "alphabetical");
 	line_wrap = config_get_mnemonic(config, "line_wrap", "off", 4, "off", "word", "char", "word_char") - 1;
+	bool global_coords = strcmp(config_get(config, "global_coords", "false"), "true") == 0;
 
 	key_up = config_get(config, "key_up", "Up");
 	key_down = config_get(config, "key_down", "Down");
@@ -1269,6 +1303,7 @@ void wofi_init(struct map* _config) {
 	gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
 	gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
 	if(!normal_window) {
+		wl_list_init(&outputs);
 		GdkDisplay* disp = gdk_display_get_default();
 		wl = gdk_wayland_display_get_wl_display(disp);
 		struct wl_registry* registry = wl_display_get_registry(wl);
@@ -1278,10 +1313,41 @@ void wofi_init(struct map* _config) {
 		};
 		wl_registry_add_listener(registry, &listener, NULL);
 		wl_display_roundtrip(wl);
+
+		struct output_node* node;
+		wl_list_for_each(node, &outputs, link) {
+			struct zxdg_output_v1* xdg_output = zxdg_output_manager_v1_get_xdg_output(output_manager, node->output);
+			struct zxdg_output_v1_listener* xdg_listener = malloc(sizeof(struct zxdg_output_v1_listener));
+			xdg_listener->description = nop;
+			xdg_listener->done = nop;
+			xdg_listener->logical_position = get_output_pos;
+			xdg_listener->logical_size = get_output_res;
+			xdg_listener->name = get_output_name;
+			zxdg_output_v1_add_listener(xdg_output, xdg_listener, node);
+		}
+		wl_display_roundtrip(wl);
+
+		ix = x == NULL ? 0 : strtol(x, NULL, 10);
+		iy = y == NULL ? 0 : strtol(y, NULL, 10);
+
+		struct wl_output* output = NULL;
+		if(global_coords) {
+			wl_list_for_each(node, &outputs, link) {
+				if(ix >= node->x && ix <= node->width + node->x
+						&& iy >= node->y && iy <= node->height + node->y) {
+					output = node->output;
+					ix -= node->x;
+					iy -= node->y;
+					break;
+				}
+			}
+		}
+
 		GdkWindow* gdk_win = gtk_widget_get_window(window);
 		gdk_wayland_window_set_use_custom_surface(gdk_win);
 		wl_surface = gdk_wayland_window_get_wl_surface(gdk_win);
-		wlr_surface = zwlr_layer_shell_v1_get_layer_surface(shell, wl_surface, NULL, ZWLR_LAYER_SHELL_V1_LAYER_TOP, "wofi");
+
+		wlr_surface = zwlr_layer_shell_v1_get_layer_surface(shell, wl_surface, output, ZWLR_LAYER_SHELL_V1_LAYER_TOP, "wofi");
 		struct zwlr_layer_surface_v1_listener* surface_listener = malloc(sizeof(struct zwlr_layer_surface_v1_listener));
 		surface_listener->configure = config_surface;
 		surface_listener->closed = nop;

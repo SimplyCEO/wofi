@@ -19,6 +19,8 @@
 
 #include <gio/gdesktopappinfo.h>
 
+static const char* arg_names[] = {"print_command"};
+
 static struct mode* mode;
 
 struct node {
@@ -27,6 +29,8 @@ struct node {
 };
 
 static struct wl_list widgets;
+
+static bool print_command;
 
 static char* get_text(char* file, char* action) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(file);
@@ -226,8 +230,9 @@ static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
 }
 
 void wofi_drun_init(struct mode* this, struct map* config) {
-	(void) config;
 	mode = this;
+
+	print_command = strcmp(config_get(config, "print_command", "false"), "true") == 0;
 
 	struct map* cached = map_init();
 	struct map* entries = map_init();
@@ -329,18 +334,35 @@ void wofi_drun_exec(const gchar* cmd) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(cmd);
 	if(G_IS_DESKTOP_APP_INFO(info)) {
 		wofi_write_cache(mode, cmd);
-		g_app_info_launch_uris_async(G_APP_INFO(info), NULL, NULL, NULL, launch_done, (gchar*) cmd);
+		if(print_command) {
+			printf("%s\n", g_app_info_get_commandline(G_APP_INFO(info)));
+			exit(0);
+		} else {
+			g_app_info_launch_uris_async(G_APP_INFO(info), NULL, NULL, NULL, launch_done, (gchar*) cmd);
+		}
 	} else if(strrchr(cmd, ' ') != NULL) {
 		char* space = strrchr(cmd, ' ');
 		*space = 0;
 		wofi_write_cache(mode, cmd);
 		info = g_desktop_app_info_new_from_filename(cmd);
 		char* action = space + 1;
-		g_desktop_app_info_launch_action(info, action, NULL);
-		utils_sleep_millis(500);
+		if(print_command) {
+			printf("%s\n", g_app_info_get_commandline(G_APP_INFO(info)));
+		} else {
+			g_desktop_app_info_launch_action(info, action, NULL);
+			utils_sleep_millis(500);
+		}
 		exit(0);
 	} else {
 		fprintf(stderr, "%s cannot be executed\n", cmd);
 		exit(1);
 	}
+}
+
+const char** wofi_drun_get_arg_names(void) {
+	return arg_names;
+}
+
+size_t wofi_drun_get_arg_count(void) {
+	return sizeof(arg_names) / sizeof(char*);
 }

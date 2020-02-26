@@ -25,6 +25,7 @@ sources = ['src/config.c',
 			'src/utils.c',
 			'src/wofi.c',
 			'proto/wlr-layer-shell-unstable-v1-protocol.c',
+			'proto/xdg-output-unstable-v1-protocol.c',
 			'proto/xdg-shell-protocol.c']
 			
 deps = [gtk, threads, wayland, dl]

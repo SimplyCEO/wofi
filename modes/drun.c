@@ -348,6 +348,7 @@ void wofi_drun_exec(const gchar* cmd) {
 		char* action = space + 1;
 		if(print_command) {
 			printf("%s\n", g_app_info_get_commandline(G_APP_INFO(info)));
+			fprintf(stderr, "Printing the command line for an action is not supported\n");
 		} else {
 			g_desktop_app_info_launch_action(info, action, NULL);
 			utils_sleep_millis(500);

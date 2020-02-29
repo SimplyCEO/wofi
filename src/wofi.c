@@ -72,6 +72,8 @@ static int64_t max_height = 0;
 static uint64_t lines;
 static int8_t line_wrap;
 static int64_t ix, iy;
+static uint8_t konami_cycle;
+static bool is_konami = false;
 
 static char* key_up, *key_down, *key_left, *key_right, *key_forward, *key_backward, *key_submit, *key_exit;
 static char* mod_up, *mod_down, *mod_left, *mod_right, *mod_forward, *mod_backward, *mod_exit;
@@ -1025,11 +1027,62 @@ static bool has_mod(guint state) {
 	return (state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK || (state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK;
 }
 
+static gboolean do_nyan(gpointer data) {
+	(void) data;
+	wofi_load_css(true);
+	return G_SOURCE_CONTINUE;
+}
+
+static guint get_konami_key(uint8_t cycle) {
+	switch(cycle) {
+	case 0:
+		return GDK_KEY_Up;
+	case 1:
+		return GDK_KEY_Up;
+	case 2:
+		return GDK_KEY_Down;
+	case 3:
+		return GDK_KEY_Down;
+	case 4:
+		return GDK_KEY_Left;
+	case 5:
+		return GDK_KEY_Right;
+	case 6:
+		return GDK_KEY_Left;
+	case 7:
+		return GDK_KEY_Right;
+	case 8:
+		return GDK_KEY_b;
+	case 9:
+		return GDK_KEY_a;
+	case 10:
+		return GDK_KEY_Return;
+	default:
+		return GDK_KEY_VoidSymbol;
+	}
+}
+
 static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 	(void) widget;
 	(void) data;
 	gchar* name = gdk_keyval_name(event->key.keyval);
 	bool printable = strlen(name) == 1 && isprint(name[0]) && !has_mod(event->key.state);
+
+	guint konami_key = get_konami_key(konami_cycle);
+	if(event->key.keyval == konami_key) {
+		if(konami_cycle == 10) {
+			konami_cycle = 0;
+			if(!is_konami) {
+				is_konami = true;
+				gdk_threads_add_timeout(500, do_nyan, NULL);
+			}
+			return TRUE;
+		} else {
+			++konami_cycle;
+		}
+	} else {
+		konami_cycle = 0;
+	}
 
 	if(gtk_widget_has_focus(entry) && printable) {
 		return FALSE;
@@ -1418,7 +1471,7 @@ void wofi_init(struct map* _config) {
 	g_signal_connect(window, "focus-in-event", G_CALLBACK(focus), NULL);
 	g_signal_connect(window, "focus-out-event", G_CALLBACK(focus), NULL);
 
-	g_timeout_add(filter_rate, do_search, NULL);
+	gdk_threads_add_timeout(filter_rate, do_search, NULL);
 
 	pthread_t thread;
 	pthread_create(&thread, NULL, start_thread, mode);

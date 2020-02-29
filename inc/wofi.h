@@ -42,4 +42,6 @@
 #include <wlr-layer-shell-unstable-v1-client-protocol.h>
 
 void wofi_init(struct map* config);
+
+void wofi_load_css(bool nyan);
 #endif

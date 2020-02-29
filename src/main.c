@@ -27,12 +27,16 @@
 #include <getopt.h>
 #include <string.h>
 
+static const char* nyan_colors[] = {"#FF0000", "#FFA500", "#FFFF00", "#00FF00", "#0000FF", "#FF00FF"};
+static size_t nyan_color_l = sizeof(nyan_colors) / sizeof(char*);
+
 static char* CONFIG_LOCATION;
 static char* COLORS_LOCATION;
 static struct map* config;
 static char* config_path;
 static char* stylesheet;
 static char* color_path;
+static uint8_t nyan_shift = 0;
 
 struct option_node {
 	char* option;
@@ -86,7 +90,7 @@ static void print_usage(char** argv) {
 	exit(0);
 }
 
-static void load_css(void) {
+void wofi_load_css(bool nyan) {
 	if(access(stylesheet, R_OK) == 0) {
 		FILE* file = fopen(stylesheet, "r");
 		fseek(file, 0, SEEK_END);
@@ -103,20 +107,30 @@ static void load_css(void) {
 			struct wl_list link;
 		};
 		wl_list_init(&lines);
-		if(access(color_path, R_OK) == 0) {
-			file = fopen(color_path, "r");
-			char* line = NULL;
-			size_t line_size = 0;
-			ssize_t line_l = 0;
-			while((line_l = getline(&line, &line_size, file)) != -1) {
+		if(nyan) {
+			for(ssize_t count = nyan_shift; count < 32 + nyan_shift; ++count) {
+				size_t i = count % nyan_color_l;
 				struct node* entry = malloc(sizeof(struct node));
-				line[line_l - 1] = 0;
-				entry->line = malloc(line_l + 1);
-				strcpy(entry->line, line);
+				entry->line = strdup(nyan_colors[i]);
 				wl_list_insert(&lines, &entry->link);
 			}
-			fclose(file);
-			free(line);
+			nyan_shift = (nyan_shift + 1) % nyan_color_l;
+		} else {
+			if(access(color_path, R_OK) == 0) {
+				file = fopen(color_path, "r");
+				char* line = NULL;
+				size_t line_size = 0;
+				ssize_t line_l = 0;
+				while((line_l = getline(&line, &line_size, file)) != -1) {
+					struct node* entry = malloc(sizeof(struct node));
+					line[line_l - 1] = 0;
+					entry->line = malloc(line_l + 1);
+					strcpy(entry->line, line);
+					wl_list_insert(&lines, &entry->link);
+				}
+				fclose(file);
+				free(line);
+			}
 		}
 
 		ssize_t count = wl_list_length(&lines) - 1;
@@ -706,7 +720,7 @@ int main(int argc, char** argv) {
 
 	gtk_init(&argc, &argv);
 
-	load_css();
+	wofi_load_css(false);
 
 	wofi_init(config);
 	gtk_main();

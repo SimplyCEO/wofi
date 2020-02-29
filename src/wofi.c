@@ -1278,6 +1278,7 @@ void wofi_init(struct map* _config) {
 	sort_order = config_get_mnemonic(config, "sort_order", "default", 2, "default", "alphabetical");
 	line_wrap = config_get_mnemonic(config, "line_wrap", "off", 4, "off", "word", "char", "word_char") - 1;
 	bool global_coords = strcmp(config_get(config, "global_coords", "false"), "true") == 0;
+	bool hide_search = strcmp(config_get(config, "hide_search", "false"), "true") == 0;
 
 	key_up = config_get(config, "key_up", "Up");
 	key_down = config_get(config, "key_down", "Down");
@@ -1370,7 +1371,9 @@ void wofi_init(struct map* _config) {
 
 	gtk_widget_set_name(entry, "input");
 	gtk_entry_set_placeholder_text(GTK_ENTRY(entry), prompt);
-	gtk_container_add(GTK_CONTAINER(outer_box), entry);
+	if(!hide_search) {
+		gtk_container_add(GTK_CONTAINER(outer_box), entry);
+	}
 	if(password_char != NULL) {
 		gtk_entry_set_visibility(GTK_ENTRY(entry), FALSE);
 		gtk_entry_set_invisible_char(GTK_ENTRY(entry), password_char[0]);

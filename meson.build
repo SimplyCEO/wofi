@@ -31,17 +31,16 @@ sources = ['src/config.c',
 deps = [gtk, threads, wayland, dl]
 			
 if get_option('enable_run')
-	sources += ['modes/run.c']
+	sources += 'modes/run.c'
 endif
 
 if get_option('enable_drun')
-	gio = dependency('gio-unix-2.0')
-	sources += ['modes/drun.c']
-	deps += [gio]
+	sources += 'modes/drun.c'
+	deps += dependency('gio-unix-2.0')
 endif
 
 if get_option('enable_dmenu')
-	sources += ['modes/dmenu.c']
+	sources += 'modes/dmenu.c'
 endif
 
 install_man('man/wofi.1',

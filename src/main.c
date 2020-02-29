@@ -108,7 +108,7 @@ void wofi_load_css(bool nyan) {
 		};
 		wl_list_init(&lines);
 		if(nyan) {
-			for(ssize_t count = nyan_shift; count < 32 + nyan_shift; ++count) {
+			for(ssize_t count = nyan_shift; count < 100 + nyan_shift; ++count) {
 				size_t i = count % nyan_color_l;
 				struct node* entry = malloc(sizeof(struct node));
 				entry->line = strdup(nyan_colors[i]);
@@ -135,7 +135,7 @@ void wofi_load_css(bool nyan) {
 
 		ssize_t count = wl_list_length(&lines) - 1;
 		if(count > 99) {
-			fprintf(stderr, "Woah there that's a lot of colors. Try having no more than 99, thanks\n");
+			fprintf(stderr, "Woah there that's a lot of colors. Try having no more than 100, thanks\n");
 			exit(1);
 		}
 		struct node* node;

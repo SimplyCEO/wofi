@@ -566,6 +566,11 @@ void wofi_write_cache(struct mode* mode, const char* _cmd) {
 	char* cmd = escape_lf(_cmd);
 
 	char* cache_path = get_cache_path(mode->name);
+
+	char* tmp_dir = strdup(cache_path);
+	utils_mkdir(dirname(tmp_dir), S_IRWXU | S_IRGRP | S_IXGRP);
+	free(tmp_dir);
+
 	struct wl_list lines;
 	wl_list_init(&lines);
 	bool inc_count = false;

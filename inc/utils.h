@@ -24,7 +24,10 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
+#include <libgen.h>
 
+#include <sys/stat.h>
 #include <sys/time.h>
 
 time_t utils_get_time_millis(void);
@@ -38,5 +41,7 @@ size_t utils_min(size_t n1, size_t n2);
 size_t utils_min3(size_t n1, size_t n2, size_t n3);
 
 size_t utils_distance(const char* haystack, const char* needle);
+
+void utils_mkdir(char* path, mode_t mode);
 
 #endif

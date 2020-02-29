@@ -97,3 +97,12 @@ size_t utils_distance(const char* haystack, const char* needle) {
 
 	return arr[str1_len][str2_len];
 }
+
+void utils_mkdir(char* path, mode_t mode) {
+	if(access(path, F_OK) != 0) {
+		char* tmp = strdup(path);
+		utils_mkdir(dirname(tmp), mode);
+		mkdir(path, mode);
+		free(tmp);
+	}
+}

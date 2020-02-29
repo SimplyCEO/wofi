@@ -483,7 +483,9 @@ static gboolean _insert_widget(gpointer data) {
 	gtk_widget_show_all(child);
 
 	if(!user_moved) {
-		gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0));
+		GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0);
+		gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), child);
+		gtk_widget_grab_focus(GTK_WIDGET(child));
 	}
 
 	if(GTK_IS_EXPANDER(parent)) {
@@ -1412,7 +1414,6 @@ void wofi_init(struct map* _config) {
 
 	pthread_t thread;
 	pthread_create(&thread, NULL, start_thread, mode);
-	gtk_widget_grab_focus(scroll);
 	gtk_window_set_title(GTK_WINDOW(window), prompt);
 	gtk_widget_show_all(window);
 }

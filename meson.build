@@ -1,4 +1,4 @@
-project('wofi', 'c', version : 'hg', default_options : ['buildtype=release', 'warning_level=2'])
+project('wofi', 'c', version : 'v1.1', default_options : ['buildtype=release', 'warning_level=2'])
 cc = meson.get_compiler('c')
 
 inc = include_directories('inc')

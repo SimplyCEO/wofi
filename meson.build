@@ -1,4 +1,4 @@
-project('wofi', 'c', default_options : ['buildtype=release', 'warning_level=2'])
+project('wofi', 'c', version : 'hg', default_options : ['buildtype=release', 'warning_level=2'])
 cc = meson.get_compiler('c')
 
 inc = include_directories('inc')
@@ -9,7 +9,7 @@ dl = cc.find_library('dl')
 
 hg = find_program('hg', native : true, required : false)
 
-version = get_option('version')
+version = meson.project_version()
 
 if hg.found()
 	version = run_command(hg, 'identify').stdout().strip()

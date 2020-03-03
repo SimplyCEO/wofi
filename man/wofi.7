@@ -80,13 +80,13 @@ Caching cannot be disabled however the cache file can be set to /dev/null to eff
 Wofi does not have the ability to do window switching on its own as there is no way to do this with wayland/wlroots protocols however if you're using sway you can use swaymsg with dmenu mode to accomplish it.
 The following script can be used to do window switching:
 
-swaymsg -t get_tree |
+swaymsg \-t get_tree |
 .br
-  jq -r '.nodes[].nodes[] | if .nodes then [recurse(.nodes[])] else [] end + .floating_nodes | .[] | select(.nodes==[]) | ((.id | tostring) + "\t" + .name)' |
+  jq \-r '.nodes[].nodes[] | if .nodes then [recurse(.nodes[])] else [] end + .floating_nodes | .[] | select(.nodes==[]) | ((.id | tostring) + "\t" + .name)' |
 .br
-  wofi --show dmenu | {
+  wofi \-\-show dmenu | {
 .br
-    read -r id name
+    read \-r id name
 .br
     swaymsg "[con_id=$id]" focus
 .br

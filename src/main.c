@@ -87,6 +87,7 @@ static void print_usage(char** argv) {
 	printf("--lines\t\t-L\tSets the height in number of lines\n");
 	printf("--columns\t-w\tSets the number of columns to display\n");
 	printf("--sort-order\t-O\tSets the sort order\n");
+	printf("--gtk-dark\t-G\tUses the dark variant of the current GTK theme\n");
 	exit(0);
 }
 
@@ -395,6 +396,12 @@ int main(int argc, char** argv) {
 			.val = 'O'
 		},
 		{
+			.name = "gtk-dark",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'G'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -427,13 +434,14 @@ int main(int argc, char** argv) {
 	char* lines = NULL;
 	char* columns = NULL;
 	char* sort_order = NULL;
+	char* gtk_dark = NULL;
 
 	struct wl_list options;
 	wl_list_init(&options);
 	struct option_node* node;
 
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:G", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -533,6 +541,9 @@ int main(int argc, char** argv) {
 		case 'O':
 			sort_order = optarg;
 			break;
+		case 'G':
+			gtk_dark = "true";
+			break;
 		}
 	}
 
@@ -604,6 +615,11 @@ int main(int argc, char** argv) {
 		}
 	} else {
 		color_path = strdup(color_str);
+	}
+
+	//Check if --gtk-dark was specified
+	if(gtk_dark == NULL) {
+		gtk_dark = map_get(config, "gtk_dark");
 	}
 
 	free(COLORS_LOCATION);
@@ -720,6 +736,10 @@ int main(int argc, char** argv) {
 
 	gtk_init(&argc, &argv);
 
+	if(gtk_dark != NULL && strcmp(gtk_dark, "true") == 0) {
+		g_object_set(gtk_settings_get_default(),
+			"gtk-application-prefer-dark-theme", 1, NULL);
+	}
 	wofi_load_css(false);
 
 	wofi_init(config);

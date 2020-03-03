@@ -410,6 +410,7 @@ static void update_surface_size(void) {
 
 	gtk_window_resize(GTK_WINDOW(window), width, height);
 	gtk_widget_set_size_request(scroll, width, height);
+	printf("%lux%lu\n", width, height);
 }
 
 static void widget_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointer data) {
@@ -1299,7 +1300,7 @@ static void get_output_pos(void* data, struct zxdg_output_v1* output, int32_t x,
 static gboolean do_percent_size(gpointer data) {
 	char** geo_str = data;
 	bool width_percent = strchr(geo_str[0], '%') != NULL;
-	bool height_percent = strchr(geo_str[1], '%') != NULL;
+	bool height_percent = strchr(geo_str[1], '%') != NULL && lines == 0;
 	GdkMonitor* monitor = gdk_display_get_monitor_at_window(gdk_display_get_default(), gtk_widget_get_window(window));
 	GdkRectangle rect;
 	gdk_monitor_get_geometry(monitor, &rect);
@@ -1501,7 +1502,7 @@ void wofi_init(struct map* _config) {
 
 
 	bool width_percent = strchr(width_str, '%') != NULL;
-	bool height_percent = strchr(height_str, '%') != NULL;
+	bool height_percent = strchr(height_str, '%') != NULL && lines == 0;
 	if(width_percent || height_percent) {
 		char** geo_str = malloc(sizeof(char*) * 2);
 		geo_str[0] = width_str;

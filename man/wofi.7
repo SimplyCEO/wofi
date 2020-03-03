@@ -76,6 +76,22 @@ There are 2 order options currently, default and alphabetical. Default means the
 .SH CACHING
 Caching cannot be disabled however the cache file can be set to /dev/null to effectively disable it.
 
+.SH WINDOW SWITCHER
+Wofi does not have the ability to do window switching on its own as there is no way to do this with wayland/wlroots protocols however if you're using sway you can use swaymsg with dmenu mode to accomplish it.
+The following script can be used to do window switching:
+
+swaymsg -t get_tree |
+.br
+  jq -r '.nodes[].nodes[] | if .nodes then [recurse(.nodes[])] else [] end + .floating_nodes | .[] | select(.nodes==[]) | ((.id | tostring) + "\t" + .name)' |
+.br
+  wofi --show dmenu | {
+.br
+    read -r id name
+.br
+    swaymsg "[con_id=$id]" focus
+.br
+}
+
 .SH WIDGET LAYOUT
 This section is for advanced CSS which needs more control than the built in wofi CSS names/classes allow for. This widget layout is subject to change at any time and without warning so your CSS might very well break if you rely on this. Widgets have their corresponding names next to them if they have one.
 

@@ -1316,8 +1316,8 @@ static gboolean do_percent_size(gpointer data) {
 
 void wofi_init(struct map* _config) {
 	config = _config;
-	char* width_str = config_get(config, "width", "1000");
-	char* height_str = config_get(config, "height", "400");
+	char* width_str = config_get(config, "width", "50%");
+	char* height_str = config_get(config, "height", "40%");
 	width = strtol(width_str, NULL, 10);
 	height = strtol(height_str, NULL, 10);
 	x = map_get(config, "x");

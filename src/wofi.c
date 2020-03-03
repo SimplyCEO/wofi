@@ -1296,6 +1296,24 @@ static void get_output_pos(void* data, struct zxdg_output_v1* output, int32_t x,
 	node->y = y;
 }
 
+static gboolean do_percent_size(gpointer data) {
+	char** geo_str = data;
+	bool width_percent = strchr(geo_str[0], '%') != NULL;
+	bool height_percent = strchr(geo_str[1], '%') != NULL;
+	GdkMonitor* monitor = gdk_display_get_monitor_at_window(gdk_display_get_default(), gtk_widget_get_window(window));
+	GdkRectangle rect;
+	gdk_monitor_get_geometry(monitor, &rect);
+	if(width_percent) {
+		width = (width / 100.f) * rect.width;
+	}
+	if(height_percent) {
+		height = (height / 100.f) * rect.height;
+	}
+	update_surface_size();
+	free(geo_str);
+	return G_SOURCE_REMOVE;
+}
+
 void wofi_init(struct map* _config) {
 	config = _config;
 	char* width_str = config_get(config, "width", "1000");
@@ -1371,9 +1389,9 @@ void wofi_init(struct map* _config) {
 	gtk_window_set_resizable(GTK_WINDOW(window), FALSE);
 	gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
 
-	GdkDisplay* disp = gdk_display_get_default();
-	GdkWindow* gdk_win = gtk_widget_get_window(window);
 	if(!normal_window) {
+		GdkDisplay* disp = gdk_display_get_default();
+		GdkWindow* gdk_win = gtk_widget_get_window(window);
 		wl_list_init(&outputs);
 		wl = gdk_wayland_display_get_wl_display(disp);
 		struct wl_registry* registry = wl_display_get_registry(wl);
@@ -1424,22 +1442,6 @@ void wofi_init(struct map* _config) {
 		wl_surface_commit(wl_surface);
 		wl_display_roundtrip(wl);
 	}
-
-	bool width_percent = strchr(width_str, '%') != NULL;
-	bool height_percent = strchr(height_str, '%') != NULL;
-	if(width_percent || height_percent) {
-		GdkMonitor* monitor = gdk_display_get_monitor_at_window(disp, gdk_win);
-		GdkRectangle rect;
-		gdk_monitor_get_geometry(monitor, &rect);
-		if(width_percent) {
-			width = (width / 100.f) * rect.width;
-		}
-		if(height_percent) {
-			height = (height / 100.f) * rect.height;
-		}
-		update_surface_size();
-	}
-
 
 	outer_box = gtk_box_new(outer_orientation, 0);
 	gtk_widget_set_name(outer_box, "outer-box");
@@ -1496,6 +1498,16 @@ void wofi_init(struct map* _config) {
 	g_signal_connect(window, "focus-out-event", G_CALLBACK(focus), NULL);
 
 	gdk_threads_add_timeout(filter_rate, do_search, NULL);
+
+
+	bool width_percent = strchr(width_str, '%') != NULL;
+	bool height_percent = strchr(height_str, '%') != NULL;
+	if(width_percent || height_percent) {
+		char** geo_str = malloc(sizeof(char*) * 2);
+		geo_str[0] = width_str;
+		geo_str[1] = height_str;
+		gdk_threads_add_timeout(70, do_percent_size, geo_str);
+	}
 
 	pthread_t thread;
 	pthread_create(&thread, NULL, start_thread, mode);

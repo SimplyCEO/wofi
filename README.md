@@ -32,6 +32,8 @@ Arch has an AUR package for the current tip https://aur.archlinux.org/packages/w
 NixOS has a packge in unstable https://nixos.org/nixos/packages.html?attr=wofi&channel=nixos-unstable&query=wofi
 
 Void Linux also has a package
+
+Fedora has a package in COPR https://copr.fedorainfracloud.org/coprs/wef/wofi/ there is also an official package https://src.fedoraproject.org/rpms/wofi but it's currently v1.0
 ## Documentation
 The official documentation is provided by the man pages in this repository, sample styling can be found here https://cloudninja.pw/docs/wofi.html
 

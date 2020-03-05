@@ -1,6 +1,8 @@
 project('wofi', 'c', version : 'hg', default_options : ['buildtype=release', 'warning_level=2'])
 cc = meson.get_compiler('c')
 
+pkgcfg = import('pkgconfig')
+
 inc = include_directories('inc')
 gtk = dependency('gtk+-3.0')
 threads = dependency('threads')
@@ -52,5 +54,18 @@ install_man('man/wofi.1',
 			'man/wofi-keys.7',
 			'man/wofi-map.3',
 			'man/wofi-utils.3')
+
+subdir = 'wofi-1'
+
+install_headers('inc/config.h',
+				'inc/map.h',
+				'inc/utils.h',
+				'inc/wofi_api.h',
+				subdir : subdir)
+
+pkgcfg.generate(name : meson.project_name(),
+				description : 'Wofi API for developing modes',
+				requires : wayland,
+				subdirs : subdir)
 
 executable(meson.project_name(), sources, include_directories : inc, dependencies : deps, install : true)

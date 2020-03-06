@@ -738,7 +738,7 @@ int main(int argc, char** argv) {
 
 	if(gtk_dark != NULL && strcmp(gtk_dark, "true") == 0) {
 		g_object_set(gtk_settings_get_default(),
-			"gtk-application-prefer-dark-theme", 1, NULL);
+			"gtk-application-prefer-dark-theme", TRUE, NULL);
 	}
 	wofi_load_css(false);
 

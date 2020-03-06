@@ -410,7 +410,6 @@ static void update_surface_size(void) {
 
 	gtk_window_resize(GTK_WINDOW(window), width, height);
 	gtk_widget_set_size_request(scroll, width, height);
-	printf("%lux%lu\n", width, height);
 }
 
 static void widget_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointer data) {

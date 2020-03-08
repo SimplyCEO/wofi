@@ -1016,15 +1016,18 @@ static void do_exit(void) {
 	exit(1);
 }
 
-static void do_key_action(GdkEvent* event, char* mod, void (*action)(void)) {
+static bool do_key_action(GdkEvent* event, char* mod, void (*action)(void)) {
 	if(mod != NULL) {
 		GdkModifierType mask = get_mask_from_name(mod);
 		if((event->key.state & mask) == mask) {
 			event->key.state &= ~mask;
 			action();
+			return true;
 		}
+		return false;
 	} else {
 		action();
+		return true;
 	}
 }
 
@@ -1093,18 +1096,19 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		return FALSE;
 	}
 
+	bool key_success = true;
 	if(event->key.keyval == gdk_keyval_from_name(key_up)) {
-		do_key_action(event, mod_up, move_up);
+		key_success = do_key_action(event, mod_up, move_up);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_down)) {
-		do_key_action(event, mod_down, move_down);
+		key_success = do_key_action(event, mod_down, move_down);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_left)) {
-		do_key_action(event, mod_left, move_left);
+		key_success = do_key_action(event, mod_left, move_left);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_right)) {
-		do_key_action(event, mod_right, move_right);
+		key_success = do_key_action(event, mod_right, move_right);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_forward)) {
-		do_key_action(event, mod_forward, move_forward);
+		key_success = do_key_action(event, mod_forward, move_forward);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_backward)) {
-		do_key_action(event, mod_backward, move_backward);
+		key_success = do_key_action(event, mod_backward, move_backward);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_submit)) {
 		mod_shift = (event->key.state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK;
 		mod_ctrl = (event->key.state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK;
@@ -1127,16 +1131,20 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		}
 		g_list_free(children);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_exit)) {
-		do_key_action(event, mod_exit, do_exit);
+		key_success = do_key_action(event, mod_exit, do_exit);
 	} else if(event->key.keyval == GDK_KEY_Shift_L || event->key.keyval == GDK_KEY_Control_L) {
 	} else if(event->key.keyval == GDK_KEY_Shift_R || event->key.keyval == GDK_KEY_Control_R) {
 	} else {
-		if(!gtk_widget_has_focus(entry)) {
-			gtk_entry_grab_focus_without_selecting(GTK_ENTRY(entry));
-		}
-		return FALSE;
+		key_success = false;
 	}
-	return TRUE;
+
+	if(key_success) {
+		return TRUE;
+	}
+	if(!gtk_widget_has_focus(entry)) {
+		gtk_entry_grab_focus_without_selecting(GTK_ENTRY(entry));
+	}
+	return FALSE;
 }
 
 static gboolean focus(GtkWidget* widget, GdkEvent* event, gpointer data) {

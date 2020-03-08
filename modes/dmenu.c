@@ -41,6 +41,8 @@ void wofi_dmenu_init(struct mode* this, struct map* config) {
 		separator = "\n";
 	} else if(strcmp(separator, "\\0") == 0) {
 		separator = "\0";
+	} else if(strcmp(separator, "\\t") == 0) {
+		separator = "\t";
 	}
 
 	wl_list_init(&widgets);

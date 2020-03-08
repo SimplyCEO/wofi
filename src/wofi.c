@@ -1235,27 +1235,6 @@ static struct mode* add_mode(char* _mode) {
 	return mode_ptr;
 }
 
-static void* start_thread(void* data) {
-	char* mode = data;
-
-	struct wl_list* modes = malloc(sizeof(struct wl_list));
-	wl_list_init(modes);
-
-	if(strchr(mode, ',') != NULL) {
-		char* save_ptr;
-		char* str = strtok_r(mode, ",", &save_ptr);
-		do {
-			struct mode* mode_ptr = add_mode(str);
-			wl_list_insert(modes, &mode_ptr->link);
-		} while((str = strtok_r(NULL, ",", &save_ptr)) != NULL);
-	} else {
-		struct mode* mode_ptr = add_mode(mode);
-		wl_list_insert(modes, &mode_ptr->link);
-	}
-	gdk_threads_add_idle(insert_all_widgets, modes);
-	return NULL;
-}
-
 static void parse_mods(char** key, char** mod) {
 	char* hyphen = strchr(*key, '-');
 	if(hyphen != NULL) {
@@ -1509,8 +1488,22 @@ void wofi_init(struct map* _config) {
 		gdk_threads_add_timeout(70, do_percent_size, geo_str);
 	}
 
-	pthread_t thread;
-	pthread_create(&thread, NULL, start_thread, mode);
+	struct wl_list* modes = malloc(sizeof(struct wl_list));
+	wl_list_init(modes);
+
+	if(strchr(mode, ',') != NULL) {
+		char* save_ptr;
+		char* str = strtok_r(mode, ",", &save_ptr);
+		do {
+			struct mode* mode_ptr = add_mode(str);
+			wl_list_insert(modes, &mode_ptr->link);
+		} while((str = strtok_r(NULL, ",", &save_ptr)) != NULL);
+	} else {
+		struct mode* mode_ptr = add_mode(mode);
+		wl_list_insert(modes, &mode_ptr->link);
+	}
+	gdk_threads_add_idle(insert_all_widgets, modes);
+
 	gtk_window_set_title(GTK_WINDOW(window), prompt);
 	gtk_widget_show_all(window);
 }

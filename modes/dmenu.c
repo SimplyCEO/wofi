@@ -52,19 +52,21 @@ void wofi_dmenu_init(struct mode* this, struct map* config) {
 
 	struct map* entry_map = map_init();
 
-	char* line = NULL;
-	size_t size = 0;
-	while(getdelim(&line, &size, separator[0], stdin) != -1) {
-		char* delim = strchr(line, separator[0]);
-		if(delim != NULL) {
-			*delim = 0;
+	if(!isatty(STDIN_FILENO)) {
+		char* line = NULL;
+		size_t size = 0;
+		while(getdelim(&line, &size, separator[0], stdin) != -1) {
+			char* delim = strchr(line, separator[0]);
+			if(delim != NULL) {
+				*delim = 0;
+			}
+			struct cache_line* node = malloc(sizeof(struct cache_line));
+			node->line = strdup(line);
+			wl_list_insert(&entries, &node->link);
+			map_put(entry_map, line, "true");
 		}
-		struct cache_line* node = malloc(sizeof(struct cache_line));
-		node->line = strdup(line);
-		wl_list_insert(&entries, &node->link);
-		map_put(entry_map, line, "true");
+		free(line);
 	}
-	free(line);
 
 	if(!print_line_num) {
 		struct wl_list* cache = wofi_read_cache(mode);

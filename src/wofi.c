@@ -1483,6 +1483,7 @@ void wofi_init(struct map* _config) {
 	g_signal_connect(window, "key-press-event", G_CALLBACK(key_press), NULL);
 	g_signal_connect(window, "focus-in-event", G_CALLBACK(focus), NULL);
 	g_signal_connect(window, "focus-out-event", G_CALLBACK(focus), NULL);
+	g_signal_connect(window, "destroy", G_CALLBACK(do_exit), NULL);
 
 	gdk_threads_add_timeout(filter_rate, do_search, NULL);
 

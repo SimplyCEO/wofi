@@ -15,7 +15,7 @@ The following list of functions are the functions which can be defined inside of
 
 .TP
 .B void init(struct mode* mode, struct map* config)
-Definining this function is required. This function is called to setup your plugin and provide it with serveral pointers which are described below.
+Defining this function is required. This function is called to setup your plugin and provide it with several pointers which are described below.
 
 .B struct mode* mode
 \- used to identify your mode, it is passed to a large number of the API functions to identify your mode.
@@ -25,23 +25,23 @@ Definining this function is required. This function is called to setup your plug
 
 .TP
 .B const char** get_arg_names(void)
-Definining this function is optional. This function is called to get an array of config options which can be set by the user. All of these options have the name of your mode prefixed on the front so if your array is for example \fB{"opt1", "opt2"}\fR the config options defined will be \fBmode-opt1=\fIvalue\fR and \fBmode-opt2=\fIvalue\fR where mode is the name of the shared object.
+Defining this function is optional. This function is called to get an array of config options which can be set by the user. All of these options have the name of your mode prefixed on the front so if your array is for example \fB{"opt1", "opt2"}\fR the config options defined will be \fBmode-opt1=\fIvalue\fR and \fBmode-opt2=\fIvalue\fR where mode is the name of the shared object.
 
 .TP
 .B size_t get_arg_count(void)
-Definining this function is optional. This function is called to get the number of arguments returned by \fBget_arg_names(void)\fR.
+Defining this function is optional. This function is called to get the number of arguments returned by \fBget_arg_names(void)\fR.
 
 .TP
 .B void exec(const char* cmd)
-Definining this function is required. This function is called when the user selects an entry.
+Defining this function is required. This function is called when the user selects an entry.
 
 .B const char* cmd
 \- The action registered to the selected entry. If your mode allows executing searches directly then this will be the search contents if no matching entries exist.
 
 .TP
 .B struct widget* get_widget(void)
-Definining this function is optional. This function is called to request the next widget to be added. See \fBwofi_create_widget()\fR in \fBwofi\-api(3)\fR on how to obtain a \fBstruct widget*\fR. \fBNULL\fR should be returned to denote no more widgets are available.
+Defining this function is optional. This function is called to request the next widget to be added. See \fBwofi_create_widget()\fR in \fBwofi\-api(3)\fR on how to obtain a \fBstruct widget*\fR. \fBNULL\fR should be returned to denote no more widgets are available.
 
 .TP
 .B bool no_entry(void)
-Definining this function is optional. This function is called to find out whether or not this mode supports running searches without any matching entries. The default is false, if you wish to allow your mode to take searches directly you must define this and return true.
+Defining this function is optional. This function is called to find out whether or not this mode supports running searches without any matching entries. The default is false, if you wish to allow your mode to take searches directly you must define this and return true.

@@ -24,7 +24,7 @@ enum matching_mode {
 	MATCHING_MODE_FUZZY
 };
 
-enum locations {
+enum location {
 	LOCATION_CENTER,
 	LOCATION_TOP_LEFT,
 	LOCATION_TOP,
@@ -62,7 +62,7 @@ static bool insensitive;
 static bool parse_search;
 static GtkAlign content_halign;
 static struct map* config;
-static enum locations location;
+static enum location location;
 static bool no_actions;
 static uint64_t columns;
 static bool user_moved = false;

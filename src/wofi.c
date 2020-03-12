@@ -75,8 +75,8 @@ static int64_t ix, iy;
 static uint8_t konami_cycle;
 static bool is_konami = false;
 
-static char* key_up, *key_down, *key_left, *key_right, *key_forward, *key_backward, *key_submit, *key_exit;
-static char* mod_up, *mod_down, *mod_left, *mod_right, *mod_forward, *mod_backward, *mod_exit;
+static char* key_up, *key_down, *key_left, *key_right, *key_forward, *key_backward, *key_submit, *key_exit, *key_pgup, *key_pgdn;
+static char* mod_up, *mod_down, *mod_left, *mod_right, *mod_forward, *mod_backward, *mod_exit, *mod_pgup, *mod_pgdn;
 
 static struct wl_display* wl = NULL;
 static struct wl_surface* wl_surface;
@@ -432,8 +432,10 @@ static void widget_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointe
 	} else {
 		max_height = allocation->height;
 	}
-	height = max_height * lines;
-	update_surface_size();
+	if(lines > 0) {
+		height = max_height * lines;
+		update_surface_size();
+	}
 }
 
 static gboolean _insert_widget(gpointer data) {
@@ -473,9 +475,7 @@ static gboolean _insert_widget(gpointer data) {
 	gtk_widget_set_halign(parent, content_halign);
 	GtkWidget* child = gtk_flow_box_child_new();
 	gtk_widget_set_name(child, "entry");
-	if(lines > 0) {
-		g_signal_connect(child, "size-allocate", G_CALLBACK(widget_allocate), NULL);
-	}
+	g_signal_connect(child, "size-allocate", G_CALLBACK(widget_allocate), NULL);
 
 	size_t lf_count = 1;
 	size_t text_len = strlen(node->text[0]);
@@ -1012,6 +1012,20 @@ static void move_backward(void) {
 	gtk_widget_child_focus(window, GTK_DIR_TAB_BACKWARD);
 }
 
+static void move_pgup(void) {
+	uint64_t lines = height / max_height;
+	for(size_t count = 0; count < lines; ++count) {
+		move_up();
+	}
+}
+
+static void move_pgdn(void) {
+	uint64_t lines = height / max_height;
+	for(size_t count = 0; count < lines; ++count) {
+		move_down();
+	}
+}
+
 static void do_exit(void) {
 	exit(1);
 }
@@ -1109,6 +1123,10 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		key_success = do_key_action(event, mod_forward, move_forward);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_backward)) {
 		key_success = do_key_action(event, mod_backward, move_backward);
+	} else if(event->key.keyval == gdk_keyval_from_name(key_pgup)) {
+		key_success = do_key_action(event, mod_pgup, move_pgup);
+	} else if(event->key.keyval == gdk_keyval_from_name(key_pgdn)) {
+		key_success = do_key_action(event, mod_pgdn, move_pgdn);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_submit)) {
 		mod_shift = (event->key.state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK;
 		mod_ctrl = (event->key.state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK;
@@ -1353,6 +1371,8 @@ void wofi_init(struct map* _config) {
 	key_backward = config_get(config, "key_backward", "ISO_Left_Tab");
 	key_submit = config_get(config, "key_submit", "Return");
 	key_exit = config_get(config, "key_exit", "Escape");
+	key_pgup = config_get(config, "key_pgup", "Page_Up");
+	key_pgdn = config_get(config, "key_pgdn", "Page_Down");
 
 	parse_mods(&key_up, &mod_up);
 	parse_mods(&key_down, &mod_down);
@@ -1361,6 +1381,8 @@ void wofi_init(struct map* _config) {
 	parse_mods(&key_forward, &mod_forward);
 	parse_mods(&key_backward, &mod_backward);
 	parse_mods(&key_exit, &mod_exit);
+	parse_mods(&key_pgup, &mod_pgup);
+	parse_mods(&key_pgdn, &mod_pgdn);
 
 	modes = map_init_void();
 

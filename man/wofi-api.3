@@ -78,6 +78,13 @@ This will requery the mode for more widgets.
 \- The \fBstruct mode*\fR given to your mode's \fBinit()\fR function.
 
 .TP
+.B char* wofi_get_dso_path(struct mode* mode)
+Returns the path to this mode's DSO if it's an external mode, returns NULL otherwise.
+
+.B struct mode* mode
+\- The \fBstruct mode*\fR given to your mode's \fBinit()\fR function.
+
+.TP
 .B bool wofi_allow_images(void)
 Returns true if the user enabled images, false otherwise.
 

@@ -1245,13 +1245,26 @@ static struct mode* add_mode(char* _mode) {
 		mode_ptr = calloc(1, sizeof(struct mode));
 		props = map_init();
 
-		init = load_mode("external", mode_ptr, props);
-
-		map_put(props, "exec", _mode);
+		char* name = utils_concat(3, "lib", _mode, ".so");
+		init = load_mode(name, mode_ptr, props);
+		free(name);
 
 		if(init == NULL) {
-			fprintf(stderr, "I would love to show %s but Idk what it is\n", _mode);
-			exit(1);
+			free(mode_ptr->name);
+			free(mode_ptr);
+			map_free(props);
+
+			mode_ptr = calloc(1, sizeof(struct mode));
+			props = map_init();
+
+			init = load_mode("external", mode_ptr, props);
+
+			map_put(props, "exec", _mode);
+
+			if(init == NULL) {
+				fprintf(stderr, "I would love to show %s but Idk what it is\n", _mode);
+				exit(1);
+			}
 		}
 	}
 	map_put_void(modes, _mode, mode_ptr);

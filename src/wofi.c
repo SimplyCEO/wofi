@@ -422,12 +422,12 @@ static void widget_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointe
 				++ratio;
 			}
 			if(ratio > 1) {
-				gtk_widget_set_size_request(widget, width, max_height * ratio);
+				gtk_widget_set_size_request(widget, -1, max_height * ratio);
 			} else {
 				max_height = allocation->height;
 			}
 		} else {
-			gtk_widget_set_size_request(widget, width, max_height);
+			gtk_widget_set_size_request(widget, -1, max_height);
 		}
 	} else {
 		max_height = allocation->height;

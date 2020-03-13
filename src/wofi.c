@@ -1220,7 +1220,7 @@ static void* load_mode(char* _mode, struct mode* mode_ptr, struct map* props) {
 	}
 
 	if(mode == NULL && no_entry != NULL && no_entry()) {
-		mode = _mode;
+		mode = mode_ptr->name;
 	}
 
 	for(size_t count = 0; count < arg_count; ++count) {

@@ -44,6 +44,8 @@ struct widget* wofi_create_widget(struct mode* mode, char* text[], char* search_
 
 void wofi_insert_widgets(struct mode* mode);
 
+char* wofi_get_dso_path(struct mode* mode);
+
 bool wofi_allow_images(void);
 
 bool wofi_allow_markup(void);

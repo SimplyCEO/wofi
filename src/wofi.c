@@ -87,7 +87,7 @@ static struct zwlr_layer_surface_v1* wlr_surface;
 struct mode {
 	void (*mode_exec)(const gchar* cmd);
 	struct widget* (*mode_get_widget)(void);
-	char* name;
+	char* name, *dso;
 	struct wl_list link;
 };
 
@@ -747,6 +747,10 @@ void wofi_insert_widgets(struct mode* mode) {
 	gdk_threads_add_idle(_insert_widget, mode);
 }
 
+char* wofi_get_dso_path(struct mode* mode) {
+	return mode->dso;
+}
+
 bool wofi_allow_images(void) {
 	return allow_images;
 }
@@ -1192,6 +1196,7 @@ static void* load_mode(char* _mode, struct mode* mode_ptr, struct map* props) {
 	size_t (*get_arg_count)(void);
 	bool (*no_entry)(void);
 	if(dso == NULL) {
+		mode_ptr->dso = NULL;
 		init = get_plugin_proc(_mode, "_init");
 		get_arg_names = get_plugin_proc(_mode, "_get_arg_names");
 		get_arg_count = get_plugin_proc(_mode, "_get_arg_count");
@@ -1201,6 +1206,7 @@ static void* load_mode(char* _mode, struct mode* mode_ptr, struct map* props) {
 	} else {
 		char* plugins_dir = utils_concat(2, config_dir, "/plugins/");
 		char* full_name = utils_concat(2, plugins_dir, _mode);
+		mode_ptr->dso = strdup(full_name);
 		void* plugin = dlopen(full_name, RTLD_LAZY | RTLD_LOCAL);
 		free(full_name);
 		free(plugins_dir);
@@ -1239,6 +1245,7 @@ static struct mode* add_mode(char* _mode) {
 
 	if(init == NULL) {
 		free(mode_ptr->name);
+		free(mode_ptr->dso);
 		free(mode_ptr);
 		map_free(props);
 
@@ -1251,6 +1258,7 @@ static struct mode* add_mode(char* _mode) {
 
 		if(init == NULL) {
 			free(mode_ptr->name);
+			free(mode_ptr->dso);
 			free(mode_ptr);
 			map_free(props);
 

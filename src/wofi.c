@@ -1186,10 +1186,10 @@ static void* get_plugin_proc(const char* prefix, const char* suffix) {
 	return proc;
 }
 
-static void* load_mode(char* _mode, struct mode* mode_ptr, struct map* props) {
+static void* load_mode(char* _mode, char* name, struct mode* mode_ptr, struct map* props) {
 	char* dso = strstr(_mode, ".so");
 
-	mode_ptr->name = strdup(_mode);
+	mode_ptr->name = strdup(name);
 
 	void (*init)(struct mode* _mode, struct map* props);
 	void (*load)(struct mode* _mode);
@@ -1238,7 +1238,7 @@ static void* load_mode(char* _mode, struct mode* mode_ptr, struct map* props) {
 
 	for(size_t count = 0; count < arg_count; ++count) {
 		const char* arg = arg_names[count];
-		char* full_name = utils_concat(3, _mode, "-", arg);
+		char* full_name = utils_concat(3, name, "-", arg);
 		map_put(props, arg, config_get(config, full_name, NULL));
 		free(full_name);
 	}
@@ -1248,7 +1248,7 @@ static void* load_mode(char* _mode, struct mode* mode_ptr, struct map* props) {
 static struct mode* add_mode(char* _mode) {
 	struct mode* mode_ptr = calloc(1, sizeof(struct mode));
 	struct map* props = map_init();
-	void (*init)(struct mode* _mode, struct map* props) = load_mode(_mode, mode_ptr, props);
+	void (*init)(struct mode* _mode, struct map* props) = load_mode(_mode, _mode, mode_ptr, props);
 
 	if(init == NULL) {
 		free(mode_ptr->name);
@@ -1260,7 +1260,7 @@ static struct mode* add_mode(char* _mode) {
 		props = map_init();
 
 		char* name = utils_concat(3, "lib", _mode, ".so");
-		init = load_mode(name, mode_ptr, props);
+		init = load_mode(name, _mode, mode_ptr, props);
 		free(name);
 
 		if(init == NULL) {
@@ -1272,7 +1272,7 @@ static struct mode* add_mode(char* _mode) {
 			mode_ptr = calloc(1, sizeof(struct mode));
 			props = map_init();
 
-			init = load_mode("external", mode_ptr, props);
+			init = load_mode("external", _mode, mode_ptr, props);
 
 			map_put(props, "exec", _mode);
 

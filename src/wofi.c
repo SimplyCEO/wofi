@@ -707,7 +707,7 @@ struct wl_list* wofi_read_cache(struct mode* mode) {
 		free(line);
 		fclose(file);
 	}
-	while(wl_list_length(&lines) > 0) {
+	while(!wl_list_empty(&lines)) {
 		uint64_t smallest = UINT64_MAX;
 		struct cache_line* node, *smallest_node = NULL;
 		wl_list_for_each(node, &lines, link) {

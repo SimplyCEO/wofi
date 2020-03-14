@@ -24,6 +24,13 @@ Defining this function is required. This function is called to setup your plugin
 \- all of the config options that the user defined for your mode. Information on how to access this can be found in \fBwofi\-map(3)\fR.
 
 .TP
+.B void load(struct mode* mode)
+Defining this function is optional. This function is called before ALL others and provides your mode pointer as early as possible.
+
+.B struct mode* mode
+\- used to identify your mode, it is passed to a large number of the API functions to identify your mode.
+
+.TP
 .B const char** get_arg_names(void)
 Defining this function is optional. This function is called to get an array of config options which can be set by the user. All of these options have the name of your mode prefixed on the front so if your array is for example \fB{"opt1", "opt2"}\fR the config options defined will be \fBmode-opt1=\fIvalue\fR and \fBmode-opt2=\fIvalue\fR where mode is the name of the shared object.
 

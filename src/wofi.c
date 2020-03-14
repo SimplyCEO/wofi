@@ -1192,12 +1192,14 @@ static void* load_mode(char* _mode, struct mode* mode_ptr, struct map* props) {
 	mode_ptr->name = strdup(_mode);
 
 	void (*init)(struct mode* _mode, struct map* props);
+	void (*load)(struct mode* _mode);
 	const char** (*get_arg_names)(void);
 	size_t (*get_arg_count)(void);
 	bool (*no_entry)(void);
 	if(dso == NULL) {
 		mode_ptr->dso = NULL;
 		init = get_plugin_proc(_mode, "_init");
+		load = get_plugin_proc(_mode, "_load");
 		get_arg_names = get_plugin_proc(_mode, "_get_arg_names");
 		get_arg_count = get_plugin_proc(_mode, "_get_arg_count");
 		mode_ptr->mode_exec = get_plugin_proc(_mode, "_exec");
@@ -1211,11 +1213,16 @@ static void* load_mode(char* _mode, struct mode* mode_ptr, struct map* props) {
 		free(full_name);
 		free(plugins_dir);
 		init = dlsym(plugin, "init");
+		load = dlsym(plugin, "load");
 		get_arg_names = dlsym(plugin, "get_arg_names");
 		get_arg_count = dlsym(plugin, "get_arg_count");
 		mode_ptr->mode_exec = dlsym(plugin, "exec");
 		mode_ptr->mode_get_widget = dlsym(plugin, "get_widget");
 		no_entry = dlsym(plugin, "no_entry");
+	}
+
+	if(load != NULL) {
+		load(mode_ptr);
 	}
 
 	const char** arg_names = NULL;

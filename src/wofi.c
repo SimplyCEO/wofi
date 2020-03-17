@@ -261,6 +261,10 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 		} else {
 			if(strcmp(mode, "img") == 0 && create_widgets) {
 				GdkPixbuf* buf = gdk_pixbuf_new_from_file(str, NULL);
+				if(buf == NULL) {
+					fprintf(stderr, "Image %s cannot be loaded\n", str);
+					goto done;
+				}
 				int width = gdk_pixbuf_get_width(buf);
 				int height = gdk_pixbuf_get_height(buf);
 				if(height > width) {
@@ -294,6 +298,7 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 					free(tmp);
 				}
 			}
+			done:
 			mode = NULL;
 			if(wl_list_empty(&modes)) {
 				break;

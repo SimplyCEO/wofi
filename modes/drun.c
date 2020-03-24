@@ -167,7 +167,7 @@ static char* get_id(char* path) {
 	return id;
 }
 
-static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
+static void insert_dir(char* app_dir, struct map* entries) {
 	DIR* dir = opendir(app_dir);
 	if(dir == NULL) {
 		return;
@@ -183,12 +183,7 @@ static void insert_dir(char* app_dir, struct map* cached, struct map* entries) {
 		struct stat info;
 		stat(full_path, &info);
 		if(S_ISDIR(info.st_mode)) {
-			insert_dir(full_path, cached, entries);
-			free(id);
-			free(full_path);
-			continue;
-		}
-		if(map_contains(cached, id)) {
+			insert_dir(full_path, entries);
 			free(id);
 			free(full_path);
 			continue;
@@ -234,7 +229,6 @@ void wofi_drun_init(struct mode* this, struct map* config) {
 
 	print_command = strcmp(config_get(config, "print_command", "false"), "true") == 0;
 
-	struct map* cached = map_init();
 	struct map* entries = map_init();
 	struct wl_list* cache = wofi_read_cache(mode);
 
@@ -258,7 +252,7 @@ void wofi_drun_init(struct mode* this, struct map* config) {
 
 		char* id = get_id(node->line);
 
-		map_put(cached, id, "true");
+		map_put(entries, id, "true");
 
 		free(id);
 
@@ -296,11 +290,10 @@ void wofi_drun_init(struct mode* this, struct map* config) {
 	char* str = strtok_r(dirs, ":", &save_ptr);
 	do {
 		char* app_dir = utils_concat(2, str, "/applications");
-		insert_dir(app_dir, cached, entries);
+		insert_dir(app_dir, entries);
 		free(app_dir);
 	} while((str = strtok_r(NULL, ":", &save_ptr)) != NULL);
 	free(dirs);
-	map_free(cached);
 	map_free(entries);
 }
 

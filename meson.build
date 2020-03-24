@@ -1,4 +1,4 @@
-project('wofi', 'c', version : 'hg', default_options : ['buildtype=release', 'warning_level=2'])
+project('wofi', 'c', version : 'hg', default_options : ['c_std=c99', 'buildtype=release', 'warning_level=2'])
 cc = meson.get_compiler('c')
 
 pkgcfg = import('pkgconfig')

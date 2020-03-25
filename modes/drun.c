@@ -224,21 +224,35 @@ static void insert_dir(char* app_dir, struct map* entries) {
 	closedir(dir);
 }
 
-static bool starts_with_data_dirs(char* path) {
+static char* get_data_dirs(void) {
 	char* data_dirs = getenv("XDG_DATA_DIRS");
 	if(data_dirs == NULL) {
 		data_dirs = "/usr/local/share:/usr/share";
 	}
-	char* dirs = strdup(data_dirs);
+	return strdup(data_dirs);
+}
+
+static char* get_data_home(void) {
+	char* data_home = getenv("XDG_DATA_HOME");
+	if(data_home == NULL) {
+		data_home = utils_concat(2, getenv("HOME"), "/.local/share");
+	} else {
+		data_home = strdup(data_home);
+	}
+	return data_home;
+}
+
+static bool starts_with_data_dirs(char* path) {
+	char* data_dirs = get_data_dirs();
 	char* save_ptr;
-	char* str = strtok_r(dirs, ":", &save_ptr);
+	char* str = strtok_r(data_dirs, ":", &save_ptr);
 	do {
 		char* tmpstr = utils_concat(2, str, "/applications");
 		char* tmp = strdup(path);
 		char* dir = dirname(tmp);
 		if(strcmp(dir, tmpstr) == 0) {
 			free(tmp);
-			free(dirs);
+			free(data_dirs);
 			free(tmpstr);
 			return true;
 		}
@@ -246,18 +260,13 @@ static bool starts_with_data_dirs(char* path) {
 		free(tmpstr);
 	} while((str = strtok_r(NULL, ":", &save_ptr)) != NULL);
 
-	free(dirs);
+	free(data_dirs);
 	return false;
 }
 
 static bool should_invalidate_cache(char* path) {
 	if(starts_with_data_dirs(path)) {
-		char* data_home = getenv("XDG_DATA_HOME");
-		if(data_home == NULL) {
-			data_home = utils_concat(2, getenv("HOME"), "/.local/share");
-		} else {
-			data_home = strdup(data_home);
-		}
+		char* data_home = get_data_home();
 		char* tmp = strdup(path);
 		char* file = basename(tmp);
 		char* full_path = utils_concat(3, data_home, "/applications/", file);
@@ -327,18 +336,11 @@ void wofi_drun_init(struct mode* this, struct map* config) {
 
 	free(cache);
 
-	char* data_home = getenv("XDG_DATA_HOME");
-	if(data_home == NULL) {
-		data_home = utils_concat(2, getenv("HOME"), "/.local/share");
-	} else {
-		data_home = strdup(data_home);
-	}
-	char* data_dirs = getenv("XDG_DATA_DIRS");
-	if(data_dirs == NULL) {
-		data_dirs = "/usr/local/share:/usr/share";
-	}
+	char* data_home = get_data_home();
+	char* data_dirs = get_data_dirs();
 	char* dirs = utils_concat(3, data_home, ":", data_dirs);
 	free(data_home);
+	free(data_dirs);
 
 	char* save_ptr;
 	char* str = strtok_r(dirs, ":", &save_ptr);

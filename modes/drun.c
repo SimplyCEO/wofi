@@ -224,6 +224,55 @@ static void insert_dir(char* app_dir, struct map* entries) {
 	closedir(dir);
 }
 
+static bool starts_with_data_dirs(char* path) {
+	char* data_dirs = getenv("XDG_DATA_DIRS");
+	if(data_dirs == NULL) {
+		data_dirs = "/usr/local/share:/usr/share";
+	}
+	char* dirs = strdup(data_dirs);
+	char* save_ptr;
+	char* str = strtok_r(dirs, ":", &save_ptr);
+	do {
+		char* tmpstr = utils_concat(2, str, "/applications");
+		char* tmp = strdup(path);
+		char* dir = dirname(tmp);
+		if(strcmp(dir, tmpstr) == 0) {
+			free(tmp);
+			free(dirs);
+			free(tmpstr);
+			return true;
+		}
+		free(tmp);
+		free(tmpstr);
+	} while((str = strtok_r(NULL, ":", &save_ptr)) != NULL);
+
+	free(dirs);
+	return false;
+}
+
+static bool should_invalidate_cache(char* path) {
+	if(starts_with_data_dirs(path)) {
+		char* data_home = getenv("XDG_DATA_HOME");
+		if(data_home == NULL) {
+			data_home = utils_concat(2, getenv("HOME"), "/.local/share");
+		} else {
+			data_home = strdup(data_home);
+		}
+		char* tmp = strdup(path);
+		char* file = basename(tmp);
+		char* full_path = utils_concat(3, data_home, "/applications/", file);
+		free(data_home);
+		if(access(full_path, F_OK) == 0) {
+			free(full_path);
+			free(tmp);
+			return true;
+		}
+		free(full_path);
+		free(tmp);
+	}
+	return false;
+}
+
 void wofi_drun_init(struct mode* this, struct map* config) {
 	mode = this;
 
@@ -236,6 +285,11 @@ void wofi_drun_init(struct mode* this, struct map* config) {
 
 	struct cache_line* node, *tmp;
 	wl_list_for_each_safe(node, tmp, cache, link) {
+		if(should_invalidate_cache(node->line)) {
+			wofi_remove_cache(mode, node->line);
+			goto cache_cont;
+		}
+
 		size_t action_count;
 		char** text = get_action_text(node->line, &action_count);
 		if(text == NULL) {

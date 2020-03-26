@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019 Scoopta
+ *  Copyright (C) 2019-2020 Scoopta
  *  This file is part of Wofi
  *  Wofi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -17,9 +17,9 @@
 
 #ifndef PROPERTY_BOX_H
 #define PROPERTY_BOX_H
-#include <map.h>
 
 #include <gtk/gtk.h>
+
 
 #define WOFI_TYPE_PROPERTY_BOX wofi_property_box_get_type()
 G_DECLARE_FINAL_TYPE(WofiPropertyBox, wofi_property_box, WOFI, PROPERTY_BOX, GtkBox);

@@ -15,17 +15,23 @@
     along with Wofi.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <map.h>
-#include <wofi.h>
-#include <utils.h>
-#include <config.h>
-
 #include <stdio.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <getopt.h>
 #include <string.h>
+#include <unistd.h>
+#include <signal.h>
+
+#include <map.h>
+#include <wofi.h>
+#include <utils.h>
+#include <config.h>
+
+#include <wayland-client.h>
+
+#include <gtk/gtk.h>
 
 static const char* nyan_colors[] = {"#FF0000", "#FFA500", "#FFFF00", "#00FF00", "#0000FF", "#FF00FF"};
 static size_t nyan_color_l = sizeof(nyan_colors) / sizeof(char*);

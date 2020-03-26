@@ -18,9 +18,7 @@
 #ifndef WOFI_API_H
 #define WOFI_API_H
 
-#include <map.h>
-
-#include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
 
 #include <wayland-client.h>

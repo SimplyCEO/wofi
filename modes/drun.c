@@ -15,8 +15,17 @@
     along with Wofi.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wofi.h>
+#include <stdio.h>
+#include <libgen.h>
 
+#include <sys/stat.h>
+
+#include <map.h>
+#include <utils.h>
+#include <config.h>
+#include <wofi_api.h>
+
+#include <gtk/gtk.h>
 #include <gio/gdesktopappinfo.h>
 
 static const char* arg_names[] = {"print_command"};

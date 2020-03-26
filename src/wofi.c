@@ -16,6 +16,28 @@
  */
 
 #include <wofi.h>
+#include <wofi_api.h>
+
+#include <ctype.h>
+#include <dlfcn.h>
+#include <errno.h>
+#include <string.h>
+#include <libgen.h>
+#include <unistd.h>
+#include <stdint.h>
+
+#include <sys/stat.h>
+
+#include <utils.h>
+#include <config.h>
+#include <property_box.h>
+
+#include <xdg-output-unstable-v1-client-protocol.h>
+#include <wlr-layer-shell-unstable-v1-client-protocol.h>
+
+#include <gtk/gtk.h>
+#include <pango/pango.h>
+#include <gdk/gdkwayland.h>
 
 static const char* terminals[] = {"kitty", "termite", "gnome-terminal", "weston-terminal"};
 

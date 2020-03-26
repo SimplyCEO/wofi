@@ -15,7 +15,15 @@
     along with Wofi.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wofi.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#include <config.h>
+#include <wofi_api.h>
+
+#include <pango/pango.h>
 
 static const char* arg_names[] = {"parse_action", "separator", "print_line_num"};
 

@@ -17,6 +17,17 @@
 
 #include <utils.h>
 
+#include <math.h>
+#include <stdarg.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <libgen.h>
+
+#include <sys/stat.h>
+#include <sys/time.h>
+
 time_t utils_get_time_millis(void) {
 	struct timeval time;
 	gettimeofday(&time, NULL);

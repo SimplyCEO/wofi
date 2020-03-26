@@ -15,7 +15,20 @@
     along with Wofi.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <wofi.h>
+#include <stdio.h>
+#include <errno.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <unistd.h>
+
+#include <sys/stat.h>
+
+#include <utils.h>
+#include <config.h>
+#include <wofi_api.h>
+
+#include <glib.h>
 
 static const char* arg_names[] = {"always_parse_args", "show_all"};
 

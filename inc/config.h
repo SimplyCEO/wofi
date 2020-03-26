@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019 Scoopta
+ *  Copyright (C) 2019-2020 Scoopta
  *  This file is part of Wofi
  *  Wofi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,13 +18,9 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#include <map.h>
-
-#include <stdio.h>
 #include <stdint.h>
-#include <stdarg.h>
-#include <string.h>
-#include <stdlib.h>
+
+#include <map.h>
 
 void config_put(struct map* map, char* line);
 

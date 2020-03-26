@@ -18,28 +18,9 @@
 #ifndef WAIFU_H
 #define WAIFU_H
 
-#include <wofi_api.h>
+#include <stdbool.h>
 
-#include <utils.h>
-#include <config.h>
-#include <property_box.h>
-
-#include <ctype.h>
-#include <dlfcn.h>
-#include <errno.h>
-#include <stddef.h>
-#include <string.h>
-#include <libgen.h>
-#include <unistd.h>
-
-#include <sys/stat.h>
-
-#include <gtk/gtk.h>
-#include <pango/pango.h>
-#include <gdk/gdkwayland.h>
-
-#include <xdg-output-unstable-v1-client-protocol.h>
-#include <wlr-layer-shell-unstable-v1-client-protocol.h>
+#include <map.h>
 
 void wofi_init(struct map* config);
 

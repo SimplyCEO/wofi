@@ -27,7 +27,7 @@ Debian sid has a package in the official repos https://packages.debian.org/sid/w
 
 Ubuntu focal has a package in universe https://packages.ubuntu.com/focal/wofi
 
-Arch has an AUR package for the current tip https://aur.archlinux.org/packages/wofi-hg/ and for the current stable https://aur.archlinux.org/packages/wofi/
+Arch has an AUR package for the current tip https://aur.archlinux.org/packages/wofi-hg/ and an official package for the current stable https://www.archlinux.org/packages/community/x86_64/wofi/
 
 NixOS has a packge in unstable https://nixos.org/nixos/packages.html?attr=wofi&channel=nixos-unstable&query=wofi
 

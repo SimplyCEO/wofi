@@ -39,7 +39,7 @@
 #include <pango/pango.h>
 #include <gdk/gdkwayland.h>
 
-static const char* terminals[] = {"kitty", "termite", "gnome-terminal", "weston-terminal"};
+static const char* terminals[] = {"kitty", "termite", "alacritty", "gnome-terminal", "weston-terminal"};
 
 enum matching_mode {
 	MATCHING_MODE_CONTAINS,

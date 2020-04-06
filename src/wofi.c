@@ -994,6 +994,9 @@ static GdkModifierType get_mask_from_keyval(guint keyval) {
 	case GDK_KEY_Control_L:
 	case GDK_KEY_Control_R:
 		return GDK_CONTROL_MASK;
+	case GDK_KEY_Alt_L:
+	case GDK_KEY_Alt_R:
+		return GDK_MOD1_MASK;
 	default:
 		return 0;
 	}
@@ -1099,7 +1102,7 @@ static bool do_key_action(GdkEvent* event, char* mod, void (*action)(void)) {
 }
 
 static bool has_mod(guint state) {
-	return (state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK || (state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK;
+	return (state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK || (state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK || (state & GDK_MOD1_MASK) == GDK_MOD1_MASK;
 }
 
 static gboolean do_nyan(gpointer data) {
@@ -1207,8 +1210,9 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		key_success = do_key_action(event, mod_expand, do_expand);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_hide_search)) {
 		key_success = do_key_action(event, mod_hide_search, do_hide_search);
-	} else if(event->key.keyval == GDK_KEY_Shift_L || event->key.keyval == GDK_KEY_Control_L) {
-	} else if(event->key.keyval == GDK_KEY_Shift_R || event->key.keyval == GDK_KEY_Control_R) {
+	} else if(event->key.keyval == GDK_KEY_Shift_L || event->key.keyval == GDK_KEY_Shift_R) {
+	} else if(event->key.keyval == GDK_KEY_Control_L || event->key.keyval == GDK_KEY_Control_R) {
+	} else if(event->key.keyval == GDK_KEY_Alt_L || event->key.keyval == GDK_KEY_Alt_R) {
 	} else {
 		key_success = false;
 	}

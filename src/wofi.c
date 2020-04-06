@@ -441,6 +441,12 @@ static void update_surface_size(void) {
 
 static void widget_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointer data) {
 	(void) data;
+	if(GTK_IS_FLOW_BOX_CHILD(widget)) {
+		GtkWidget* expander = gtk_bin_get_child(GTK_BIN(widget));
+		if(GTK_IS_EXPANDER(expander) && gtk_expander_get_expanded(GTK_EXPANDER(expander))) {
+			return;
+		}
+	}
 	if(max_height > 0) {
 		if(allocation->height > max_height) {
 			int64_t ratio = allocation->height / max_height;

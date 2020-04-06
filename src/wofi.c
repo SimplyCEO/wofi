@@ -97,8 +97,8 @@ static int64_t ix, iy;
 static uint8_t konami_cycle;
 static bool is_konami = false;
 
-static char* key_up, *key_down, *key_left, *key_right, *key_forward, *key_backward, *key_submit, *key_exit, *key_pgup, *key_pgdn;
-static char* mod_up, *mod_down, *mod_left, *mod_right, *mod_forward, *mod_backward, *mod_exit, *mod_pgup, *mod_pgdn;
+static char* key_up, *key_down, *key_left, *key_right, *key_forward, *key_backward, *key_submit, *key_exit, *key_pgup, *key_pgdn, *key_expand;
+static char* mod_up, *mod_down, *mod_left, *mod_right, *mod_forward, *mod_backward, *mod_exit, *mod_pgup, *mod_pgdn, *mod_expand;
 
 static struct wl_display* wl = NULL;
 static struct wl_surface* wl_surface;
@@ -1061,6 +1061,17 @@ static void do_exit(void) {
 	exit(1);
 }
 
+static void do_expand(void) {
+	GList* children = gtk_flow_box_get_selected_children(GTK_FLOW_BOX(inner_box));
+	if(children->data != NULL && gtk_widget_has_focus(children->data)) {
+		GtkWidget* expander = gtk_bin_get_child(children->data);
+		if(GTK_IS_EXPANDER(expander)) {
+			g_signal_emit_by_name(expander, "activate");
+		}
+	}
+	g_list_free(children);
+}
+
 static bool do_key_action(GdkEvent* event, char* mod, void (*action)(void)) {
 	if(mod != NULL) {
 		GdkModifierType mask = get_mask_from_name(mod);
@@ -1181,6 +1192,8 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		g_list_free(children);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_exit)) {
 		key_success = do_key_action(event, mod_exit, do_exit);
+	} else if(event->key.keyval == gdk_keyval_from_name(key_expand)) {
+		key_success = do_key_action(event, mod_expand, do_expand);
 	} else if(event->key.keyval == GDK_KEY_Shift_L || event->key.keyval == GDK_KEY_Control_L) {
 	} else if(event->key.keyval == GDK_KEY_Shift_R || event->key.keyval == GDK_KEY_Control_R) {
 	} else {
@@ -1428,6 +1441,7 @@ void wofi_init(struct map* _config) {
 	key_exit = config_get(config, "key_exit", "Escape");
 	key_pgup = config_get(config, "key_pgup", "Page_Up");
 	key_pgdn = config_get(config, "key_pgdn", "Page_Down");
+	key_expand = config_get(config, "key_expand", "");
 
 	parse_mods(&key_up, &mod_up);
 	parse_mods(&key_down, &mod_down);
@@ -1438,6 +1452,7 @@ void wofi_init(struct map* _config) {
 	parse_mods(&key_exit, &mod_exit);
 	parse_mods(&key_pgup, &mod_pgup);
 	parse_mods(&key_pgdn, &mod_pgdn);
+	parse_mods(&key_expand, &mod_expand);
 
 	modes = map_init_void();
 

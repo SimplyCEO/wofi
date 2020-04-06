@@ -97,8 +97,8 @@ static int64_t ix, iy;
 static uint8_t konami_cycle;
 static bool is_konami = false;
 
-static char* key_up, *key_down, *key_left, *key_right, *key_forward, *key_backward, *key_submit, *key_exit, *key_pgup, *key_pgdn, *key_expand;
-static char* mod_up, *mod_down, *mod_left, *mod_right, *mod_forward, *mod_backward, *mod_exit, *mod_pgup, *mod_pgdn, *mod_expand;
+static char* key_up, *key_down, *key_left, *key_right, *key_forward, *key_backward, *key_submit, *key_exit, *key_pgup, *key_pgdn, *key_expand, *key_hide_search;
+static char* mod_up, *mod_down, *mod_left, *mod_right, *mod_forward, *mod_backward, *mod_exit, *mod_pgup, *mod_pgdn, *mod_expand, *mod_hide_search;
 
 static struct wl_display* wl = NULL;
 static struct wl_surface* wl_surface;
@@ -1078,6 +1078,11 @@ static void do_expand(void) {
 	g_list_free(children);
 }
 
+static void do_hide_search(void) {
+	gtk_widget_set_visible(entry, !gtk_widget_get_visible(entry));
+	update_surface_size();
+}
+
 static bool do_key_action(GdkEvent* event, char* mod, void (*action)(void)) {
 	if(mod != NULL) {
 		GdkModifierType mask = get_mask_from_name(mod);
@@ -1200,6 +1205,8 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		key_success = do_key_action(event, mod_exit, do_exit);
 	} else if(event->key.keyval == gdk_keyval_from_name(key_expand)) {
 		key_success = do_key_action(event, mod_expand, do_expand);
+	} else if(event->key.keyval == gdk_keyval_from_name(key_hide_search)) {
+		key_success = do_key_action(event, mod_hide_search, do_hide_search);
 	} else if(event->key.keyval == GDK_KEY_Shift_L || event->key.keyval == GDK_KEY_Control_L) {
 	} else if(event->key.keyval == GDK_KEY_Shift_R || event->key.keyval == GDK_KEY_Control_R) {
 	} else {
@@ -1448,6 +1455,7 @@ void wofi_init(struct map* _config) {
 	key_pgup = config_get(config, "key_pgup", "Page_Up");
 	key_pgdn = config_get(config, "key_pgdn", "Page_Down");
 	key_expand = config_get(config, "key_expand", "");
+	key_hide_search = config_get(config, "key_hide_search", "");
 
 	parse_mods(&key_up, &mod_up);
 	parse_mods(&key_down, &mod_down);
@@ -1459,6 +1467,7 @@ void wofi_init(struct map* _config) {
 	parse_mods(&key_pgup, &mod_pgup);
 	parse_mods(&key_pgdn, &mod_pgdn);
 	parse_mods(&key_expand, &mod_expand);
+	parse_mods(&key_hide_search, &mod_hide_search);
 
 	modes = map_init_void();
 
@@ -1535,9 +1544,9 @@ void wofi_init(struct map* _config) {
 
 	gtk_widget_set_name(entry, "input");
 	gtk_entry_set_placeholder_text(GTK_ENTRY(entry), prompt);
-	if(!hide_search) {
-		gtk_container_add(GTK_CONTAINER(outer_box), entry);
-	}
+	gtk_container_add(GTK_CONTAINER(outer_box), entry);
+	gtk_widget_set_child_visible(entry, !hide_search);
+
 	if(password_char != NULL) {
 		gtk_entry_set_visibility(GTK_ENTRY(entry), FALSE);
 		gtk_entry_set_invisible_char(GTK_ENTRY(entry), password_char[0]);

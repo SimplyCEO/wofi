@@ -962,23 +962,43 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 	const gchar* text2 = wofi_property_box_get_property(WOFI_PROPERTY_BOX(box2), "filter");
 	uint64_t index1 = strtol(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box1), "index"), NULL, 10);
 	uint64_t index2 = strtol(wofi_property_box_get_property(WOFI_PROPERTY_BOX(box2), "index"), NULL, 10);
+
 	if(text1 == NULL || text2 == NULL) {
 		return index1 - index2;
 	}
-	if(filter == NULL || strcmp(filter, "") == 0) {
-		switch(sort_order) {
-		case SORT_ORDER_DEFAULT:
-			return index1 - index2;
-		case SORT_ORDER_ALPHABETICAL:
-			return strcmp(text1, text2);
+
+	uint64_t fallback = 0;
+	switch(sort_order) {
+	case SORT_ORDER_DEFAULT:
+		fallback = index1 - index2;
+		break;
+	case SORT_ORDER_ALPHABETICAL:
+		if(insensitive) {
+			fallback = strcasecmp(text1, text2);
+		} else {
+			fallback = strcmp(text1, text2);
 		}
+		break;
 	}
 
+	if(filter == NULL || strcmp(filter, "") == 0) {
+		return fallback;
+	}
+
+	gint primary = 0;
 	switch(matching) {
 	case MATCHING_MODE_CONTAINS:
-		return contains_sort(text1, text2);
+		primary = contains_sort(text1, text2);
+		if(primary == 0) {
+			return fallback;
+		}
+		return primary;
 	case MATCHING_MODE_FUZZY:
-		return fuzzy_sort(text1, text2);
+		primary = fuzzy_sort(text1, text2);
+		if(primary == 0) {
+			return fallback;
+		}
+		return primary;
 	default:
 		return 0;
 	}

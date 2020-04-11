@@ -1360,7 +1360,11 @@ static void parse_mods(char* key, void (*action)(void)) {
 			mod = NULL;
 		}
 		struct key_entry* entry = malloc(sizeof(struct key_entry));
-		entry->mod = mod;
+		if(mod == NULL) {
+			entry->mod = NULL;
+		} else {
+			entry->mod = strdup(mod);
+		}
 		entry->action = action;
 		map_put_void(keys, str, entry);
 	} while((str = strtok_r(NULL, ",", &save_ptr)) != NULL);

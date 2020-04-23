@@ -384,7 +384,7 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 			free(tmp);
 		}
 		if(allow_markup) {
-			char* out;
+			char* out = NULL;
 			pango_parse_markup(search_text, -1, 0, NULL, &out, NULL, NULL);
 			free(search_text);
 			search_text = out;

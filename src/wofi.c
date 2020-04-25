@@ -820,14 +820,25 @@ void wofi_term_run(const char* cmd) {
 	exit(1);
 }
 
+static void flag_box(GtkBox* box, GtkStateFlags flags) {
+	GList* selected_children = gtk_container_get_children(GTK_CONTAINER(box));
+	GList* list = selected_children;
+	for(GtkWidget* child = list->data; list != NULL; list = list->next) {
+		gtk_widget_set_state_flags(child, flags, TRUE);
+	}
+	g_list_free(selected_children);
+}
+
 static void select_item(GtkFlowBox* flow_box, gpointer data) {
 	(void) data;
 	if(previous_selection != NULL) {
 		gtk_widget_set_name(previous_selection, "unselected");
+		flag_box(GTK_BOX(previous_selection), GTK_STATE_FLAG_NORMAL);
 	}
 	GList* selected_children = gtk_flow_box_get_selected_children(flow_box);
 	GtkWidget* box = gtk_bin_get_child(GTK_BIN(selected_children->data));
 	g_list_free(selected_children);
+	flag_box(GTK_BOX(box), GTK_STATE_FLAG_SELECTED);
 	gtk_widget_set_name(box, "selected");
 	previous_selection = box;
 }

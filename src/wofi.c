@@ -1608,6 +1608,7 @@ void wofi_init(struct map* _config) {
 	}
 
 	inner_box = gtk_flow_box_new();
+	gtk_flow_box_set_selection_mode(GTK_FLOW_BOX(inner_box), GTK_SELECTION_BROWSE);
 	gtk_flow_box_set_max_children_per_line(GTK_FLOW_BOX(inner_box), columns);
 	gtk_orientable_set_orientation(GTK_ORIENTABLE(inner_box), orientation);
 	gtk_widget_set_halign(inner_box, halign);

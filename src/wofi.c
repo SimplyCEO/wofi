@@ -810,11 +810,11 @@ bool wofi_mod_control(void) {
 
 void wofi_term_run(const char* cmd) {
 	if(terminal != NULL) {
-		execlp(terminal, terminal, "--", cmd, NULL);
+		execlp(terminal, terminal, "-e", cmd, NULL);
 	}
 	size_t term_count = sizeof(terminals) / sizeof(char*);
 	for(size_t count = 0; count < term_count; ++count) {
-		execlp(terminals[count], terminals[count], "--", cmd, NULL);
+		execlp(terminals[count], terminals[count], "-e", cmd, NULL);
 	}
 	fprintf(stderr, "No terminal emulator found please set term in config or use --term\n");
 	exit(1);

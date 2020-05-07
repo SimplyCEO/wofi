@@ -32,6 +32,9 @@ The character used to separate dmenu entries, default is \\n.
 .B print_line_num=\fIBOOL\fR
 When an entry is selected the number of the line the entry was on is printed instead of the entry itself. This disables caching as it's fundamentally incompatible with it.
 
+.SH RUN
+In run mode holding ctrl while running an entry will cause arguments to be parsed even if always_parse_args=false. Holding shift will cause the entry to be run in a terminal.
+
 .SH RUN CONFIG OPTIONS
 .TP
 .B always_parse_args=\fIBOOL\fR

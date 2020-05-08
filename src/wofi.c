@@ -471,6 +471,7 @@ static void widget_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointe
 	}
 	if(lines > 0) {
 		height = max_height * lines;
+		++height;
 		update_surface_size();
 	}
 }

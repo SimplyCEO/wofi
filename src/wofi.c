@@ -88,7 +88,7 @@ static enum location location;
 static bool no_actions;
 static uint64_t columns;
 static bool user_moved = false;
-static uint16_t widget_count = 0;
+static uint32_t widget_count = 0;
 static enum sort_order sort_order;
 static int64_t max_height = 0;
 static uint64_t lines;
@@ -359,7 +359,7 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 	gtk_style_context_add_class(style, "entry");
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "mode", mode);
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "action", action);
-	char index[6];
+	char index[11];
 	snprintf(index, sizeof(index), "%u", ++widget_count);
 	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "index", index);
 

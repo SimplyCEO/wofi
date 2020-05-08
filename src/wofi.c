@@ -838,6 +838,9 @@ static void select_item(GtkFlowBox* flow_box, gpointer data) {
 	GList* selected_children = gtk_flow_box_get_selected_children(flow_box);
 	GtkWidget* box = gtk_bin_get_child(GTK_BIN(selected_children->data));
 	g_list_free(selected_children);
+	if(GTK_IS_EXPANDER(box)) {
+		box = gtk_expander_get_label_widget(GTK_EXPANDER(box));
+	}
 	flag_box(GTK_BOX(box), GTK_STATE_FLAG_SELECTED);
 	gtk_widget_set_name(box, "selected");
 	previous_selection = box;

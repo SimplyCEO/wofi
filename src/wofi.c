@@ -515,14 +515,6 @@ static gboolean _insert_widget(gpointer data) {
 	gtk_widget_set_name(child, "entry");
 	g_signal_connect(child, "size-allocate", G_CALLBACK(widget_allocate), NULL);
 
-	size_t lf_count = 1;
-	size_t text_len = strlen(node->text[0]);
-	for(size_t count = 0; count < text_len; ++count) {
-		if(node->text[0][count] == '\n') {
-			++lf_count;
-		}
-	}
-
 	gtk_container_add(GTK_CONTAINER(child), parent);
 	gtk_container_add(GTK_CONTAINER(inner_box), child);
 	gtk_widget_show_all(child);

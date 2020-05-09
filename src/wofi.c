@@ -96,6 +96,7 @@ static int8_t line_wrap;
 static int64_t ix, iy;
 static uint8_t konami_cycle;
 static bool is_konami = false;
+static GDBusProxy* dbus = NULL;
 
 static struct map* keys;
 
@@ -1250,6 +1251,19 @@ static gboolean focus(GtkWidget* widget, GdkEvent* event, gpointer data) {
 	return FALSE;
 }
 
+static gboolean focus_entry(GtkWidget* widget, GdkEvent* event, gpointer data) {
+	(void) data;
+	if(widget == entry && dbus != NULL) {
+		GError* err = NULL;
+		g_dbus_proxy_call_sync(dbus, "SetVisible", g_variant_new("(b)", event->focus_change.in), G_DBUS_CALL_FLAGS_NONE, 2000, NULL, &err);
+		if(err != NULL && err->code != G_DBUS_ERROR_SERVICE_UNKNOWN) {
+			fprintf(stderr, "Error while changing OSK state %s\n", err->message);
+			g_error_free(err);
+		}
+	}
+	return FALSE;
+}
+
 static void* get_plugin_proc(const char* prefix, const char* suffix) {
 	char* proc_name = utils_concat(3, "wofi_", prefix, suffix);
 	void* proc = dlsym(RTLD_DEFAULT, proc_name);
@@ -1634,7 +1648,11 @@ void wofi_init(struct map* _config) {
 	g_signal_connect(window, "key-press-event", G_CALLBACK(key_press), NULL);
 	g_signal_connect(window, "focus-in-event", G_CALLBACK(focus), NULL);
 	g_signal_connect(window, "focus-out-event", G_CALLBACK(focus), NULL);
+	g_signal_connect(entry, "focus-in-event", G_CALLBACK(focus_entry), NULL);
+	g_signal_connect(entry, "focus-out-event", G_CALLBACK(focus_entry), NULL);
 	g_signal_connect(window, "destroy", G_CALLBACK(do_exit), NULL);
+
+	dbus = g_dbus_proxy_new_for_bus_sync(G_BUS_TYPE_SESSION, G_DBUS_PROXY_FLAGS_NONE, NULL, "sm.puri.OSK0", "/sm/puri/OSK0", "sm.puri.OSK0", NULL, NULL);
 
 	gdk_threads_add_timeout(filter_rate, do_search, NULL);
 

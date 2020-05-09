@@ -27,7 +27,7 @@ typedef struct {
 	struct map* properties;
 } WofiPropertyBoxPrivate;
 
-G_DEFINE_TYPE_WITH_PRIVATE(WofiPropertyBox, wofi_property_box, GTK_TYPE_BOX);
+G_DEFINE_TYPE_WITH_PRIVATE(WofiPropertyBox, wofi_property_box, GTK_TYPE_BOX)
 
 static void wofi_property_box_init(WofiPropertyBox* box) {
 	WofiPropertyBoxPrivate* this = wofi_property_box_get_instance_private(box);

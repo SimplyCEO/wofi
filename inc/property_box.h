@@ -22,7 +22,7 @@
 
 
 #define WOFI_TYPE_PROPERTY_BOX wofi_property_box_get_type()
-G_DECLARE_FINAL_TYPE(WofiPropertyBox, wofi_property_box, WOFI, PROPERTY_BOX, GtkBox);
+G_DECLARE_FINAL_TYPE(WofiPropertyBox, wofi_property_box, WOFI, PROPERTY_BOX, GtkBox)
 
 GtkWidget* wofi_property_box_new(GtkOrientation orientation, gint spacing);
 

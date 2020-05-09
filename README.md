@@ -34,6 +34,8 @@ NixOS has a packge in unstable https://nixos.org/nixos/packages.html?attr=wofi&c
 Void Linux also has a package
 
 Feodra has an official package https://src.fedoraproject.org/rpms/wofi as well as one in COPR https://copr.fedorainfracloud.org/coprs/wef/wofi/
+
+FreeBSD has an official package https://www.freebsd.org/cgi/ports.cgi?query=wofi&stype=all&sektion=x11
 ## Documentation
 The official documentation is provided by the man pages in this repository, sample styling can be found here https://cloudninja.pw/docs/wofi.html
 

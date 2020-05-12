@@ -1449,7 +1449,6 @@ static gboolean do_percent_size(gpointer data) {
 	bool width_percent = strchr(geo_str[0], '%') != NULL;
 	bool height_percent = strchr(geo_str[1], '%') != NULL && lines == 0;
 	GdkMonitor* monitor = gdk_display_get_monitor_at_window(gdk_display_get_default(), gtk_widget_get_window(window));
-
 	GdkRectangle rect;
 	gdk_monitor_get_geometry(monitor, &rect);
 	if(width_percent) {
@@ -1459,8 +1458,7 @@ static gboolean do_percent_size(gpointer data) {
 		height = (height / 100.f) * rect.height;
 	}
 	update_surface_size();
-
-	gtk_widget_show_all(window);
+	free(geo_str);
 	return G_SOURCE_REMOVE;
 }
 
@@ -1668,14 +1666,13 @@ void wofi_init(struct map* _config) {
 
 	gdk_threads_add_timeout(filter_rate, do_search, NULL);
 
-	bool delay_show = false;
+
 	bool width_percent = strchr(width_str, '%') != NULL;
 	bool height_percent = strchr(height_str, '%') != NULL && lines == 0;
 	if(width_percent || height_percent) {
-		static char* geo_str[2];
+		char** geo_str = malloc(sizeof(char*) * 2);
 		geo_str[0] = width_str;
 		geo_str[1] = height_str;
-		delay_show = true;
 		gdk_threads_add_timeout(70, do_percent_size, geo_str);
 	}
 
@@ -1696,7 +1693,5 @@ void wofi_init(struct map* _config) {
 	gdk_threads_add_idle(insert_all_widgets, modes);
 
 	gtk_window_set_title(GTK_WINDOW(window), prompt);
-	if (!delay_show) {
-		gtk_widget_show_all(window);
-	}
+	gtk_widget_show_all(window);
 }

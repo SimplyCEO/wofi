@@ -222,6 +222,7 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 	char* ret = strdup("");
 	struct map* mode_map = map_init();
 	map_put(mode_map, "img", "true");
+	map_put(mode_map, "img-noscale", "true");
 	map_put(mode_map, "text", "true");
 
 	char* tmp = strdup(text);
@@ -304,6 +305,15 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 					GdkPixbuf* tmp = gdk_pixbuf_scale_simple(buf, image_size, height * percent, GDK_INTERP_BILINEAR);
 					g_object_unref(buf);
 					buf = tmp;
+				}
+				GtkWidget* img = gtk_image_new_from_pixbuf(buf);
+				gtk_widget_set_name(img, "img");
+				gtk_container_add(GTK_CONTAINER(box), img);
+			} else if(strcmp(mode, "img-noscale") == 0 && create_widgets) {
+				GdkPixbuf* buf = gdk_pixbuf_new_from_file(str, NULL);
+				if(buf == NULL) {
+					fprintf(stderr, "Image %s cannot be loaded\n", str);
+					goto done;
 				}
 				GtkWidget* img = gtk_image_new_from_pixbuf(buf);
 				gtk_widget_set_name(img, "img");

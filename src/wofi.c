@@ -444,7 +444,7 @@ static void expand(GtkExpander* expander, gpointer data) {
 }
 
 static void update_surface_size(void) {
-	if(wl != NULL) {
+	if(shell != NULL) {
 		zwlr_layer_surface_v1_set_size(wlr_surface, width, height);
 		wl_surface_commit(wl_surface);
 		wl_display_roundtrip(wl);
@@ -1570,6 +1570,7 @@ void wofi_init(struct map* _config) {
 
 		if(shell == NULL) {
 			fprintf(stderr, "Compositor does not support wlr_layer_shell protocol, switching to normal window mode\n");
+			normal_window = true;
 			goto normal_win;
 		}
 

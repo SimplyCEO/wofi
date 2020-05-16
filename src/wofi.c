@@ -65,7 +65,7 @@ enum sort_order {
 
 static uint64_t width, height;
 static char* x, *y;
-static struct zwlr_layer_shell_v1* shell;
+static struct zwlr_layer_shell_v1* shell = NULL;
 static GtkWidget* window, *outer_box, *scroll, *entry, *inner_box, *previous_selection = NULL;
 static gchar* filter = NULL;
 static char* mode = NULL;
@@ -1552,9 +1552,14 @@ void wofi_init(struct map* _config) {
 
 	if(!normal_window) {
 		GdkDisplay* disp = gdk_display_get_default();
-		GdkWindow* gdk_win = gtk_widget_get_window(window);
 		wl_list_init(&outputs);
 		wl = gdk_wayland_display_get_wl_display(disp);
+
+		if(wl == NULL) {
+			fprintf(stderr, "Failed to connect to wayland compositor\n");
+			exit(1);
+		}
+
 		struct wl_registry* registry = wl_display_get_registry(wl);
 		struct wl_registry_listener listener = {
 			.global = add_interface,
@@ -1562,6 +1567,11 @@ void wofi_init(struct map* _config) {
 		};
 		wl_registry_add_listener(registry, &listener, NULL);
 		wl_display_roundtrip(wl);
+
+		if(shell == NULL) {
+			fprintf(stderr, "Compositor does not support wlr_layer_shell protocol, switching to normal window mode\n");
+			goto normal_win;
+		}
 
 		struct output_node* node;
 		wl_list_for_each(node, &outputs, link) {
@@ -1592,6 +1602,8 @@ void wofi_init(struct map* _config) {
 			}
 		}
 
+		GdkWindow* gdk_win = gtk_widget_get_window(window);
+
 		gdk_wayland_window_set_use_custom_surface(gdk_win);
 		wl_surface = gdk_wayland_window_get_wl_surface(gdk_win);
 
@@ -1603,6 +1615,8 @@ void wofi_init(struct map* _config) {
 		wl_surface_commit(wl_surface);
 		wl_display_roundtrip(wl);
 	}
+
+	normal_win:
 
 	outer_box = gtk_box_new(outer_orientation, 0);
 	gtk_widget_set_name(outer_box, "outer-box");

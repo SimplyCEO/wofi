@@ -28,7 +28,7 @@
 #include <gtk/gtk.h>
 #include <gio/gdesktopappinfo.h>
 
-static const char* arg_names[] = {"print_command"};
+static const char* arg_names[] = {"print_command", "display_generic"};
 
 static struct mode* mode;
 
@@ -40,6 +40,7 @@ struct node {
 static struct wl_list widgets;
 
 static bool print_command;
+static bool display_generic;
 
 static char* get_text(char* file, char* action) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(file);
@@ -47,8 +48,16 @@ static char* get_text(char* file, char* action) {
 		return NULL;
 	}
 	const char* name;
+	char* generic_name = strdup("");
 	if(action == NULL) {
 		name = g_app_info_get_display_name(G_APP_INFO(info));
+		if(display_generic) {
+			const char* gname = g_desktop_app_info_get_generic_name(info);
+			if(gname != NULL) {
+				free(generic_name);
+				generic_name = utils_concat(3, " (", gname, ")");
+			}
+		}
 	} else {
 		name = g_desktop_app_info_get_action_name(info, action);
 	}
@@ -60,7 +69,9 @@ static char* get_text(char* file, char* action) {
 		if(G_IS_FILE_ICON(icon)) {
 			GFile* file = g_file_icon_get_file(G_FILE_ICON(icon));
 			char* path = g_file_get_path(file);
-			return utils_concat(4, "img:", path, ":text:", name);
+			char* ret = utils_concat(5, "img:", path, ":text:", name, generic_name);
+			free(generic_name);
+			return ret;
 		} else {
 			GtkIconTheme* theme = gtk_icon_theme_get_default();
 			GtkIconInfo* info = NULL;
@@ -72,10 +83,14 @@ static char* get_text(char* file, char* action) {
 				info = gtk_icon_theme_lookup_icon(theme, "application-x-executable", wofi_get_image_size(), 0);
 			}
 			const gchar* icon_path = gtk_icon_info_get_filename(info);
-			return utils_concat(4, "img:", icon_path, ":text:", name);
+			char* ret = utils_concat(5, "img:", icon_path, ":text:", name, generic_name);
+			free(generic_name);
+			return ret;
 		}
 	} else {
-		return strdup(name);
+		char* ret = utils_concat(2, name, generic_name);
+		free(generic_name);
+		return ret;
 	}
 }
 
@@ -295,6 +310,7 @@ void wofi_drun_init(struct mode* this, struct map* config) {
 	mode = this;
 
 	print_command = strcmp(config_get(config, "print_command", "false"), "true") == 0;
+	display_generic = strcmp(config_get(config, "display_generic", "false"), "true") == 0;
 
 	struct map* entries = map_init();
 	struct wl_list* cache = wofi_read_cache(mode);

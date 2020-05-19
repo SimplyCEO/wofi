@@ -97,6 +97,7 @@ static int64_t ix, iy;
 static uint8_t konami_cycle;
 static bool is_konami = false;
 static GDBusProxy* dbus = NULL;
+static GdkRectangle resolution = {0};
 
 static struct map* keys;
 
@@ -1448,18 +1449,28 @@ static gboolean do_percent_size(gpointer data) {
 	char** geo_str = data;
 	bool width_percent = strchr(geo_str[0], '%') != NULL;
 	bool height_percent = strchr(geo_str[1], '%') != NULL && lines == 0;
+
 	GdkMonitor* monitor = gdk_display_get_monitor_at_window(gdk_display_get_default(), gtk_widget_get_window(window));
+
 	GdkRectangle rect;
 	gdk_monitor_get_geometry(monitor, &rect);
+
+	if(rect.width == resolution.width && rect.height == resolution.height) {
+		return G_SOURCE_CONTINUE;
+	}
+
+	resolution = rect;
+
 	if(width_percent) {
-		width = (width / 100.f) * rect.width;
+		uint64_t w_percent = strtol(geo_str[0], NULL, 10);
+		width = (w_percent / 100.f) * rect.width;
 	}
 	if(height_percent) {
-		height = (height / 100.f) * rect.height;
+		uint64_t h_percent = strtol(geo_str[1], NULL, 10);
+		height = (h_percent / 100.f) * rect.height;
 	}
 	update_surface_size();
-	free(geo_str);
-	return G_SOURCE_REMOVE;
+	return G_SOURCE_CONTINUE;
 }
 
 void wofi_init(struct map* _config) {
@@ -1685,10 +1696,11 @@ void wofi_init(struct map* _config) {
 	bool width_percent = strchr(width_str, '%') != NULL;
 	bool height_percent = strchr(height_str, '%') != NULL && lines == 0;
 	if(width_percent || height_percent) {
-		char** geo_str = malloc(sizeof(char*) * 2);
+		static char* geo_str[2];
 		geo_str[0] = width_str;
 		geo_str[1] = height_str;
-		gdk_threads_add_timeout(70, do_percent_size, geo_str);
+		gdk_threads_add_timeout(50, do_percent_size, geo_str);
+		do_percent_size(geo_str);
 	}
 
 	struct wl_list* modes = malloc(sizeof(struct wl_list));

@@ -22,6 +22,14 @@ Please file bug reports at https://todo.sr.ht/~scoopta/wofi
 Please submit patches to https://lists.sr.ht/~scoopta/wofi
 
 You can find documentation here https://man.sr.ht/hg.sr.ht/email.md
+
+## drun and dbus
+Some desktop files declare themselves as being launched by dbus, if this is the case wofi can experience issues on systems where a user session bus is not automatically started such as systems using elogind.
+
+To manually launch a user session bus run the following:
+
+	dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus
+
 ## Packages
 Debian sid has a package in the official repos https://packages.debian.org/sid/wofi
 

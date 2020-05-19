@@ -805,6 +805,10 @@ uint64_t wofi_get_image_size(void) {
 	return image_size;
 }
 
+uint64_t wofi_get_window_scale(void) {
+	return gdk_window_get_scale_factor(gtk_widget_get_window(window));
+}
+
 bool wofi_mod_shift(void) {
 	return mod_shift;
 }

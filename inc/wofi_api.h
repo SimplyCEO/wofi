@@ -50,6 +50,8 @@ bool wofi_allow_markup(void);
 
 uint64_t wofi_get_image_size(void);
 
+uint64_t wofi_get_window_scale(void);
+
 bool wofi_mod_shift(void);
 
 bool wofi_mod_control(void);

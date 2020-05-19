@@ -1023,7 +1023,7 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 }
 
 static void select_first(void) {
-	GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0);
+	GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 1);
 	gtk_widget_grab_focus(GTK_WIDGET(child));
 	gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), GTK_FLOW_BOX_CHILD(child));
 }

@@ -16,7 +16,6 @@
  */
 
 #include <wofi.h>
-#include <wofi_api.h>
 
 #include <ctype.h>
 #include <dlfcn.h>

@@ -18,6 +18,8 @@
 #ifndef WAIFU_H
 #define WAIFU_H
 
+#include <wofi_api.h>
+
 #include <stdbool.h>
 
 #include <map.h>

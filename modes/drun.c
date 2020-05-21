@@ -404,6 +404,13 @@ static void launch_done(GObject* obj, GAsyncResult* result, gpointer data) {
 	exit(1);
 }
 
+static void set_dri_prime(GDesktopAppInfo* info) {
+	bool dri_prime = g_desktop_app_info_get_boolean(info, "PrefersNonDefaultGPU");
+	if(dri_prime) {
+		setenv("DRI_PRIME", "1", true);
+	}
+}
+
 void wofi_drun_exec(const gchar* cmd) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(cmd);
 	if(G_IS_DESKTOP_APP_INFO(info)) {
@@ -412,10 +419,7 @@ void wofi_drun_exec(const gchar* cmd) {
 			printf("%s\n", g_app_info_get_commandline(G_APP_INFO(info)));
 			exit(0);
 		} else {
-			bool dri_prime = g_desktop_app_info_get_boolean(info, "PrefersNonDefaultGPU");
-			if(dri_prime) {
-				setenv("DRI_PRIME", "1", true);
-			}
+			set_dri_prime(info);
 			g_app_info_launch_uris_async(G_APP_INFO(info), NULL, NULL, NULL, launch_done, (gchar*) cmd);
 		}
 	} else if(strrchr(cmd, ' ') != NULL) {
@@ -428,6 +432,7 @@ void wofi_drun_exec(const gchar* cmd) {
 			printf("%s\n", g_app_info_get_commandline(G_APP_INFO(info)));
 			fprintf(stderr, "Printing the command line for an action is not supported\n");
 		} else {
+			set_dri_prime(info);
 			g_desktop_app_info_launch_action(info, action, NULL);
 			utils_sleep_millis(500);
 		}

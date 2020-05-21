@@ -412,6 +412,10 @@ void wofi_drun_exec(const gchar* cmd) {
 			printf("%s\n", g_app_info_get_commandline(G_APP_INFO(info)));
 			exit(0);
 		} else {
+			bool dri_prime = g_desktop_app_info_get_boolean(info, "PrefersNonDefaultGPU");
+			if(dri_prime) {
+				setenv("DRI_PRIME", "1", true);
+			}
 			g_app_info_launch_uris_async(G_APP_INFO(info), NULL, NULL, NULL, launch_done, (gchar*) cmd);
 		}
 	} else if(strrchr(cmd, ' ') != NULL) {

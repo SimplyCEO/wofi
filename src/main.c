@@ -734,8 +734,7 @@ int main(int argc, char** argv) {
 		map_put(config, "sort_order", sort_order);
 	}
 
-	struct sigaction sigact;
-	memset(&sigact, 0, sizeof(sigact));
+	struct sigaction sigact = {0};
 	sigact.sa_handler = sig;
 	sigaction(SIGTERM, &sigact, NULL);
 

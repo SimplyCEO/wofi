@@ -94,6 +94,7 @@ static void print_usage(char** argv) {
 	printf("--columns\t-w\tSets the number of columns to display\n");
 	printf("--sort-order\t-O\tSets the sort order\n");
 	printf("--gtk-dark\t-G\tUses the dark variant of the current GTK theme\n");
+	printf("--search\t-Q\tSearch for something immediately on open\n");
 	exit(0);
 }
 
@@ -408,6 +409,12 @@ int main(int argc, char** argv) {
 			.val = 'G'
 		},
 		{
+			.name = "search",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'Q'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -441,13 +448,14 @@ int main(int argc, char** argv) {
 	char* columns = NULL;
 	char* sort_order = NULL;
 	char* gtk_dark = NULL;
+	char* search = NULL;
 
 	struct wl_list options;
 	wl_list_init(&options);
 	struct option_node* node;
 
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:G", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:GQ:", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -549,6 +557,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'G':
 			gtk_dark = "true";
+			break;
+		case 'Q':
+			search = optarg;
 			break;
 		}
 	}
@@ -732,6 +743,9 @@ int main(int argc, char** argv) {
 	}
 	if(sort_order != NULL) {
 		map_put(config, "sort_order", sort_order);
+	}
+	if(search != NULL) {
+		map_put(config, "search", search);
 	}
 
 	struct sigaction sigact = {0};

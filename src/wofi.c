@@ -1519,6 +1519,7 @@ void wofi_init(struct map* _config) {
 	line_wrap = config_get_mnemonic(config, "line_wrap", "off", 4, "off", "word", "char", "word_char") - 1;
 	bool global_coords = strcmp(config_get(config, "global_coords", "false"), "true") == 0;
 	bool hide_search = strcmp(config_get(config, "hide_search", "false"), "true") == 0;
+	char* search = map_get(config, "search");
 
 	keys = map_init_void();
 
@@ -1642,6 +1643,10 @@ void wofi_init(struct map* _config) {
 	gtk_entry_set_placeholder_text(GTK_ENTRY(entry), prompt);
 	gtk_container_add(GTK_CONTAINER(outer_box), entry);
 	gtk_widget_set_child_visible(entry, !hide_search);
+
+	if(search != NULL) {
+		gtk_entry_set_text(GTK_ENTRY(entry), search);
+	}
 
 	if(password_char != NULL) {
 		gtk_entry_set_visibility(GTK_ENTRY(entry), FALSE);

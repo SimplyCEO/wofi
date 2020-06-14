@@ -410,7 +410,7 @@ int main(int argc, char** argv) {
 		},
 		{
 			.name = "search",
-			.has_arg = no_argument,
+			.has_arg = required_argument,
 			.flag = NULL,
 			.val = 'Q'
 		},

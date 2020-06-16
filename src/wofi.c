@@ -90,7 +90,7 @@ static bool user_moved = false;
 static uint32_t widget_count = 0;
 static enum sort_order sort_order;
 static int64_t max_height = 0;
-static uint64_t lines;
+static uint32_t lines, max_lines;
 static int8_t line_wrap;
 static int64_t ix, iy;
 static uint8_t konami_cycle;
@@ -98,6 +98,8 @@ static bool is_konami = false;
 static GDBusProxy* dbus = NULL;
 static GdkRectangle resolution = {0};
 static bool resize_expander = false;
+static uint32_t line_count = 0;
+static bool dynamic_lines;
 
 static struct map* keys;
 
@@ -446,6 +448,10 @@ static void expand(GtkExpander* expander, gpointer data) {
 }
 
 static void update_surface_size(void) {
+	if(lines > 0) {
+		height = max_height * lines;
+		height += 5;
+	}
 	if(shell != NULL) {
 		zwlr_layer_surface_v1_set_size(wlr_surface, width, height);
 		wl_surface_commit(wl_surface);
@@ -481,8 +487,6 @@ static void widget_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointe
 		max_height = allocation->height;
 	}
 	if(lines > 0) {
-		height = max_height * lines;
-		height += 5;
 		update_surface_size();
 	}
 }
@@ -527,8 +531,9 @@ static gboolean _insert_widget(gpointer data) {
 	g_signal_connect(child, "size-allocate", G_CALLBACK(widget_allocate), NULL);
 
 	gtk_container_add(GTK_CONTAINER(child), parent);
-	gtk_container_add(GTK_CONTAINER(inner_box), child);
 	gtk_widget_show_all(child);
+	gtk_container_add(GTK_CONTAINER(inner_box), child);
+	++line_count;
 
 	if(!user_moved) {
 		GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0);
@@ -892,7 +897,25 @@ static gboolean filter_proxy(GtkFlowBoxChild* row) {
 static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
 	(void) data;
 	gboolean ret = filter_proxy(row);
+
+	if(gtk_widget_get_visible(GTK_WIDGET(row)) == !ret && dynamic_lines) {
+		if(ret) {
+			++line_count;
+		} else {
+			--line_count;
+		}
+
+		if(line_count < max_lines) {
+			lines = line_count;
+			update_surface_size();
+		} else {
+			lines = max_lines;
+			update_surface_size();
+		}
+	}
+
 	gtk_widget_set_visible(GTK_WIDGET(row), ret);
+
 	return ret;
 }
 
@@ -1514,12 +1537,14 @@ void wofi_init(struct map* _config) {
 			"0", "1", "2", "3", "4", "5", "6", "7", "8");
 	no_actions = strcmp(config_get(config, "no_actions", "false"), "true") == 0;
 	lines = strtol(config_get(config, "lines", "0"), NULL, 10);
+	max_lines = lines;
 	columns = strtol(config_get(config, "columns", "1"), NULL, 10);
 	sort_order = config_get_mnemonic(config, "sort_order", "default", 2, "default", "alphabetical");
 	line_wrap = config_get_mnemonic(config, "line_wrap", "off", 4, "off", "word", "char", "word_char") - 1;
 	bool global_coords = strcmp(config_get(config, "global_coords", "false"), "true") == 0;
 	bool hide_search = strcmp(config_get(config, "hide_search", "false"), "true") == 0;
 	char* search = map_get(config, "search");
+	dynamic_lines = strcmp(config_get(config, "dynamic_lines", "false"), "true") == 0;
 
 	keys = map_init_void();
 

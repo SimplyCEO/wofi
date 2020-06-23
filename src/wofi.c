@@ -30,11 +30,11 @@
 #include <utils.h>
 #include <config.h>
 #include <property_box.h>
+#include <widget_builder.h>
 
 #include <xdg-output-unstable-v1-client-protocol.h>
 #include <wlr-layer-shell-unstable-v1-client-protocol.h>
 
-#include <gtk/gtk.h>
 #include <pango/pango.h>
 #include <gdk/gdkwayland.h>
 
@@ -108,18 +108,6 @@ static struct wl_surface* wl_surface;
 static struct wl_list outputs;
 static struct zxdg_output_manager_v1* output_manager;
 static struct zwlr_layer_surface_v1* wlr_surface;
-
-struct mode {
-	void (*mode_exec)(const gchar* cmd);
-	struct widget* (*mode_get_widget)(void);
-	char* name, *dso;
-	struct wl_list link;
-};
-
-struct widget {
-	size_t action_count;
-	char* mode, **text, *search_text, **actions;
-};
 
 struct output_node {
 	char* name;
@@ -502,11 +490,17 @@ static gboolean _insert_widget(gpointer data) {
 	if(node == NULL) {
 		return FALSE;
 	}
+
 	GtkWidget* parent;
 	if(node->action_count > 1 && !no_actions) {
 		parent = gtk_expander_new("");
 		g_signal_connect(parent, "activate", G_CALLBACK(expand), NULL);
-		GtkWidget* box = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
+		GtkWidget* box;
+		if(node->builder == NULL) {
+			box = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
+		} else {
+			box = GTK_WIDGET(node->builder->box);
+		}
 		gtk_expander_set_label_widget(GTK_EXPANDER(parent), box);
 
 		GtkWidget* exp_box = gtk_list_box_new();
@@ -514,7 +508,11 @@ static gboolean _insert_widget(gpointer data) {
 		g_signal_connect(exp_box, "row-activated", G_CALLBACK(activate_item), NULL);
 		gtk_container_add(GTK_CONTAINER(parent), exp_box);
 		for(size_t count = 1; count < node->action_count; ++count) {
-			box = create_label(node->mode, node->text[count], node->search_text, node->actions[count]);
+			if(node->builder == NULL) {
+				box = create_label(node->mode, node->text[count], node->search_text, node->actions[count]);
+			} else {
+				box = GTK_WIDGET(node->builder[count].box);
+			}
 
 			GtkWidget* row = gtk_list_box_row_new();
 			gtk_widget_set_name(row, "entry");
@@ -523,8 +521,13 @@ static gboolean _insert_widget(gpointer data) {
 			gtk_container_add(GTK_CONTAINER(exp_box), row);
 		}
 	} else {
-		parent = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
+		if(node->builder == NULL) {
+			parent = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
+		} else {
+			parent = GTK_WIDGET(node->builder->box);
+		}
 	}
+
 	gtk_widget_set_halign(parent, content_halign);
 	GtkWidget* child = gtk_flow_box_child_new();
 	gtk_widget_set_name(child, "entry");
@@ -546,17 +549,21 @@ static gboolean _insert_widget(gpointer data) {
 		gtk_widget_set_visible(box, FALSE);
 	}
 
-	free(node->mode);
-	for(size_t count = 0; count < node->action_count; ++count) {
-		free(node->text[count]);
+	if(node->builder != NULL) {
+		wofi_free_widget_builder(node->builder);
+	} else {
+		free(node->mode);
+		for(size_t count = 0; count < node->action_count; ++count) {
+			free(node->text[count]);
+		}
+		free(node->text);
+		free(node->search_text);
+		for(size_t count = 0; count < node->action_count; ++count) {
+			free(node->actions[count]);
+		}
+		free(node->actions);
+		free(node);
 	}
-	free(node->text);
-	free(node->search_text);
-	for(size_t count = 0; count < node->action_count; ++count) {
-		free(node->actions[count]);
-	}
-	free(node->actions);
-	free(node);
 	return TRUE;
 }
 
@@ -774,7 +781,7 @@ struct wl_list* wofi_read_cache(struct mode* mode) {
 }
 
 struct widget* wofi_create_widget(struct mode* mode, char* text[], char* search_text, char* actions[], size_t action_count) {
-	struct widget* widget = malloc(sizeof(struct widget));
+	struct widget* widget = calloc(1, sizeof(struct widget));
 	widget->mode = strdup(mode->name);
 	widget->text = malloc(action_count * sizeof(char*));
 	for(size_t count = 0; count < action_count; ++count) {

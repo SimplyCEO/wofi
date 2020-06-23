@@ -1,0 +1,79 @@
+.TH wofi\-widget\-builder 3
+.SH NAME
+wofi \- Widget builder API functions
+
+.SH DESCRIPTION
+The functions documented here are used for building custom widgets with more power and flexibility than previously allowed. They are defined in wofi_widget_builder_api.h
+
+.TP
+.B struct widget_builder* wofi_create_widget_builder(struct mode* mode, size_t actions)
+Creates multiple widget builders. The number of builders created is specified by actions and is returned as an array.
+
+.B struct mode* mode
+\- The \fBstruct mode*\fR given to your mode's \fBinit()\fR function.
+
+.B size_t actions
+\- The number of builders to create
+
+.TP
+.B void wofi_widget_builder_set_search_text(struct widget_builder* builder, char* search_text)
+Sets the search text for the widget specified by the builder
+
+.B struct widget_builder* builder
+\- The builder that contains the widget to set the search text for
+
+.B char* search_text
+\- The text to set as the search text
+
+.TP
+.B void wofi_widget_builder_set_action(struct widget_builder* builder, char* action)
+Sets the action for the widget specified by the builder
+
+.B struct widget_builder* builder
+\- The builder that contains the widget to set the action for
+
+.B char* action
+\- The text to set as the action
+
+.TP
+.B void wofi_widget_builder_insert_text(struct widget_builder* builder, char* text, char* css_name)
+Inserts text into the widget specified by the builder
+
+.B struct widget_builder* builder
+\- The builder that contains the widget to add the text to
+
+.B char* text
+\- The text to add to the widget
+
+.B char* css_name
+\- The name of the CSS node for this text. The name that will be assigned is #mode_name-css_name where mode_name is the name of the mode, i.e. drun etc.
+
+.TP
+.B void wofi_widget_builder_insert_image(struct widget_builder* builder, GdkPixbuf* pixbuf, char* css_name)
+Inserts an image into the widget specified by the builder
+
+.B struct widget_builder* builder
+\- The builder that contains the widget to add the image to
+
+.B GdkPixbuf* pixbuf
+\- The image to add to the widget
+
+.B char* css_name
+\- The name of the CSS node for this image. The name that will be assigned is #mode_name-css_name where mode_name is the name of the mode, i.e. drun etc.
+
+.TP
+.B struct widget_builder* wofi_widget_builder_get_idx(struct widget_builder* builder, size_t idx)
+Gets the widget_builder at the provided index in the array
+
+.B struct widget_builder* builder
+\- The array of builders to get the builder from
+
+.B size_t idx
+\- The index in the array to get
+
+.TP
+.B struct widget* wofi_widget_builder_get_widget(struct widget_builder* builder)
+Constructs a new widget from the specified builder, the widget can be returned by \fBstruct widget* get_widget(void)\fR
+
+.B struct widget_builder* builder
+\- The builder to construct a widget for

@@ -28,8 +28,6 @@
 #include <config.h>
 #include <wofi_api.h>
 
-#include <glib.h>
-
 static const char* arg_names[] = {"always_parse_args", "show_all"};
 
 static bool always_parse_args;
@@ -153,7 +151,7 @@ struct widget* wofi_run_get_widget(void) {
 }
 
 
-void wofi_run_exec(const gchar* cmd) {
+void wofi_run_exec(const char* cmd) {
 	bool arg_run = wofi_mod_control() || always_parse_args;
 	if(strncmp(cmd, arg_str, strlen(arg_str)) == 0) {
 		arg_run = true;

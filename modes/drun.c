@@ -32,12 +32,13 @@ static const char* arg_names[] = {"print_command", "display_generic"};
 
 static struct mode* mode;
 
-struct node {
-	struct widget* widget;
+struct desktop_entry {
+	char* full_path;
 	struct wl_list link;
 };
 
-static struct wl_list widgets;
+static struct map* entries;
+static struct wl_list desktop_entries;
 
 static bool print_command;
 static bool display_generic;
@@ -191,7 +192,46 @@ static char* get_id(char* path) {
 	return id;
 }
 
-static void insert_dir(char* app_dir, struct map* entries) {
+static struct widget* create_widget(char* full_path) {
+	char* id = get_id(full_path);
+
+	if(map_contains(entries, id)) {
+		free(id);
+		free(full_path);
+		return NULL;
+	}
+
+	size_t action_count;
+	char** text = get_action_text(full_path, &action_count);
+	map_put(entries, id, "true");
+	if(text == NULL) {
+		wofi_remove_cache(mode, full_path);
+		free(id);
+		free(full_path);
+		return NULL;
+	}
+
+	char** actions = get_action_actions(full_path, &action_count);
+
+	char* search_text = get_search_text(full_path);
+
+	struct widget* ret = wofi_create_widget(mode, text, search_text, actions, action_count);
+
+	for(size_t count = 0; count < action_count; ++count) {
+		free(actions[count]);
+		free(text[count]);
+	}
+
+	free(id);
+	free(text);
+	free(actions);
+	free(full_path);
+	free(search_text);
+
+	return ret;
+}
+
+static void insert_dir(char* app_dir) {
 	DIR* dir = opendir(app_dir);
 	if(dir == NULL) {
 		return;
@@ -207,7 +247,7 @@ static void insert_dir(char* app_dir, struct map* entries) {
 		struct stat info;
 		stat(full_path, &info);
 		if(S_ISDIR(info.st_mode)) {
-			insert_dir(full_path, entries);
+			insert_dir(full_path);
 			free(id);
 			free(full_path);
 			continue;
@@ -217,33 +257,12 @@ static void insert_dir(char* app_dir, struct map* entries) {
 			free(full_path);
 			continue;
 		}
-		size_t action_count;
-		char** text = get_action_text(full_path, &action_count);
-		map_put(entries, id, "true");
-		if(text == NULL) {
-			free(id);
-			free(full_path);
-			continue;
-		}
 
-		char** actions = get_action_actions(full_path, &action_count);
-
-		char* search_text = get_search_text(full_path);
-
-		struct node* node = malloc(sizeof(struct node));
-		node->widget = wofi_create_widget(mode, text, search_text, actions, action_count);
-		wl_list_insert(&widgets, &node->link);
-
-		for(size_t count = 0; count < action_count; ++count) {
-			free(actions[count]);
-			free(text[count]);
-		}
+		struct desktop_entry* entry = malloc(sizeof(struct desktop_entry));
+		entry->full_path = full_path;
+		wl_list_insert(&desktop_entries, &entry->link);
 
 		free(id);
-		free(text);
-		free(actions);
-		free(search_text);
-		free(full_path);
 	}
 	closedir(dir);
 }
@@ -312,49 +331,24 @@ void wofi_drun_init(struct mode* this, struct map* config) {
 	print_command = strcmp(config_get(config, "print_command", "false"), "true") == 0;
 	display_generic = strcmp(config_get(config, "display_generic", "false"), "true") == 0;
 
-	struct map* entries = map_init();
+	entries = map_init();
 	struct wl_list* cache = wofi_read_cache(mode);
 
-	wl_list_init(&widgets);
+	wl_list_init(&desktop_entries);
 
 	struct cache_line* node, *tmp;
 	wl_list_for_each_safe(node, tmp, cache, link) {
 		if(should_invalidate_cache(node->line)) {
 			wofi_remove_cache(mode, node->line);
+			free(node->line);
 			goto cache_cont;
 		}
 
-		size_t action_count;
-		char** text = get_action_text(node->line, &action_count);
-		if(text == NULL) {
-			wofi_remove_cache(mode, node->line);
-			goto cache_cont;
-		}
-
-		char** actions = get_action_actions(node->line, &action_count);
-
-		char* search_text = get_search_text(node->line);
-		struct node* widget = malloc(sizeof(struct node));
-		widget->widget = wofi_create_widget(mode, text, search_text, actions, action_count);
-		wl_list_insert(&widgets, &widget->link);
-
-		char* id = get_id(node->line);
-
-		map_put(entries, id, "true");
-
-		free(id);
-
-		free(search_text);
-
-		for(size_t count = 0; count < action_count; ++count) {
-			free(text[count]);
-			free(actions[count]);
-		}
-		free(text);
-		free(actions);
+		struct desktop_entry* entry = malloc(sizeof(struct desktop_entry));
+		entry->full_path = node->line;
+		wl_list_insert(&desktop_entries, &entry->link);
 
 		cache_cont:
-		free(node->line);
 		wl_list_remove(&node->link);
 		free(node);
 	}
@@ -371,19 +365,21 @@ void wofi_drun_init(struct mode* this, struct map* config) {
 	char* str = strtok_r(dirs, ":", &save_ptr);
 	do {
 		char* app_dir = utils_concat(2, str, "/applications");
-		insert_dir(app_dir, entries);
+		insert_dir(app_dir);
 		free(app_dir);
 	} while((str = strtok_r(NULL, ":", &save_ptr)) != NULL);
 	free(dirs);
-	map_free(entries);
 }
 
 struct widget* wofi_drun_get_widget(void) {
-	struct node* node, *tmp;
-	wl_list_for_each_reverse_safe(node, tmp, &widgets, link) {
-		struct widget* widget = node->widget;
+	struct desktop_entry* node, *tmp;
+	wl_list_for_each_reverse_safe(node, tmp, &desktop_entries, link) {
+		struct widget* widget = create_widget(node->full_path);
 		wl_list_remove(&node->link);
 		free(node);
+		if(widget == NULL) {
+			continue;
+		}
 		return widget;
 	}
 	return NULL;

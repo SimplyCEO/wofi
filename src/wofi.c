@@ -100,6 +100,8 @@ static GdkRectangle resolution = {0};
 static bool resize_expander = false;
 static uint32_t line_count = 0;
 static bool dynamic_lines;
+static struct wl_list mode_list;
+static pthread_t mode_thread;
 
 static struct map* keys;
 
@@ -568,9 +570,9 @@ static gboolean _insert_widget(gpointer data) {
 }
 
 static gboolean insert_all_widgets(gpointer data) {
+	pthread_join(mode_thread, NULL);
 	struct wl_list* modes = data;
 	if(modes->prev == modes) {
-		free(modes);
 		return FALSE;
 	} else {
 		struct mode* mode = wl_container_of(modes->prev, mode, link);
@@ -1420,6 +1422,22 @@ static struct mode* add_mode(char* _mode) {
 	return mode_ptr;
 }
 
+static void* start_mode_thread(void* data) {
+	char* mode = data;
+	if(strchr(mode, ',') != NULL) {
+		char* save_ptr;
+		char* str = strtok_r(mode, ",", &save_ptr);
+		do {
+			struct mode* mode_ptr = add_mode(str);
+			wl_list_insert(&mode_list, &mode_ptr->link);
+		} while((str = strtok_r(NULL, ",", &save_ptr)) != NULL);
+	} else {
+		struct mode* mode_ptr = add_mode(mode);
+		wl_list_insert(&mode_list, &mode_ptr->link);
+	}
+	return NULL;
+}
+
 static void parse_mods(char* key, void (*action)(void)) {
 	char* tmp = strdup(key);
 	char* save_ptr;
@@ -1743,21 +1761,11 @@ void wofi_init(struct map* _config) {
 		do_percent_size(geo_str);
 	}
 
-	struct wl_list* modes = malloc(sizeof(struct wl_list));
-	wl_list_init(modes);
+	wl_list_init(&mode_list);
 
-	if(strchr(mode, ',') != NULL) {
-		char* save_ptr;
-		char* str = strtok_r(mode, ",", &save_ptr);
-		do {
-			struct mode* mode_ptr = add_mode(str);
-			wl_list_insert(modes, &mode_ptr->link);
-		} while((str = strtok_r(NULL, ",", &save_ptr)) != NULL);
-	} else {
-		struct mode* mode_ptr = add_mode(mode);
-		wl_list_insert(modes, &mode_ptr->link);
-	}
-	gdk_threads_add_idle(insert_all_widgets, modes);
+	pthread_create(&mode_thread, NULL, start_mode_thread, mode);
+
+	gdk_threads_add_idle(insert_all_widgets, &mode_list);
 
 	gtk_window_set_title(GTK_WINDOW(window), prompt);
 	gtk_widget_show_all(window);

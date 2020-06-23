@@ -6,6 +6,7 @@ pkgcfg = import('pkgconfig')
 inc = include_directories('inc')
 gtk = dependency('gtk+-3.0')
 wayland = dependency('wayland-client')
+threads = dependency('threads')
 dl = cc.find_library('dl')
 
 hg = find_program('hg', native : true, required : false)
@@ -30,7 +31,7 @@ sources = ['src/config.c',
 			'proto/xdg-output-unstable-v1-protocol.c',
 			'proto/xdg-shell-protocol.c']
 			
-deps = [gtk, wayland, dl]
+deps = [gtk, wayland, dl, threads]
 			
 if get_option('enable_run')
 	sources += 'modes/run.c'

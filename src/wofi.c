@@ -356,16 +356,24 @@ char* wofi_parse_image_escapes(const char* text) {
 	return parse_images(NULL, text, false);
 }
 
-static GtkWidget* create_label(char* mode, char* text, char* search_text, char* action) {
-	GtkWidget* box = wofi_property_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
-	gtk_widget_set_name(box, "unselected");
-	GtkStyleContext* style = gtk_widget_get_style_context(box);
-	gtk_style_context_add_class(style, "entry");
-	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "mode", mode);
-	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "action", action);
+static void setup_label(char* mode, WofiPropertyBox* box) {
+	wofi_property_box_add_property(box, "mode", mode);
 	char index[11];
 	snprintf(index, sizeof(index), "%u", ++widget_count);
-	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "index", index);
+	wofi_property_box_add_property(box, "index", index);
+
+	gtk_widget_set_name(GTK_WIDGET(box), "unselected");
+
+	GtkStyleContext* style = gtk_widget_get_style_context(GTK_WIDGET(box));
+	gtk_style_context_add_class(style, "entry");
+}
+
+static GtkWidget* create_label(char* mode, char* text, char* search_text, char* action) {
+	GtkWidget* box = wofi_property_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+
+	wofi_property_box_add_property(WOFI_PROPERTY_BOX(box), "action", action);
+
+	setup_label(mode, WOFI_PROPERTY_BOX(box));
 
 	if(allow_images) {
 		parse_images(WOFI_PROPERTY_BOX(box), text, true);
@@ -502,6 +510,7 @@ static gboolean _insert_widget(gpointer data) {
 			box = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
 		} else {
 			box = GTK_WIDGET(node->builder->box);
+			setup_label(node->builder->mode->name, WOFI_PROPERTY_BOX(box));
 		}
 		gtk_expander_set_label_widget(GTK_EXPANDER(parent), box);
 
@@ -514,6 +523,7 @@ static gboolean _insert_widget(gpointer data) {
 				box = create_label(node->mode, node->text[count], node->search_text, node->actions[count]);
 			} else {
 				box = GTK_WIDGET(node->builder[count].box);
+				setup_label(node->builder->mode->name, WOFI_PROPERTY_BOX(box));
 			}
 
 			GtkWidget* row = gtk_list_box_row_new();
@@ -527,6 +537,7 @@ static gboolean _insert_widget(gpointer data) {
 			parent = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
 		} else {
 			parent = GTK_WIDGET(node->builder->box);
+			setup_label(node->builder->mode->name, WOFI_PROPERTY_BOX(parent));
 		}
 	}
 

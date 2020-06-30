@@ -29,6 +29,4 @@ struct widget_builder {
 	size_t actions;
 };
 
-void wofi_free_widget_builder(struct widget_builder* builder);
-
 #endif

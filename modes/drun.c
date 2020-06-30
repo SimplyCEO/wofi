@@ -23,7 +23,7 @@
 #include <map.h>
 #include <utils.h>
 #include <config.h>
-#include <wofi_api.h>
+#include <widget_builder_api.h>
 
 #include <gtk/gtk.h>
 #include <gio/gdesktopappinfo.h>
@@ -42,58 +42,6 @@ static struct wl_list desktop_entries;
 
 static bool print_command;
 static bool display_generic;
-
-static char* get_text(char* file, char* action) {
-	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(file);
-	if(info == NULL || g_desktop_app_info_get_is_hidden(info) || g_desktop_app_info_get_nodisplay(info)) {
-		return NULL;
-	}
-	const char* name;
-	char* generic_name = strdup("");
-	if(action == NULL) {
-		name = g_app_info_get_display_name(G_APP_INFO(info));
-		if(display_generic) {
-			const char* gname = g_desktop_app_info_get_generic_name(info);
-			if(gname != NULL) {
-				free(generic_name);
-				generic_name = utils_concat(3, " (", gname, ")");
-			}
-		}
-	} else {
-		name = g_desktop_app_info_get_action_name(info, action);
-	}
-	if(name == NULL) {
-		return NULL;
-	}
-	if(wofi_allow_images()) {
-		GIcon* icon = g_app_info_get_icon(G_APP_INFO(info));
-		if(G_IS_FILE_ICON(icon)) {
-			GFile* file = g_file_icon_get_file(G_FILE_ICON(icon));
-			char* path = g_file_get_path(file);
-			char* ret = utils_concat(5, "img:", path, ":text:", name, generic_name);
-			free(generic_name);
-			return ret;
-		} else {
-			GtkIconTheme* theme = gtk_icon_theme_get_default();
-			GtkIconInfo* info = NULL;
-			if(icon != NULL) {
-				const gchar* const* icon_names = g_themed_icon_get_names(G_THEMED_ICON(icon));
-				info = gtk_icon_theme_choose_icon(theme, (const gchar**) icon_names, wofi_get_image_size(), 0);
-			}
-			if(info == NULL) {
-				info = gtk_icon_theme_lookup_icon(theme, "application-x-executable", wofi_get_image_size(), 0);
-			}
-			const gchar* icon_path = gtk_icon_info_get_filename(info);
-			char* ret = utils_concat(5, "img:", icon_path, ":text:", name, generic_name);
-			free(generic_name);
-			return ret;
-		}
-	} else {
-		char* ret = utils_concat(2, name, generic_name);
-		free(generic_name);
-		return ret;
-	}
-}
 
 static char* get_search_text(char* file) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(file);
@@ -124,6 +72,91 @@ static char* get_search_text(char* file) {
 	return ret;
 }
 
+static bool populate_widget(char* file, char* action, struct widget_builder* builder) {
+	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(file);
+	if(info == NULL || g_desktop_app_info_get_is_hidden(info) || g_desktop_app_info_get_nodisplay(info)) {
+		return false;
+	}
+	const char* name;
+	char* generic_name = strdup("");
+	if(action == NULL) {
+		name = g_app_info_get_display_name(G_APP_INFO(info));
+		if(display_generic) {
+			const char* gname = g_desktop_app_info_get_generic_name(info);
+			if(gname != NULL) {
+				free(generic_name);
+				generic_name = utils_concat(3, " (", gname, ")");
+			}
+		}
+	} else {
+		name = g_desktop_app_info_get_action_name(info, action);
+	}
+	if(name == NULL) {
+		free(generic_name);
+		return false;
+	}
+
+
+
+	if(wofi_allow_images()) {
+		GIcon* icon = g_app_info_get_icon(G_APP_INFO(info));
+		GdkPixbuf* pixbuf;
+		if(G_IS_FILE_ICON(icon)) {
+			GFile* file = g_file_icon_get_file(G_FILE_ICON(icon));
+			char* path = g_file_get_path(file);
+			pixbuf = gdk_pixbuf_new_from_file(path, NULL);
+		} else {
+			GtkIconTheme* theme = gtk_icon_theme_get_default();
+			GtkIconInfo* info = NULL;
+			if(icon != NULL) {
+				const gchar* const* icon_names = g_themed_icon_get_names(G_THEMED_ICON(icon));
+				info = gtk_icon_theme_choose_icon(theme, (const gchar**) icon_names, wofi_get_image_size(), 0);
+			}
+			if(info == NULL) {
+				info = gtk_icon_theme_lookup_icon(theme, "application-x-executable", wofi_get_image_size(), 0);
+			}
+			pixbuf = gtk_icon_info_load_icon(info, NULL);
+		}
+
+		int width = gdk_pixbuf_get_width(pixbuf);
+		int height = gdk_pixbuf_get_height(pixbuf);
+		uint64_t image_size = wofi_get_image_size();
+
+		if(height > width) {
+			float percent = (float) image_size / height;
+			GdkPixbuf* tmp = gdk_pixbuf_scale_simple(pixbuf, width * percent, image_size, GDK_INTERP_BILINEAR);
+			g_object_unref(pixbuf);
+			pixbuf = tmp;
+		} else {
+			float percent = (float) image_size / width;
+			GdkPixbuf* tmp = gdk_pixbuf_scale_simple(pixbuf, image_size, height * percent, GDK_INTERP_BILINEAR);
+			g_object_unref(pixbuf);
+			pixbuf = tmp;
+		}
+
+		wofi_widget_builder_insert_image(builder, pixbuf, "icon");
+		g_object_unref(pixbuf);
+	}
+	wofi_widget_builder_insert_text(builder, name, "name");
+	wofi_widget_builder_insert_text(builder, generic_name, "generic-name");
+	free(generic_name);
+
+	if(action == NULL) {
+		wofi_widget_builder_set_action(builder, file);
+	} else {
+		char* action_txt = utils_concat(3, file, " ", action);
+		wofi_widget_builder_set_action(builder, action_txt);
+		free(action_txt);
+	}
+
+
+	char* search_txt = get_search_text(file);
+	wofi_widget_builder_set_search_text(builder, search_txt);
+	free(search_txt);
+
+	return true;
+}
+
 static const gchar* const* get_actions(char* file, size_t* action_count) {
 	*action_count = 0;
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(file);
@@ -140,44 +173,22 @@ static const gchar* const* get_actions(char* file, size_t* action_count) {
 	return actions;
 }
 
-static char** get_action_text(char* file, size_t* text_count) {
-	*text_count = 0;
-
-	char* tmp = get_text(file, NULL);
-	if(tmp == NULL) {
-		return NULL;
-	}
-
+static struct widget_builder* populate_actions(char* file, size_t* text_count) {
 	const gchar* const* action_names = get_actions(file, text_count);
 
 	++*text_count;
-	char** text = malloc(*text_count * sizeof(char*));
-	text[0] = tmp;
 
-	for(size_t count = 1; count < *text_count; ++count) {
-		text[count] = get_text(file, (gchar*) action_names[count - 1]);
-	}
-	return text;
-}
 
-static char** get_action_actions(char* file, size_t* action_count) {
-	*action_count = 0;
-
-	char* tmp = strdup(file);
-	if(tmp == NULL) {
+	struct widget_builder* builder = wofi_create_widget_builder(mode, *text_count);
+	if(!populate_widget(file, NULL, builder)) {
+		wofi_free_widget_builder(builder);
 		return NULL;
 	}
 
-	const gchar* const* action_names = get_actions(file, action_count);
-
-	++*action_count;
-	char** actions = malloc(*action_count * sizeof(char*));
-	actions[0] = tmp;
-
-	for(size_t count = 1; count < *action_count; ++count) {
-		actions[count] = utils_concat(3, file, " ", (gchar*) action_names[count - 1]);
+	for(size_t count = 1; count < *text_count; ++count) {
+		populate_widget(file, (gchar*) action_names[count - 1], wofi_widget_builder_get_idx(builder, count));
 	}
-	return actions;
+	return builder;
 }
 
 static char* get_id(char* path) {
@@ -201,32 +212,22 @@ static struct widget* create_widget(char* full_path) {
 		return NULL;
 	}
 
-	size_t action_count;
-	char** text = get_action_text(full_path, &action_count);
 	map_put(entries, id, "true");
-	if(text == NULL) {
+
+	size_t action_count;
+
+	struct widget_builder* builder = populate_actions(full_path, &action_count);
+	if(builder == NULL) {
 		wofi_remove_cache(mode, full_path);
 		free(id);
 		free(full_path);
 		return NULL;
 	}
 
-	char** actions = get_action_actions(full_path, &action_count);
-
-	char* search_text = get_search_text(full_path);
-
-	struct widget* ret = wofi_create_widget(mode, text, search_text, actions, action_count);
-
-	for(size_t count = 0; count < action_count; ++count) {
-		free(actions[count]);
-		free(text[count]);
-	}
+	struct widget* ret = wofi_widget_builder_get_widget(builder);
 
 	free(id);
-	free(text);
-	free(actions);
 	free(full_path);
-	free(search_text);
 
 	return ret;
 }

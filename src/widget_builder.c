@@ -42,7 +42,7 @@ void wofi_widget_builder_set_action(struct widget_builder* builder, char* action
 	wofi_property_box_add_property(builder->box, "action", action);
 }
 
-void wofi_widget_builder_insert_text(struct widget_builder* builder, char* text, char* css_name) {
+void wofi_widget_builder_insert_text(struct widget_builder* builder, const char* text, char* css_name) {
 	GtkWidget* label = gtk_label_new(text);
 	gtk_container_add(GTK_CONTAINER(builder->box), label);
 	if(css_name != NULL) {

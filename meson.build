@@ -61,6 +61,7 @@ subdir = 'wofi-1'
 install_headers('inc/config.h',
 				'inc/map.h',
 				'inc/utils.h',
+				'inc/widget_builder_api.h',
 				'inc/wofi_api.h',
 				subdir : subdir)
 

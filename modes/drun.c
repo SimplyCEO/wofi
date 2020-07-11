@@ -179,9 +179,9 @@ static struct widget_builder* populate_actions(char* file, size_t* text_count) {
 	++*text_count;
 
 
-	struct widget_builder* builder = wofi_create_widget_builder(mode, *text_count);
+	struct widget_builder* builder = wofi_widget_builder_init(mode, *text_count);
 	if(!populate_widget(file, NULL, builder)) {
-		wofi_free_widget_builder(builder);
+		wofi_widget_builder_free(builder);
 		return NULL;
 	}
 

@@ -563,7 +563,7 @@ static gboolean _insert_widget(gpointer data) {
 	}
 
 	if(node->builder != NULL) {
-		wofi_free_widget_builder(node->builder);
+		wofi_widget_builder_free(node->builder);
 	} else {
 		free(node->mode);
 		for(size_t count = 0; count < node->action_count; ++count) {

@@ -6,7 +6,7 @@ wofi \- Widget builder API functions
 The functions documented here are used for building custom widgets with more power and flexibility than previously allowed. They are defined in wofi_widget_builder_api.h
 
 .TP
-.B struct widget_builder* wofi_create_widget_builder(struct mode* mode, size_t actions)
+.B struct widget_builder* wofi_widget_builder_init(struct mode* mode, size_t actions)
 Creates multiple widget builders. The number of builders created is specified by actions and is returned as an array.
 
 .B struct mode* mode
@@ -79,7 +79,7 @@ Constructs a new widget from the specified builder, the widget can be returned b
 \- The builder to construct a widget for
 
 .TP
-.B void wofi_free_widget_builder(struct widget_builder* builder)
+.B void wofi_widget_builder_free(struct widget_builder* builder)
 Frees the specified builder
 
 .B struct widget_builder* builder

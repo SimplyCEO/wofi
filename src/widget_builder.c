@@ -20,7 +20,7 @@
 #include <wofi.h>
 #include <utils.h>
 
-struct widget_builder* wofi_create_widget_builder(struct mode* mode, size_t actions) {
+struct widget_builder* wofi_widget_builder_init(struct mode* mode, size_t actions) {
 	struct widget_builder* builder = calloc(actions, sizeof(struct widget_builder));
 
 	for(size_t count = 0; count < actions; ++count) {
@@ -84,7 +84,7 @@ struct widget* wofi_widget_builder_get_widget(struct widget_builder* builder) {
 	return builder->widget;
 }
 
-void wofi_free_widget_builder(struct widget_builder* builder) {
+void wofi_widget_builder_free(struct widget_builder* builder) {
 	if(builder->widget != NULL) {
 		free(builder->widget);
 	}

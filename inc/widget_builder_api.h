@@ -24,7 +24,7 @@
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-struct widget_builder* wofi_create_widget_builder(struct mode* mode, size_t actions);
+struct widget_builder* wofi_widget_builder_init(struct mode* mode, size_t actions);
 
 void wofi_widget_builder_set_search_text(struct widget_builder* builder, char* search_text);
 
@@ -38,6 +38,6 @@ struct widget_builder* wofi_widget_builder_get_idx(struct widget_builder* builde
 
 struct widget* wofi_widget_builder_get_widget(struct widget_builder* builder);
 
-void wofi_free_widget_builder(struct widget_builder* builder);
+void wofi_widget_builder_free(struct widget_builder* builder);
 
 #endif

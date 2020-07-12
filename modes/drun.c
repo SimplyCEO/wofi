@@ -23,6 +23,7 @@
 #include <map.h>
 #include <utils.h>
 #include <config.h>
+#include <utils_g.h>
 #include <widget_builder_api.h>
 
 #include <gtk/gtk.h>
@@ -118,21 +119,7 @@ static bool populate_widget(char* file, char* action, struct widget_builder* bui
 			pixbuf = gtk_icon_info_load_icon(info, NULL);
 		}
 
-		int width = gdk_pixbuf_get_width(pixbuf);
-		int height = gdk_pixbuf_get_height(pixbuf);
-		uint64_t image_size = wofi_get_image_size();
-
-		if(height > width) {
-			float percent = (float) image_size / height;
-			GdkPixbuf* tmp = gdk_pixbuf_scale_simple(pixbuf, width * percent, image_size, GDK_INTERP_BILINEAR);
-			g_object_unref(pixbuf);
-			pixbuf = tmp;
-		} else {
-			float percent = (float) image_size / width;
-			GdkPixbuf* tmp = gdk_pixbuf_scale_simple(pixbuf, image_size, height * percent, GDK_INTERP_BILINEAR);
-			g_object_unref(pixbuf);
-			pixbuf = tmp;
-		}
+		pixbuf = utils_g_resize_pixbuf(pixbuf, wofi_get_image_size(), GDK_INTERP_BILINEAR);
 
 		wofi_widget_builder_insert_image(builder, pixbuf, "icon");
 		g_object_unref(pixbuf);

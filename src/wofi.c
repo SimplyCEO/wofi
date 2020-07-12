@@ -29,6 +29,7 @@
 
 #include <utils.h>
 #include <config.h>
+#include <utils_g.h>
 #include <property_box.h>
 #include <widget_builder.h>
 
@@ -216,6 +217,8 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 	struct map* mode_map = map_init();
 	map_put(mode_map, "img", "true");
 	map_put(mode_map, "img-noscale", "true");
+	map_put(mode_map, "img-base64", "true");
+	map_put(mode_map, "img-base64-noscale", "true");
 	map_put(mode_map, "text", "true");
 
 	char* tmp = strdup(text);
@@ -286,19 +289,9 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 					fprintf(stderr, "Image %s cannot be loaded\n", str);
 					goto done;
 				}
-				int width = gdk_pixbuf_get_width(buf);
-				int height = gdk_pixbuf_get_height(buf);
-				if(height > width) {
-					float percent = (float) image_size / height;
-					GdkPixbuf* tmp = gdk_pixbuf_scale_simple(buf, width * percent, image_size, GDK_INTERP_BILINEAR);
-					g_object_unref(buf);
-					buf = tmp;
-				} else {
-					float percent = (float) image_size / width;
-					GdkPixbuf* tmp = gdk_pixbuf_scale_simple(buf, image_size, height * percent, GDK_INTERP_BILINEAR);
-					g_object_unref(buf);
-					buf = tmp;
-				}
+
+				buf = utils_g_resize_pixbuf(buf, image_size, GDK_INTERP_BILINEAR);
+
 				GtkWidget* img = gtk_image_new_from_pixbuf(buf);
 				gtk_widget_set_name(img, "img");
 				gtk_container_add(GTK_CONTAINER(box), img);
@@ -306,6 +299,27 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 				GdkPixbuf* buf = gdk_pixbuf_new_from_file(str, NULL);
 				if(buf == NULL) {
 					fprintf(stderr, "Image %s cannot be loaded\n", str);
+					goto done;
+				}
+				GtkWidget* img = gtk_image_new_from_pixbuf(buf);
+				gtk_widget_set_name(img, "img");
+				gtk_container_add(GTK_CONTAINER(box), img);
+			} else if(strcmp(mode, "img-base64") == 0 && create_widgets) {
+				GdkPixbuf* buf = utils_g_pixbuf_from_base64(str);
+				if(buf == NULL) {
+					fprintf(stderr, "base64 image cannot be loaded\n");
+					goto done;
+				}
+
+				buf = utils_g_resize_pixbuf(buf, image_size, GDK_INTERP_BILINEAR);
+
+				GtkWidget* img = gtk_image_new_from_pixbuf(buf);
+				gtk_widget_set_name(img, "img");
+				gtk_container_add(GTK_CONTAINER(box), img);
+			} else if(strcmp(mode, "img-base64-noscale") == 0 && create_widgets) {
+				GdkPixbuf* buf = utils_g_pixbuf_from_base64(str);
+				if(buf == NULL) {
+					fprintf(stderr, "base64 image cannot be loaded\n");
 					goto done;
 				}
 				GtkWidget* img = gtk_image_new_from_pixbuf(buf);
@@ -855,8 +869,8 @@ void wofi_term_run(const char* cmd) {
 
 static void flag_box(GtkBox* box, GtkStateFlags flags) {
 	GList* selected_children = gtk_container_get_children(GTK_CONTAINER(box));
-	GList* list = selected_children;
-	for(GtkWidget* child = list->data; list != NULL; list = list->next) {
+	for(GList* list = selected_children; list != NULL; list = list->next) {
+		GtkWidget* child = list->data;
 		gtk_widget_set_state_flags(child, flags, TRUE);
 	}
 	g_list_free(selected_children);

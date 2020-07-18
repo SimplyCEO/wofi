@@ -95,6 +95,7 @@ static void print_usage(char** argv) {
 	printf("--sort-order\t-O\tSets the sort order\n");
 	printf("--gtk-dark\t-G\tUses the dark variant of the current GTK theme\n");
 	printf("--search\t-Q\tSearch for something immediately on open\n");
+	printf("--monitor\t-o\tSets the monitor to open on\n");
 	exit(0);
 }
 
@@ -415,6 +416,12 @@ int main(int argc, char** argv) {
 			.val = 'Q'
 		},
 		{
+			.name = "monitor",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'o'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -449,13 +456,14 @@ int main(int argc, char** argv) {
 	char* sort_order = NULL;
 	char* gtk_dark = NULL;
 	char* search = NULL;
+	char* monitor = NULL;
 
 	struct wl_list options;
 	wl_list_init(&options);
 	struct option_node* node;
 
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:GQ:", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:GQ:o:", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -560,6 +568,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'Q':
 			search = optarg;
+			break;
+		case 'o':
+			monitor = optarg;
 			break;
 		}
 	}
@@ -746,6 +757,9 @@ int main(int argc, char** argv) {
 	}
 	if(search != NULL) {
 		map_put(config, "search", search);
+	}
+	if(monitor != NULL) {
+		map_put(config, "monitor", monitor);
 	}
 
 	struct sigaction sigact = {0};

@@ -1617,6 +1617,7 @@ void wofi_init(struct map* _config) {
 	bool hide_search = strcmp(config_get(config, "hide_search", "false"), "true") == 0;
 	char* search = map_get(config, "search");
 	dynamic_lines = strcmp(config_get(config, "dynamic_lines", "false"), "true") == 0;
+	char* monitor = map_get(config, "monitor");
 
 	keys = map_init_void();
 
@@ -1710,6 +1711,13 @@ void wofi_init(struct map* _config) {
 					output = node->output;
 					ix -= node->x;
 					iy -= node->y;
+					break;
+				}
+			}
+		} else if(monitor != NULL) {
+			wl_list_for_each(node, &outputs, link) {
+				if(strcmp(monitor, node->name) == 0) {
+					output = node->output;
 					break;
 				}
 			}

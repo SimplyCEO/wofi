@@ -111,15 +111,15 @@ static bool populate_widget(char* file, char* action, struct widget_builder* bui
 			GtkIconInfo* info = NULL;
 			if(icon != NULL) {
 				const gchar* const* icon_names = g_themed_icon_get_names(G_THEMED_ICON(icon));
-				info = gtk_icon_theme_choose_icon(theme, (const gchar**) icon_names, wofi_get_image_size(), 0);
+				info = gtk_icon_theme_choose_icon_for_scale(theme, (const gchar**) icon_names, wofi_get_image_size(), wofi_get_window_scale(), 0);
 			}
 			if(info == NULL) {
-				info = gtk_icon_theme_lookup_icon(theme, "application-x-executable", wofi_get_image_size(), 0);
+				info = gtk_icon_theme_lookup_icon_for_scale(theme, "application-x-executable", wofi_get_image_size(), wofi_get_window_scale(), 0);
 			}
 			pixbuf = gtk_icon_info_load_icon(info, NULL);
 		}
 
-		pixbuf = utils_g_resize_pixbuf(pixbuf, wofi_get_image_size(), GDK_INTERP_BILINEAR);
+		pixbuf = utils_g_resize_pixbuf(pixbuf, wofi_get_image_size() * wofi_get_window_scale(), GDK_INTERP_BILINEAR);
 
 		wofi_widget_builder_insert_image(builder, pixbuf, "icon");
 		g_object_unref(pixbuf);

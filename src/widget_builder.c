@@ -53,7 +53,10 @@ void wofi_widget_builder_insert_text(struct widget_builder* builder, const char*
 }
 
 void wofi_widget_builder_insert_image(struct widget_builder* builder, GdkPixbuf* pixbuf, char* css_name) {
-	GtkWidget* img = gtk_image_new_from_pixbuf(pixbuf);
+	GtkWidget* img = gtk_image_new();
+	cairo_surface_t* surface = gdk_cairo_surface_create_from_pixbuf(pixbuf, wofi_get_window_scale(), gtk_widget_get_window(img));
+	gtk_image_set_from_surface(GTK_IMAGE(img), surface);
+	cairo_surface_destroy(surface);
 	gtk_container_add(GTK_CONTAINER(builder->box), img);
 	if(css_name != NULL) {
 		char* tmp = utils_concat(3, builder->mode->name, "-", css_name);

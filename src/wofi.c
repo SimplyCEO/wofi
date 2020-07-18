@@ -212,6 +212,7 @@ static gboolean do_search(gpointer data) {
 	return G_SOURCE_CONTINUE;
 }
 
+//This is hideous, why did I do this to myself
 static char* parse_images(WofiPropertyBox* box, const char* text, bool create_widgets) {
 	char* ret = strdup("");
 	struct map* mode_map = map_init();
@@ -290,9 +291,14 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 					goto done;
 				}
 
-				buf = utils_g_resize_pixbuf(buf, image_size, GDK_INTERP_BILINEAR);
+				buf = utils_g_resize_pixbuf(buf, image_size * wofi_get_window_scale(), GDK_INTERP_BILINEAR);
 
-				GtkWidget* img = gtk_image_new_from_pixbuf(buf);
+				GtkWidget* img = gtk_image_new();
+				cairo_surface_t* surface = gdk_cairo_surface_create_from_pixbuf(buf, wofi_get_window_scale(), gtk_widget_get_window(img));
+				gtk_image_set_from_surface(GTK_IMAGE(img), surface);
+				cairo_surface_destroy(surface);
+				g_object_unref(buf);
+
 				gtk_widget_set_name(img, "img");
 				gtk_container_add(GTK_CONTAINER(box), img);
 			} else if(strcmp(mode, "img-noscale") == 0 && create_widgets) {
@@ -301,7 +307,13 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 					fprintf(stderr, "Image %s cannot be loaded\n", str);
 					goto done;
 				}
-				GtkWidget* img = gtk_image_new_from_pixbuf(buf);
+
+				GtkWidget* img = gtk_image_new();
+				cairo_surface_t* surface = gdk_cairo_surface_create_from_pixbuf(buf, wofi_get_window_scale(), gtk_widget_get_window(img));
+				gtk_image_set_from_surface(GTK_IMAGE(img), surface);
+				cairo_surface_destroy(surface);
+				g_object_unref(buf);
+
 				gtk_widget_set_name(img, "img");
 				gtk_container_add(GTK_CONTAINER(box), img);
 			} else if(strcmp(mode, "img-base64") == 0 && create_widgets) {
@@ -313,7 +325,12 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 
 				buf = utils_g_resize_pixbuf(buf, image_size, GDK_INTERP_BILINEAR);
 
-				GtkWidget* img = gtk_image_new_from_pixbuf(buf);
+				GtkWidget* img = gtk_image_new();
+				cairo_surface_t* surface = gdk_cairo_surface_create_from_pixbuf(buf, wofi_get_window_scale(), gtk_widget_get_window(img));
+				gtk_image_set_from_surface(GTK_IMAGE(img), surface);
+				cairo_surface_destroy(surface);
+				g_object_unref(buf);
+
 				gtk_widget_set_name(img, "img");
 				gtk_container_add(GTK_CONTAINER(box), img);
 			} else if(strcmp(mode, "img-base64-noscale") == 0 && create_widgets) {
@@ -322,7 +339,12 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 					fprintf(stderr, "base64 image cannot be loaded\n");
 					goto done;
 				}
-				GtkWidget* img = gtk_image_new_from_pixbuf(buf);
+				GtkWidget* img = gtk_image_new();
+				cairo_surface_t* surface = gdk_cairo_surface_create_from_pixbuf(buf, wofi_get_window_scale(), gtk_widget_get_window(img));
+				gtk_image_set_from_surface(GTK_IMAGE(img), surface);
+				cairo_surface_destroy(surface);
+				g_object_unref(buf);
+
 				gtk_widget_set_name(img, "img");
 				gtk_container_add(GTK_CONTAINER(box), img);
 			} else if(strcmp(mode, "text") == 0) {

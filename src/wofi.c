@@ -257,7 +257,7 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 	char* original = strdup(text);
 	char* mode1 = NULL;
 	char* mode2 = NULL;
-	char* data1 = original;
+	char* data1 = NULL;
 	char* data2 = NULL;
 
 	get_img_data(original, original, mode_map, true, &mode2, &data2);

@@ -42,27 +42,43 @@ void wofi_widget_builder_set_action(struct widget_builder* builder, char* action
 	wofi_property_box_add_property(builder->box, "action", action);
 }
 
-void wofi_widget_builder_insert_text(struct widget_builder* builder, const char* text, char* css_name) {
+void wofi_widget_builder_insert_text(struct widget_builder* builder, const char* text, ...) {
 	GtkWidget* label = gtk_label_new(text);
 	gtk_container_add(GTK_CONTAINER(builder->box), label);
-	if(css_name != NULL) {
-		char* tmp = utils_concat(3, builder->mode->name, "-", css_name);
-		gtk_widget_set_name(label, tmp);
+	gtk_widget_set_name(label, "text");
+
+	GtkStyleContext* ctx = gtk_widget_get_style_context(label);
+
+	va_list args;
+	va_start(args, text);
+	char* arg;
+	while((arg = va_arg(args, char*)) != NULL) {
+		char* tmp = utils_concat(3, builder->mode->name, "-", arg);
+		gtk_style_context_add_class(ctx, tmp);
 		free(tmp);
 	}
+	va_end(args);
 }
 
-void wofi_widget_builder_insert_image(struct widget_builder* builder, GdkPixbuf* pixbuf, char* css_name) {
+void wofi_widget_builder_insert_image(struct widget_builder* builder, GdkPixbuf* pixbuf, ...) {
 	GtkWidget* img = gtk_image_new();
 	cairo_surface_t* surface = gdk_cairo_surface_create_from_pixbuf(pixbuf, wofi_get_window_scale(), gtk_widget_get_window(img));
 	gtk_image_set_from_surface(GTK_IMAGE(img), surface);
 	cairo_surface_destroy(surface);
 	gtk_container_add(GTK_CONTAINER(builder->box), img);
-	if(css_name != NULL) {
-		char* tmp = utils_concat(3, builder->mode->name, "-", css_name);
-		gtk_widget_set_name(img, tmp);
+	gtk_widget_set_name(img, "img");
+
+	GtkStyleContext* ctx = gtk_widget_get_style_context(img);
+
+	va_list args;
+	va_start(args, pixbuf);
+	char* arg;
+	while((arg = va_arg(args, char*)) != NULL) {
+		char* tmp = utils_concat(3, builder->mode->name, "-", arg);
+		gtk_style_context_add_class(ctx, tmp);
 		free(tmp);
 	}
+	va_end(args);
 }
 
 struct widget_builder* wofi_widget_builder_get_idx(struct widget_builder* builder, size_t idx) {

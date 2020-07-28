@@ -30,9 +30,9 @@ void wofi_widget_builder_set_search_text(struct widget_builder* builder, char* s
 
 void wofi_widget_builder_set_action(struct widget_builder* builder, char* action);
 
-void wofi_widget_builder_insert_text(struct widget_builder* builder, const char* text, char* css_name);
+__attribute__((sentinel)) void wofi_widget_builder_insert_text(struct widget_builder* builder, const char* text, ...);
 
-void wofi_widget_builder_insert_image(struct widget_builder* builder, GdkPixbuf* pixbuf, char* css_name);
+__attribute__((sentinel)) void wofi_widget_builder_insert_image(struct widget_builder* builder, GdkPixbuf* pixbuf, ...);
 
 struct widget_builder* wofi_widget_builder_get_idx(struct widget_builder* builder, size_t idx);
 

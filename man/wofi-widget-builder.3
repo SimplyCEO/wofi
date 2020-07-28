@@ -36,7 +36,7 @@ Sets the action for the widget specified by the builder
 \- The text to set as the action
 
 .TP
-.B void wofi_widget_builder_insert_text(struct widget_builder* builder, char* text, char* css_name)
+.B void wofi_widget_builder_insert_text(struct widget_builder* builder, char* text, ...)
 Inserts text into the widget specified by the builder
 
 .B struct widget_builder* builder
@@ -45,8 +45,8 @@ Inserts text into the widget specified by the builder
 .B char* text
 \- The text to add to the widget
 
-.B char* css_name
-\- The name of the CSS node for this text. The name that will be assigned is #mode_name-css_name where mode_name is the name of the mode, i.e. drun etc.
+.B ...
+\- The names of the CSS classes for this text. The class that will be assigned is .mode_name-css_name where mode_name is the name of the mode, i.e. drun etc. This should have a NULL sentinel
 
 .TP
 .B void wofi_widget_builder_insert_image(struct widget_builder* builder, GdkPixbuf* pixbuf, char* css_name)
@@ -58,8 +58,8 @@ Inserts an image into the widget specified by the builder
 .B GdkPixbuf* pixbuf
 \- The image to add to the widget
 
-.B char* css_name
-\- The name of the CSS node for this image. The name that will be assigned is #mode_name-css_name where mode_name is the name of the mode, i.e. drun etc.
+.B ...
+\- The names of the CSS classes for this image. The class that will be assigned is .mode_name-css_name where mode_name is the name of the mode, i.e. drun etc. This should have a NULL sentinel
 
 .TP
 .B struct widget_builder* wofi_widget_builder_get_idx(struct widget_builder* builder, size_t idx)

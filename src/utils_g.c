@@ -40,6 +40,10 @@ GdkPixbuf* utils_g_pixbuf_from_base64(char* base64) {
 	char* str = strdup(base64);
 	char* original_str = str;
 
+	if(strncmp(str, "data:", sizeof("data:") - 1) == 0) {
+		str += sizeof("data:") - 1;
+	}
+
 	GError* err = NULL;
 	GdkPixbufLoader* loader;
 	if(strncmp(str, "image/", sizeof("image/") - 1) == 0) {

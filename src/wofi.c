@@ -1618,6 +1618,7 @@ void wofi_init(struct map* _config) {
 	char* search = map_get(config, "search");
 	dynamic_lines = strcmp(config_get(config, "dynamic_lines", "false"), "true") == 0;
 	char* monitor = map_get(config, "monitor");
+	char* layer = config_get(config, "layer", "top");
 
 	keys = map_init_void();
 
@@ -1728,7 +1729,19 @@ void wofi_init(struct map* _config) {
 		gdk_wayland_window_set_use_custom_surface(gdk_win);
 		wl_surface = gdk_wayland_window_get_wl_surface(gdk_win);
 
-		wlr_surface = zwlr_layer_shell_v1_get_layer_surface(shell, wl_surface, output, ZWLR_LAYER_SHELL_V1_LAYER_TOP, "wofi");
+		enum zwlr_layer_shell_v1_layer wlr_layer;
+
+		if(strcmp(layer, "background") == 0) {
+			wlr_layer = ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND;
+		} else if(strcmp(layer, "bottom") == 0) {
+			wlr_layer = ZWLR_LAYER_SHELL_V1_LAYER_BOTTOM;
+		} else if(strcmp(layer, "top") == 0) {
+			wlr_layer = ZWLR_LAYER_SHELL_V1_LAYER_TOP;
+		} else if(strcmp(layer, "overlay") == 0) {
+			wlr_layer = ZWLR_LAYER_SHELL_V1_LAYER_OVERLAY;
+		}
+
+		wlr_surface = zwlr_layer_shell_v1_get_layer_surface(shell, wl_surface, output, wlr_layer, "wofi");
 		struct zwlr_layer_surface_v1_listener* surface_listener = malloc(sizeof(struct zwlr_layer_surface_v1_listener));
 		surface_listener->configure = config_surface;
 		surface_listener->closed = nop;

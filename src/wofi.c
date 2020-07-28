@@ -1708,7 +1708,7 @@ void wofi_init(struct map* _config) {
 		gdk_wayland_window_set_use_custom_surface(gdk_win);
 		wl_surface = gdk_wayland_window_get_wl_surface(gdk_win);
 
-		enum zwlr_layer_shell_v1_layer wlr_layer;
+		enum zwlr_layer_shell_v1_layer wlr_layer = ZWLR_LAYER_SHELL_V1_LAYER_TOP;
 
 		if(strcmp(layer, "background") == 0) {
 			wlr_layer = ZWLR_LAYER_SHELL_V1_LAYER_BACKGROUND;

@@ -212,6 +212,38 @@ static gboolean do_search(gpointer data) {
 	return G_SOURCE_CONTINUE;
 }
 
+static void get_img_data(char* original, char* str, struct map* mode_map, bool first, char** mode, char** data) {
+	char* colon = strchr(str, ':');
+	if(colon == NULL) {
+		if(first) {
+			*mode = "text";
+			*data = str;
+			return;
+		} else {
+			*mode = NULL;
+			*data = NULL;
+			return;
+		}
+	}
+
+	*colon = 0;
+
+	if(map_contains(mode_map, str)) {
+		if(original != str) {
+			*(str - 1) = 0;
+		}
+		*mode = str;
+		*data = colon + 1;
+	} else if(first) {
+		*colon = ':';
+		*mode = "text";
+		*data = str;
+	} else {
+		*colon = ':';
+		get_img_data(original, colon + 1, mode_map, first, mode, data);
+	}
+}
+
 //This is hideous, why did I do this to myself
 static char* parse_images(WofiPropertyBox* box, const char* text, bool create_widgets) {
 	char* ret = strdup("");
@@ -222,72 +254,28 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 	map_put(mode_map, "img-base64-noscale", "true");
 	map_put(mode_map, "text", "true");
 
-	char* tmp = strdup(text);
+	char* original = strdup(text);
+	char* mode1 = NULL;
+	char* mode2 = NULL;
+	char* data1 = original;
+	char* data2 = NULL;
 
-	struct wl_list modes;
-	struct node {
-		char* str;
-		struct wl_list link;
-	};
+	get_img_data(original, original, mode_map, true, &mode2, &data2);
 
-	wl_list_init(&modes);
-
-	bool data = false;
-
-	char* save_ptr;
-	char* str = strtok_r(tmp, ":", &save_ptr);
-	do {
-		if(str == NULL) {
-			break;
-		}
-		if(map_contains(mode_map, str) || data) {
-			struct node* node = malloc(sizeof(struct node));
-			node->str = str;
-			wl_list_insert(&modes, &node->link);
-			data = !data;
-		}
-	} while((str = strtok_r(NULL, ":", &save_ptr)) != NULL);
-
-	char* tmp2 = strdup(text);
-	char* start = tmp2;
-
-	char* mode = NULL;
-
-	struct node* node = wl_container_of(modes.prev, node, link);
 	while(true) {
-		if(mode == NULL) {
-			if(start == NULL) {
+		if(mode1 == NULL) {
+			mode1 = mode2;
+			data1 = data2;
+			if(data1 != NULL) {
+				get_img_data(original, data1, mode_map, false, &mode2, &data2);
+			} else {
 				break;
 			}
-			char* tmp_start = (start - tmp2) + tmp;
-			if(!wl_list_empty(&modes) && tmp_start == node->str) {
-				if(node->link.prev == &modes) {
-					break;
-				}
-				mode = node->str;
-				node = wl_container_of(node->link.prev, node, link);
-				str = node->str;
-				start = ((str + strlen(str) + 1) - tmp) + tmp2;
-				if(((start - tmp2) + text) > (text + strlen(text))) {
-					start = NULL;
-				}
-				if(node->link.prev != &modes) {
-					node = wl_container_of(node->link.prev, node, link);
-				}
-			} else {
-				mode = "text";
-				str = start;
-				if(!wl_list_empty(&modes)) {
-					start = (node->str - tmp - 1) + tmp2;
-					*start = 0;
-					++start;
-				}
-			}
 		} else {
-			if(strcmp(mode, "img") == 0 && create_widgets) {
-				GdkPixbuf* buf = gdk_pixbuf_new_from_file(str, NULL);
+			if(strcmp(mode1, "img") == 0 && create_widgets) {
+				GdkPixbuf* buf = gdk_pixbuf_new_from_file(data1, NULL);
 				if(buf == NULL) {
-					fprintf(stderr, "Image %s cannot be loaded\n", str);
+					fprintf(stderr, "Image %s cannot be loaded\n", data1);
 					goto done;
 				}
 
@@ -301,10 +289,10 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 
 				gtk_widget_set_name(img, "img");
 				gtk_container_add(GTK_CONTAINER(box), img);
-			} else if(strcmp(mode, "img-noscale") == 0 && create_widgets) {
-				GdkPixbuf* buf = gdk_pixbuf_new_from_file(str, NULL);
+			} else if(strcmp(mode1, "img-noscale") == 0 && create_widgets) {
+				GdkPixbuf* buf = gdk_pixbuf_new_from_file(data1, NULL);
 				if(buf == NULL) {
-					fprintf(stderr, "Image %s cannot be loaded\n", str);
+					fprintf(stderr, "Image %s cannot be loaded\n", data1);
 					goto done;
 				}
 
@@ -316,8 +304,8 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 
 				gtk_widget_set_name(img, "img");
 				gtk_container_add(GTK_CONTAINER(box), img);
-			} else if(strcmp(mode, "img-base64") == 0 && create_widgets) {
-				GdkPixbuf* buf = utils_g_pixbuf_from_base64(str);
+			} else if(strcmp(mode1, "img-base64") == 0 && create_widgets) {
+				GdkPixbuf* buf = utils_g_pixbuf_from_base64(data1);
 				if(buf == NULL) {
 					fprintf(stderr, "base64 image cannot be loaded\n");
 					goto done;
@@ -333,8 +321,8 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 
 				gtk_widget_set_name(img, "img");
 				gtk_container_add(GTK_CONTAINER(box), img);
-			} else if(strcmp(mode, "img-base64-noscale") == 0 && create_widgets) {
-				GdkPixbuf* buf = utils_g_pixbuf_from_base64(str);
+			} else if(strcmp(mode1, "img-base64-noscale") == 0 && create_widgets) {
+				GdkPixbuf* buf = utils_g_pixbuf_from_base64(data1);
 				if(buf == NULL) {
 					fprintf(stderr, "base64 image cannot be loaded\n");
 					goto done;
@@ -347,9 +335,9 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 
 				gtk_widget_set_name(img, "img");
 				gtk_container_add(GTK_CONTAINER(box), img);
-			} else if(strcmp(mode, "text") == 0) {
+			} else if(strcmp(mode1, "text") == 0) {
 				if(create_widgets) {
-					GtkWidget* label = gtk_label_new(str);
+					GtkWidget* label = gtk_label_new(data1);
 					gtk_widget_set_name(label, "text");
 					gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
 					gtk_label_set_xalign(GTK_LABEL(label), 0);
@@ -360,26 +348,17 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 					gtk_container_add(GTK_CONTAINER(box), label);
 				} else {
 					char* tmp = ret;
-					ret = utils_concat(2, ret, str);
+					ret = utils_concat(2, ret, data1);
 					free(tmp);
 				}
 			}
 			done:
-			mode = NULL;
-			if(wl_list_empty(&modes)) {
-				break;
-			}
+			mode1 = NULL;
 		}
 	}
-	free(tmp);
-	free(tmp2);
+	free(original);
 	map_free(mode_map);
 
-	struct node* tmp_node;
-	wl_list_for_each_safe(node, tmp_node, &modes, link) {
-		wl_list_remove(&node->link);
-		free(node);
-	}
 	if(create_widgets) {
 		free(ret);
 		return NULL;

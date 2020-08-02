@@ -90,7 +90,7 @@ The following script can be used to do window switching:
 
 swaymsg \-t get_tree |
 .br
-  jq \-r '.nodes[].nodes[] | if .nodes then [recurse(.nodes[])] else [] end + .floating_nodes | .[] | select(.nodes==[]) | ((.id | tostring) + "\t" + .name)' |
+  jq \-r '.nodes[].nodes[] | if .nodes then [recurse(.nodes[])] else [] end + .floating_nodes | .[] | select(.nodes==[]) | ((.id | tostring) + " " + .name)' |
 .br
   wofi \-\-show dmenu | {
 .br

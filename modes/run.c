@@ -28,10 +28,11 @@
 #include <config.h>
 #include <wofi_api.h>
 
-static const char* arg_names[] = {"always_parse_args", "show_all"};
+static const char* arg_names[] = {"always_parse_args", "show_all", "print_command"};
 
 static bool always_parse_args;
 static bool show_all;
+static bool print_command;
 static struct mode* mode;
 static const char* arg_str = "__args";
 
@@ -46,6 +47,7 @@ void wofi_run_init(struct mode* this, struct map* config) {
 	mode = this;
 	always_parse_args = strcmp(config_get(config, arg_names[0], "false"), "true") == 0;
 	show_all = strcmp(config_get(config, arg_names[1], "true"), "true") == 0;
+	print_command = strcmp(config_get(config, arg_names[2], "false"), "true") == 0;
 
 	wl_list_init(&widgets);
 
@@ -187,6 +189,10 @@ void wofi_run_exec(const char* cmd) {
 	if(wofi_mod_shift()) {
 		wofi_write_cache(mode, cmd);
 		wofi_term_run(cmd);
+	}
+	if(print_command) {
+		printf("%s\n", cmd);
+		exit(0);
 	}
 	if(arg_run) {
 		size_t space_count = 2;

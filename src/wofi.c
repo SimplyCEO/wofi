@@ -1644,9 +1644,8 @@ void wofi_init(struct map* _config) {
 	gtk_window_set_decorated(GTK_WINDOW(window), FALSE);
 
 	if(!normal_window) {
-		GdkDisplay* disp = gdk_display_get_default();
 		wl_list_init(&outputs);
-		wl = gdk_wayland_display_get_wl_display(disp);
+		wl = gdk_wayland_display_get_wl_display(gdk_display_get_default());
 
 		if(wl == NULL) {
 			fprintf(stderr, "Failed to connect to wayland compositor\n");

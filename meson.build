@@ -55,7 +55,8 @@ install_man('man/wofi.1',
 			'man/wofi-config.3',
 			'man/wofi-keys.7',
 			'man/wofi-map.3',
-			'man/wofi-utils.3')
+			'man/wofi-utils.3',
+			'man/wofi-widget-builder.3')
 
 subdir = 'wofi-1'
 

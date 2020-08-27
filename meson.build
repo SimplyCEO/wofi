@@ -1,4 +1,4 @@
-project('wofi', 'c', version : 'v1.2.1', default_options : ['c_std=c99', 'buildtype=release', 'warning_level=2'])
+project('wofi', 'c', version : 'v1.2.2', default_options : ['c_std=c99', 'buildtype=release', 'warning_level=2'])
 cc = meson.get_compiler('c')
 
 pkgcfg = import('pkgconfig')
@@ -55,7 +55,8 @@ install_man('man/wofi.1',
 			'man/wofi-config.3',
 			'man/wofi-keys.7',
 			'man/wofi-map.3',
-			'man/wofi-utils.3')
+			'man/wofi-utils.3',
+			'man/wofi-widget-builder.3')
 
 subdir = 'wofi-1'
 

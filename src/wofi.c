@@ -103,6 +103,7 @@ static uint32_t line_count = 0;
 static bool dynamic_lines;
 static struct wl_list mode_list;
 static pthread_t mode_thread;
+static bool has_joined_mode = false;
 
 static struct map* keys;
 
@@ -596,7 +597,10 @@ static gboolean _insert_widget(gpointer data) {
 }
 
 static gboolean insert_all_widgets(gpointer data) {
-	pthread_join(mode_thread, NULL);
+	if(!has_joined_mode) {
+		pthread_join(mode_thread, NULL);
+		has_joined_mode = true;
+	}
 	struct wl_list* modes = data;
 	if(modes->prev == modes) {
 		return FALSE;

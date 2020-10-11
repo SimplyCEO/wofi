@@ -140,11 +140,14 @@ static void add_interface(void* data, struct wl_registry* registry, uint32_t nam
 	}
 }
 
-static void config_surface(void* data, struct zwlr_layer_surface_v1* surface, uint32_t serial, uint32_t _width, uint32_t _height) {
+static void config_surface(void* data, struct zwlr_layer_surface_v1* surface, uint32_t serial, uint32_t width, uint32_t height) {
 	(void) data;
-	(void) _width;
-	(void) _height;
+	(void) width;
+	(void) height;
 	zwlr_layer_surface_v1_ack_configure(surface, serial);
+}
+
+static void setup_surface(struct zwlr_layer_surface_v1* surface) {
 	zwlr_layer_surface_v1_set_size(surface, width, height);
 	zwlr_layer_surface_v1_set_keyboard_interactivity(surface, true);
 
@@ -1734,6 +1737,7 @@ void wofi_init(struct map* _config) {
 		}
 
 		wlr_surface = zwlr_layer_shell_v1_get_layer_surface(shell, wl_surface, output, wlr_layer, "wofi");
+		setup_surface(wlr_surface);
 		struct zwlr_layer_surface_v1_listener* surface_listener = malloc(sizeof(struct zwlr_layer_surface_v1_listener));
 		surface_listener->configure = config_surface;
 		surface_listener->closed = nop;

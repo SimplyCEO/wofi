@@ -408,7 +408,7 @@ void wofi_drun_exec(const gchar* cmd) {
 		fprintf(stderr, "%s cannot be executed\n", cmd);
 		exit(1);
 	}
-	utils_sleep_millis(100);
+	utils_sleep_millis(200);
 	exit(0);
 }
 

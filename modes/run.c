@@ -214,7 +214,7 @@ void wofi_run_exec(const char* cmd) {
 		wofi_write_cache(mode, cmd);
 		execl(cmd, cmd, NULL);
 	}
-	fprintf(stderr, "%s cannot be executed\n", cmd);
+	fprintf(stderr, "%s cannot be executed %s\n", cmd, strerror(errno));
 	exit(errno);
 }
 

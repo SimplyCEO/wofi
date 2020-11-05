@@ -26,6 +26,7 @@
 #include <stdint.h>
 
 #include <sys/stat.h>
+#include <sys/wait.h>
 
 #include <utils.h>
 #include <config.h>
@@ -104,6 +105,7 @@ static bool dynamic_lines;
 static struct wl_list mode_list;
 static pthread_t mode_thread;
 static bool has_joined_mode = false;
+static char* copy_exec = NULL;
 
 static struct map* keys;
 
@@ -1197,6 +1199,45 @@ static void do_hide_search(void) {
 	update_surface_size();
 }
 
+static void do_copy(void) {
+	GList* children = gtk_flow_box_get_selected_children(GTK_FLOW_BOX(inner_box));
+	if(children->data != NULL && gtk_widget_has_focus(children->data)) {
+		GtkWidget* widget = gtk_bin_get_child(children->data);
+		if(GTK_IS_EXPANDER(widget)) {
+			GtkWidget* box = gtk_bin_get_child(GTK_BIN(widget));
+			GtkListBoxRow* row = gtk_list_box_get_selected_row(GTK_LIST_BOX(box));
+			if(row == NULL) {
+				widget = gtk_expander_get_label_widget(GTK_EXPANDER(widget));
+			} else {
+				widget = gtk_bin_get_child(GTK_BIN(row));
+			}
+		}
+		if(WOFI_IS_PROPERTY_BOX(widget)) {
+			const gchar* action = wofi_property_box_get_property(WOFI_PROPERTY_BOX(widget), "action");
+			if(action == NULL) {
+				return;
+			}
+
+			int fds[2];
+			pipe(fds);
+			if(fork() == 0) {
+				close(fds[1]);
+				dup2(fds[0], STDIN_FILENO);
+				execlp(copy_exec, copy_exec, NULL);
+				fprintf(stderr, "%s could not be executed: %s\n", copy_exec, strerror(errno));
+				exit(errno);
+			}
+			close(fds[0]);
+
+			write(fds[1], action, strlen(action));
+
+			close(fds[1]);
+
+			while(waitpid(-1, NULL, WNOHANG) > 0);
+		}
+	}
+}
+
 static bool do_key_action(GdkEvent* event, char* mod, void (*action)(void)) {
 	if(mod != NULL) {
 		GdkModifierType mask = get_mask_from_name(mod);
@@ -1615,6 +1656,7 @@ void wofi_init(struct map* _config) {
 	dynamic_lines = strcmp(config_get(config, "dynamic_lines", "false"), "true") == 0;
 	char* monitor = map_get(config, "monitor");
 	char* layer = config_get(config, "layer", "top");
+	copy_exec = config_get(config, "copy_exec", "wl-copy");
 
 	keys = map_init_void();
 
@@ -1632,6 +1674,7 @@ void wofi_init(struct map* _config) {
 	char* key_pgdn = config_get(config, "key_pgdn", "Page_Down");
 	char* key_expand = config_get(config, "key_expand", "");
 	char* key_hide_search = config_get(config, "key_hide_search", "");
+	char* key_copy = config_get(config, "key_copy", "Control_L-c");
 
 	parse_mods(key_up, move_up);
 	parse_mods(key_down, move_down);
@@ -1645,6 +1688,7 @@ void wofi_init(struct map* _config) {
 	parse_mods(key_pgdn, move_pgdn);
 	parse_mods(key_expand, do_expand);
 	parse_mods(key_hide_search, do_hide_search);
+	parse_mods(key_copy, do_copy);
 
 	modes = map_init_void();
 

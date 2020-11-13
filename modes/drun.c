@@ -427,8 +427,8 @@ void wofi_drun_exec(const gchar* cmd) {
 		} else {
 			set_dri_prime(info);
 			g_desktop_app_info_launch_action(info, action, NULL);
-			exit(0);
 		}
+		exit(0);
 	} else {
 		fprintf(stderr, "%s cannot be executed\n", cmd);
 		exit(1);

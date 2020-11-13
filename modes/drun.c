@@ -373,11 +373,30 @@ struct widget* wofi_drun_get_widget(void) {
 	return NULL;
 }
 
+static void launch_done(GObject* obj, GAsyncResult* result, gpointer data) {
+	GError* err = NULL;
+	if(g_app_info_launch_uris_finish(G_APP_INFO(obj), result, &err)) {
+		exit(0);
+	} else if(err != NULL) {
+		char* cmd = data;
+		fprintf(stderr, "%s cannot be executed: %s\n", cmd, err->message);
+		g_error_free(err);
+	} else {
+		char* cmd = data;
+		fprintf(stderr, "%s cannot be executed\n", cmd);
+	}
+	exit(1);
+}
+
 static void set_dri_prime(GDesktopAppInfo* info) {
 	bool dri_prime = g_desktop_app_info_get_boolean(info, "PrefersNonDefaultGPU");
 	if(dri_prime) {
 		setenv("DRI_PRIME", "1", true);
 	}
+}
+
+static bool uses_dbus(GDesktopAppInfo* info) {
+	return g_desktop_app_info_get_boolean(info, "DBusActivatable");
 }
 
 void wofi_drun_exec(const gchar* cmd) {
@@ -389,7 +408,12 @@ void wofi_drun_exec(const gchar* cmd) {
 			exit(0);
 		} else {
 			set_dri_prime(info);
-			g_app_info_launch_uris(G_APP_INFO(info), NULL, NULL, NULL);
+			if(uses_dbus(info)) {
+				g_app_info_launch_uris_async(G_APP_INFO(info), NULL, NULL, NULL, launch_done, (gchar*) cmd);
+			} else {
+				g_app_info_launch_uris(G_APP_INFO(info), NULL, NULL, NULL);
+				exit(0);
+			}
 		}
 	} else if(strrchr(cmd, ' ') != NULL) {
 		char* space = strrchr(cmd, ' ');
@@ -403,13 +427,12 @@ void wofi_drun_exec(const gchar* cmd) {
 		} else {
 			set_dri_prime(info);
 			g_desktop_app_info_launch_action(info, action, NULL);
+			exit(0);
 		}
 	} else {
 		fprintf(stderr, "%s cannot be executed\n", cmd);
 		exit(1);
 	}
-	utils_sleep_millis(200);
-	exit(0);
 }
 
 const char** wofi_drun_get_arg_names(void) {

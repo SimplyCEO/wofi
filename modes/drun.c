@@ -399,12 +399,34 @@ static bool uses_dbus(GDesktopAppInfo* info) {
 	return g_desktop_app_info_get_boolean(info, "DBusActivatable");
 }
 
+static char* get_cmd(GAppInfo* info) {
+	const char* cmd = g_app_info_get_commandline(info);
+	size_t cmd_size = strlen(cmd);
+	char* new_cmd = calloc(1, cmd_size + 1);
+	size_t new_cmd_count = 0;
+	for(size_t count = 0; count < cmd_size; ++count) {
+		if(cmd[count] == '%') {
+			if(cmd[++count] == '%') {
+				new_cmd[new_cmd_count++] = cmd[count];
+			}
+		} else {
+			new_cmd[new_cmd_count++] = cmd[count];
+		}
+	}
+	if(new_cmd[--new_cmd_count] == ' ') {
+		new_cmd[new_cmd_count] = 0;
+	}
+	return new_cmd;
+}
+
 void wofi_drun_exec(const gchar* cmd) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(cmd);
 	if(G_IS_DESKTOP_APP_INFO(info)) {
 		wofi_write_cache(mode, cmd);
 		if(print_command) {
-			printf("%s\n", g_app_info_get_commandline(G_APP_INFO(info)));
+			char* cmd = get_cmd(G_APP_INFO(info));
+			printf("%s\n", cmd);
+			free(cmd);
 			exit(0);
 		} else {
 			set_dri_prime(info);
@@ -422,7 +444,9 @@ void wofi_drun_exec(const gchar* cmd) {
 		info = g_desktop_app_info_new_from_filename(cmd);
 		char* action = space + 1;
 		if(print_command) {
-			printf("%s\n", g_app_info_get_commandline(G_APP_INFO(info)));
+			char* cmd = get_cmd(G_APP_INFO(info));
+			printf("%s\n", cmd);
+			free(cmd);
 			fprintf(stderr, "Printing the command line for an action is not supported\n");
 		} else {
 			set_dri_prime(info);

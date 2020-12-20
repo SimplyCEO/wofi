@@ -180,6 +180,9 @@ static struct widget_builder* populate_actions(char* file, size_t* text_count) {
 
 static char* get_id(char* path) {
 	char* applications = strstr(path, "applications/");
+	if(applications == NULL) {
+		return NULL;
+	}
 	char* name = strchr(applications, '/') + 1;
 	char* id = strdup(name);
 
@@ -192,6 +195,10 @@ static char* get_id(char* path) {
 
 static struct widget* create_widget(char* full_path) {
 	char* id = get_id(full_path);
+	if(id == NULL) {
+		free(full_path);
+		return NULL;
+	}
 
 	if(map_contains(entries, id)) {
 		free(id);
@@ -231,6 +238,10 @@ static void insert_dir(char* app_dir) {
 		}
 		char* full_path = utils_concat(3, app_dir, "/", entry->d_name);
 		char* id = get_id(full_path);
+		if(id == NULL) {
+			free(full_path);
+			continue;
+		}
 
 		struct stat info;
 		stat(full_path, &info);

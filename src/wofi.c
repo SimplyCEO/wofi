@@ -1294,9 +1294,19 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		GList* children = gtk_flow_box_get_selected_children(GTK_FLOW_BOX(inner_box));
 		if(gtk_widget_has_focus(entry)) {
 			g_signal_emit_by_name(entry, "activate", entry, NULL);
-		} else if(gtk_widget_has_focus(inner_box) || (children->data != NULL && gtk_widget_has_focus(children->data))) {
-			if(children->data != NULL) {
-				g_signal_emit_by_name(children->data, "activate", children->data, NULL);
+		} else if(gtk_widget_has_focus(inner_box) || children->data != NULL) {
+			gpointer obj = children->data;
+
+			if(obj != NULL) {
+				GtkWidget* exp = gtk_bin_get_child(GTK_BIN(obj));
+				if(GTK_IS_EXPANDER(exp)) {
+					GtkWidget* box = gtk_bin_get_child(GTK_BIN(exp));
+					GtkListBoxRow* row = gtk_list_box_get_selected_row(GTK_LIST_BOX(box));
+					if(row != NULL) {
+						obj = row;
+					}
+				}
+				g_signal_emit_by_name(obj, "activate", obj, NULL);
 			}
 		}
 		g_list_free(children);

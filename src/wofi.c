@@ -1386,12 +1386,13 @@ static gboolean focus_entry(GtkWidget* widget, GdkEvent* event, gpointer data) {
 	if(widget == entry && dbus != NULL) {
 		GError* err = NULL;
 		GVariant* ret = g_dbus_proxy_call_sync(dbus, "SetVisible", g_variant_new("(b)", event->focus_change.in), G_DBUS_CALL_FLAGS_NONE, 2000, NULL, &err);
-		g_variant_unref(ret);
 		if(err != NULL) {
 			if(err->code != G_DBUS_ERROR_SERVICE_UNKNOWN) {
 				fprintf(stderr, "Error while changing OSK state %s\n", err->message);
 			}
 			g_error_free(err);
+		} else {
+			g_variant_unref(ret);
 		}
 	}
 	return FALSE;

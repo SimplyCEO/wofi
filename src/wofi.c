@@ -478,11 +478,26 @@ static void update_surface_size(void) {
 	}
 
 	gtk_window_resize(GTK_WINDOW(window), width, height);
-	gtk_widget_set_size_request(scroll, width, height);
+	GtkAllocation alloc;
+	gtk_widget_get_allocated_size(entry, &alloc, NULL);
+	if(outer_orientation == GTK_ORIENTATION_HORIZONTAL) {
+		if(alloc.width > 0) {
+			gtk_widget_set_size_request(scroll, width - alloc.width, height);
+		}
+	} else {
+		if(alloc.height > 0) {
+			gtk_widget_set_size_request(scroll, width, height - alloc.height);
+		}
+	}
 }
 
 static void widget_allocate(GtkWidget* widget, GdkRectangle* allocation, gpointer data) {
 	(void) data;
+	if(widget == entry) {
+		update_surface_size();
+		return;
+	}
+
 	if(resize_expander) {
 		return;
 	}
@@ -1798,6 +1813,7 @@ void wofi_init(struct map* _config) {
 	gtk_widget_set_name(outer_box, "outer-box");
 	gtk_container_add(GTK_CONTAINER(window), outer_box);
 	entry = gtk_search_entry_new();
+	g_signal_connect(entry, "size-allocate", G_CALLBACK(widget_allocate), NULL);
 
 	gtk_widget_set_name(entry, "input");
 	gtk_entry_set_placeholder_text(GTK_ENTRY(entry), prompt);
@@ -1816,7 +1832,6 @@ void wofi_init(struct map* _config) {
 	scroll = gtk_scrolled_window_new(NULL, NULL);
 	gtk_widget_set_name(scroll, "scroll");
 	gtk_container_add(GTK_CONTAINER(outer_box), scroll);
-	gtk_widget_set_size_request(scroll, width, height);
 	if(hide_scroll) {
 		gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_EXTERNAL, GTK_POLICY_EXTERNAL);
 	}

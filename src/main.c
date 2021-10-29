@@ -63,39 +63,40 @@ static char* get_exec_name(char* path) {
 static void print_usage(char** argv) {
 	printf("%s [options]\n", get_exec_name(argv[0]));
 	printf("Options:\n");
-	printf("--help\t\t-h\tDisplays this help message\n");
-	printf("--fork\t\t-f\tForks the menu so you can close the terminal\n");
-	printf("--conf\t\t-c\tSelects a config file to use\n");
-	printf("--style\t\t-s\tSelects a stylesheet to use\n");
-	printf("--color\t\t-C\tSelects a colors file to use\n");
-	printf("--dmenu\t\t-d\tRuns in dmenu mode\n");
-	printf("--show\t\t-S\tSpecifies the mode to run in\n");
-	printf("--width\t\t-W\tSpecifies the surface width\n");
-	printf("--height\t-H\tSpecifies the surface height\n");
-	printf("--prompt\t-p\tPrompt to display\n");
-	printf("--xoffset\t-x\tThe x offset\n");
-	printf("--yoffset\t-y\tThe y offset\n");
-	printf("--normal-window\t-n\tRender to a normal window\n");
-	printf("--allow-images\t-I\tAllows images to be rendered\n");
-	printf("--allow-markup\t-m\tAllows pango markup\n");
-	printf("--cache-file\t-k\tSets the cache file to use\n");
-	printf("--term\t\t-t\tSpecifies the terminal to use when running in a term\n");
-	printf("--password\t-P\tRuns in password mode\n");
-	printf("--exec-search\t-e\tMakes enter always use the search contents not the first result\n");
-	printf("--hide-scroll\t-b\tHides the scroll bars\n");
-	printf("--matching\t-M\tSets the matching method, default is contains\n");
-	printf("--insensitive\t-i\tAllows case insensitive searching\n");
-	printf("--parse-search\t-q\tParses the search text removing image escapes and pango\n");
-	printf("--version\t-v\tPrints the version and then exits\n");
-	printf("--location\t-l\tSets the location\n");
-	printf("--no-actions\t-a\tDisables multiple actions for modes that support it\n");
-	printf("--define\t-D\tSets a config option\n");
-	printf("--lines\t\t-L\tSets the height in number of lines\n");
-	printf("--columns\t-w\tSets the number of columns to display\n");
-	printf("--sort-order\t-O\tSets the sort order\n");
-	printf("--gtk-dark\t-G\tUses the dark variant of the current GTK theme\n");
-	printf("--search\t-Q\tSearch for something immediately on open\n");
-	printf("--monitor\t-o\tSets the monitor to open on\n");
+	printf("--help\t\t\t-h\tDisplays this help message\n");
+	printf("--fork\t\t\t-f\tForks the menu so you can close the terminal\n");
+	printf("--conf\t\t\t-c\tSelects a config file to use\n");
+	printf("--style\t\t\t-s\tSelects a stylesheet to use\n");
+	printf("--color\t\t\t-C\tSelects a colors file to use\n");
+	printf("--dmenu\t\t\t-d\tRuns in dmenu mode\n");
+	printf("--show\t\t\t-S\tSpecifies the mode to run in\n");
+	printf("--width\t\t\t-W\tSpecifies the surface width\n");
+	printf("--height\t\t-H\tSpecifies the surface height\n");
+	printf("--prompt\t\t-p\tPrompt to display\n");
+	printf("--xoffset\t\t-x\tThe x offset\n");
+	printf("--yoffset\t\t-y\tThe y offset\n");
+	printf("--normal-window\t\t-n\tRender to a normal window\n");
+	printf("--allow-images\t\t-I\tAllows images to be rendered\n");
+	printf("--allow-markup\t\t-m\tAllows pango markup\n");
+	printf("--cache-file\t\t-k\tSets the cache file to use\n");
+	printf("--term\t\t\t-t\tSpecifies the terminal to use when running in a term\n");
+	printf("--password\t\t-P\tRuns in password mode\n");
+	printf("--exec-search\t\t-e\tMakes enter always use the search contents not the first result\n");
+	printf("--hide-scroll\t\t-b\tHides the scroll bars\n");
+	printf("--matching\t\t-M\tSets the matching method, default is contains\n");
+	printf("--insensitive\t\t-i\tAllows case insensitive searching\n");
+	printf("--parse-search\t\t-q\tParses the search text removing image escapes and pango\n");
+	printf("--version\t\t-v\tPrints the version and then exits\n");
+	printf("--location\t\t-l\tSets the location\n");
+	printf("--no-actions\t\t-a\tDisables multiple actions for modes that support it\n");
+	printf("--define\t\t-D\tSets a config option\n");
+	printf("--lines\t\t\t-L\tSets the height in number of lines\n");
+	printf("--columns\t\t-w\tSets the number of columns to display\n");
+	printf("--sort-order\t\t-O\tSets the sort order\n");
+	printf("--gtk-dark\t\t-G\tUses the dark variant of the current GTK theme\n");
+	printf("--search\t\t-Q\tSearch for something immediately on open\n");
+	printf("--monitor\t\t-o\tSets the monitor to open on\n");
+	printf("--pre-display-cmd\t-r\tRuns command for the displayed entries, without changing the output. %%s for the real string\n");
 	exit(0);
 }
 
@@ -106,7 +107,10 @@ void wofi_load_css(bool nyan) {
 		ssize_t size = ftell(file);
 		fseek(file, 0, SEEK_SET);
 		char* data = malloc(size + 1);
-		fread(data, 1, size, file);
+		if (fread(data, 1, size, file) != 0) {
+			printf("failed to read stylesheet data from file");
+			exit(EXIT_FAILURE);
+		}
 		fclose(file);
 
 		data[size] = 0;
@@ -422,6 +426,12 @@ int main(int argc, char** argv) {
 			.val = 'o'
 		},
 		{
+			.name = "pre-display-cmd",
+			.has_arg = required_argument,
+			.flag = NULL,
+			.val = 'r'
+		},
+		{
 			.name = NULL,
 			.has_arg = 0,
 			.flag = NULL,
@@ -457,13 +467,14 @@ int main(int argc, char** argv) {
 	char* gtk_dark = NULL;
 	char* search = NULL;
 	char* monitor = NULL;
+	char* pre_display_cmd = NULL;
 
 	struct wl_list options;
 	wl_list_init(&options);
 	struct option_node* node;
 
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:GQ:o:", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:GQ:o:r:", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -571,6 +582,9 @@ int main(int argc, char** argv) {
 			break;
 		case 'o':
 			monitor = optarg;
+			break;
+		case 'r':
+			pre_display_cmd = optarg;
 			break;
 		}
 	}
@@ -760,6 +774,9 @@ int main(int argc, char** argv) {
 	}
 	if(monitor != NULL) {
 		map_put(config, "monitor", monitor);
+	}
+	if(pre_display_cmd != NULL) {
+		map_put(config, "pre_display_cmd", pre_display_cmd);
 	}
 
 	struct sigaction sigact = {0};

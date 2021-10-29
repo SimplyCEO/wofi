@@ -106,6 +106,7 @@ static struct wl_list mode_list;
 static pthread_t mode_thread;
 static bool has_joined_mode = false;
 static char* copy_exec = NULL;
+static char* pre_display_cmd = NULL;
 
 static struct map* keys;
 
@@ -536,6 +537,40 @@ static gboolean _insert_widget(gpointer data) {
 	if(node == NULL) {
 		return FALSE;
 	}
+	char* nodetext = NULL;
+
+	if (!(pre_display_cmd == NULL)) {
+		FILE *fp_labeltext;
+		char *cmd_labeltext;
+		char line[128]; // you'd think this caps the line's length to 128, but it's just a buffer which due to the nature of fgets() splits on lines
+		unsigned int size = 0;
+		// first, prepare cmd_labeltext to be each entry's actual comamand to run, aka replacing 'cat %s' to be 'cat filename'
+		if ((asprintf(&cmd_labeltext, pre_display_cmd, node->text[0])) == -1) {
+			printf("error parsing pre_display_cmd to run\n");
+			exit(EXIT_FAILURE);
+		}
+		// then, run the command
+		fp_labeltext = popen(cmd_labeltext, "r");
+		if (fp_labeltext == NULL) {
+			printf("error executing '%s'\n", cmd_labeltext);
+			exit(EXIT_FAILURE);
+		} else if (fgets(line, sizeof(line), fp_labeltext)) {
+			// lastly, read the output of said command, and put it into the text variable to be used for the label widgets
+			// consider using 'printf %.10s as your --pre-display-cmd to limit a string to a determined width. 10 here is an example
+			size += strlen(line+1); // we need place for the \0 of strcpy
+			nodetext = (char *) realloc(nodetext, size);
+			strcpy(nodetext, line);
+			while (fgets(line, sizeof(line), fp_labeltext)) {
+				size += strlen(line);
+				nodetext = (char *) realloc(nodetext, size);
+				strncat(nodetext, line, size);
+			}
+		}
+
+		pclose(fp_labeltext);
+	} else {
+		nodetext = *(node->text);
+	}
 
 	GtkWidget* parent;
 	if(node->action_count > 1 && !no_actions) {
@@ -543,7 +578,7 @@ static gboolean _insert_widget(gpointer data) {
 		g_signal_connect(parent, "activate", G_CALLBACK(expand), NULL);
 		GtkWidget* box;
 		if(node->builder == NULL) {
-			box = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
+			box = create_label(node->mode, nodetext, node->search_text, node->actions[0]);
 		} else {
 			box = GTK_WIDGET(node->builder->box);
 			setup_label(node->builder->mode->name, WOFI_PROPERTY_BOX(box));
@@ -570,7 +605,7 @@ static gboolean _insert_widget(gpointer data) {
 		}
 	} else {
 		if(node->builder == NULL) {
-			parent = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
+			parent = create_label(node->mode, nodetext, node->search_text, node->actions[0]);
 		} else {
 			parent = GTK_WIDGET(node->builder->box);
 			setup_label(node->builder->mode->name, WOFI_PROPERTY_BOX(parent));
@@ -1234,7 +1269,10 @@ static void do_copy(void) {
 			}
 
 			int fds[2];
-			pipe(fds);
+			if (pipe(fds) == -1) {
+				perror("pipe broken");
+				exit(EXIT_FAILURE);
+			}
 			if(fork() == 0) {
 				close(fds[1]);
 				dup2(fds[0], STDIN_FILENO);
@@ -1244,7 +1282,9 @@ static void do_copy(void) {
 			}
 			close(fds[0]);
 
-			write(fds[1], action, strlen(action));
+			if (!(write(fds[1], action, strlen(action)) == 0)) {
+				printf("fd pipe failed to write");
+			}
 
 			close(fds[1]);
 
@@ -1674,6 +1714,8 @@ void wofi_init(struct map* _config) {
 	char* monitor = map_get(config, "monitor");
 	char* layer = config_get(config, "layer", "top");
 	copy_exec = config_get(config, "copy_exec", "wl-copy");
+	
+	pre_display_cmd = map_get(config, "pre_display_cmd");
 
 	keys = map_init_void();
 

@@ -112,6 +112,10 @@ Specifies something to search for immediately on opening
 .TP
 .B \-o, \-\-monitor
 Sets the monitor to open on
+.TP
+.B \-r, \-\-pre\-display\-cmd
+If set, the selectable entry won't be displayed as-is, but will instead be displayed based on the output of this command, which can be anything. Suggested to use with \fB"echo %s | some_cmd"\fR or \fB"some_cmd %s"\fR, as the string gets replaced in a printf-like fashion. This will not affect the output of wofi once a selection has been done, allowing you to display something else than the original output.
+
 
 .SH CONFIGURATION
 Wofi has 3 main files used for configuration. All files are completely optional.

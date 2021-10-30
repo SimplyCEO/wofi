@@ -397,6 +397,38 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 
 	setup_label(mode, WOFI_PROPERTY_BOX(box));
 
+	char* nodetext = text;
+	if (pre_display_cmd != NULL) {
+		text = NULL;
+		FILE *fp_labeltext;
+		char *cmd_labeltext;
+		char line[128]; // you'd think this caps the line's length to 128, but it's just a buffer which due to the nature of fgets() splits on lines
+		size_t size = 0;
+		// first, prepare cmd_labeltext to be each entry's actual comamand to run, aka replacing 'cat %s' to be 'cat filename'
+		if ((asprintf(&cmd_labeltext, pre_display_cmd, nodetext)) == -1) {
+			fprintf(stderr, "error parsing pre_display_cmd to run\n");
+			exit(EXIT_FAILURE); }
+		// then, run the command
+		fp_labeltext = popen(cmd_labeltext, "r");
+		if (fp_labeltext == NULL) {
+			fprintf(stderr, "error executing '%s'\n", cmd_labeltext);
+			exit(EXIT_FAILURE);
+		} else if (fgets(line, sizeof(line), fp_labeltext)) {
+			// lastly, read the output of said command, and put it into the text variable to be used for the label widgets
+			// consider using 'printf %.10s as your --pre-display-cmd to limit a string to a determined width. 10 here is an example
+			size += strlen(line+1); // we need place for the \0 of strcpy
+			text = (char *) realloc(text, size);
+			strcpy(text, line);
+			while (fgets(line, sizeof(line), fp_labeltext)) {
+				size += strlen(line);
+				text = (char *) realloc(text, size);
+				strncat(text, line, size);
+			}
+		}
+
+		pclose(fp_labeltext);
+	}
+
 	if(allow_images) {
 		parse_images(WOFI_PROPERTY_BOX(box), text, true);
 	} else {
@@ -537,39 +569,8 @@ static gboolean _insert_widget(gpointer data) {
 	if(node == NULL) {
 		return FALSE;
 	}
-	char* nodetext = NULL;
+	char* nodetext = *(node->text);
 
-	if (pre_display_cmd != NULL) {
-		FILE *fp_labeltext;
-		char *cmd_labeltext;
-		char line[128]; // you'd think this caps the line's length to 128, but it's just a buffer which due to the nature of fgets() splits on lines
-		size_t size = 0;
-		// first, prepare cmd_labeltext to be each entry's actual comamand to run, aka replacing 'cat %s' to be 'cat filename'
-		if ((asprintf(&cmd_labeltext, pre_display_cmd, node->text[0])) == -1) {
-			printf(stderr, "error parsing pre_display_cmd to run\n");
-			exit(EXIT_FAILURE); }
-		// then, run the command
-		fp_labeltext = popen(cmd_labeltext, "r");
-		if (fp_labeltext == NULL) {
-			printf(stderr, "error executing '%s'\n", cmd_labeltext);
-			exit(EXIT_FAILURE);
-		} else if (fgets(line, sizeof(line), fp_labeltext)) {
-			// lastly, read the output of said command, and put it into the text variable to be used for the label widgets
-			// consider using 'printf %.10s as your --pre-display-cmd to limit a string to a determined width. 10 here is an example
-			size += strlen(line+1); // we need place for the \0 of strcpy
-			nodetext = (char *) realloc(nodetext, size);
-			strcpy(nodetext, line);
-			while (fgets(line, sizeof(line), fp_labeltext)) {
-				size += strlen(line);
-				nodetext = (char *) realloc(nodetext, size);
-				strncat(nodetext, line, size);
-			}
-		}
-
-		pclose(fp_labeltext);
-	} else {
-		nodetext = *(node->text);
-	}
 
 	GtkWidget* parent;
 	if(node->action_count > 1 && !no_actions) {

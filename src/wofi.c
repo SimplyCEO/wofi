@@ -1283,7 +1283,7 @@ static void do_copy(void) {
 			close(fds[0]);
 
 			if (write(fds[1], action, strlen(action)) != 0) {
-				printf("fd pipe failed to write");
+				fprintf(stderr, "fd pipe failed to write");
 			}
 
 			close(fds[1]);

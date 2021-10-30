@@ -109,6 +109,9 @@ Specifies something to search for immediately on opening
 .B monitor=\fISTRING\fR
 Sets the monitor to open on
 .TP
+.B pre_display_cmd=\fSTR\fR
+Specifies a printf-like string which is used on the entries prior to displaying them. This command is only used to represent the label widget's string, and won't affect the the output of the selected label.
+.TP
 .B orientation=\fIORIENTATION\fR
 Specifies the orientation, it can be either horizontal or vertical, default is vertical.
 .TP
@@ -183,8 +186,6 @@ Specifies the layer to open on. The options are background, bottom, top, and ove
 .TP
 .B copy_exec=\fIPATH\fR
 Specifies the executable to pipe copy data into. $PATH will be scanned, this is not passed to a shell and must be an executable. Default is wl-copy.
-.B pre_display_cmd=\fSTR\fR
-Specifies a printf-like string which is used on the entries prior to displaying them. This command is only used to represent the label widget's string, and won't affect the the output of the selected label.
 
 .SH CSS SELECTORS
 Any GTK widget can be selected by using the name of its CSS node, these however might change with updates and are not guaranteed to stay constant. Wofi also provides certain widgets with names and classes which can be referenced from CSS to give access to the most important widgets easily. \fBwofi\fR(7) contains the current widget layout used by wofi so if you want to get into CSS directly using GTK widget names look there for info.

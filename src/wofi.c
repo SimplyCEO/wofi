@@ -539,20 +539,19 @@ static gboolean _insert_widget(gpointer data) {
 	}
 	char* nodetext = NULL;
 
-	if (!(pre_display_cmd == NULL)) {
+	if (pre_display_cmd != NULL) {
 		FILE *fp_labeltext;
 		char *cmd_labeltext;
 		char line[128]; // you'd think this caps the line's length to 128, but it's just a buffer which due to the nature of fgets() splits on lines
-		unsigned int size = 0;
+		size_t size = 0;
 		// first, prepare cmd_labeltext to be each entry's actual comamand to run, aka replacing 'cat %s' to be 'cat filename'
 		if ((asprintf(&cmd_labeltext, pre_display_cmd, node->text[0])) == -1) {
-			printf("error parsing pre_display_cmd to run\n");
-			exit(EXIT_FAILURE);
-		}
+			printf(stderr, "error parsing pre_display_cmd to run\n");
+			exit(EXIT_FAILURE); }
 		// then, run the command
 		fp_labeltext = popen(cmd_labeltext, "r");
 		if (fp_labeltext == NULL) {
-			printf("error executing '%s'\n", cmd_labeltext);
+			printf(stderr, "error executing '%s'\n", cmd_labeltext);
 			exit(EXIT_FAILURE);
 		} else if (fgets(line, sizeof(line), fp_labeltext)) {
 			// lastly, read the output of said command, and put it into the text variable to be used for the label widgets
@@ -1282,7 +1281,7 @@ static void do_copy(void) {
 			}
 			close(fds[0]);
 
-			if (!(write(fds[1], action, strlen(action)) == 0)) {
+			if (write(fds[1], action, strlen(action)) != 0) {
 				printf("fd pipe failed to write");
 			}
 

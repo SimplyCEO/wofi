@@ -570,8 +570,6 @@ static gboolean _insert_widget(gpointer data) {
 	if(node == NULL) {
 		return FALSE;
 	}
-	char* nodetext = *(node->text);
-
 
 	GtkWidget* parent;
 	if(node->action_count > 1 && !no_actions) {
@@ -579,7 +577,7 @@ static gboolean _insert_widget(gpointer data) {
 		g_signal_connect(parent, "activate", G_CALLBACK(expand), NULL);
 		GtkWidget* box;
 		if(node->builder == NULL) {
-			box = create_label(node->mode, nodetext, node->search_text, node->actions[0]);
+			box = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
 		} else {
 			box = GTK_WIDGET(node->builder->box);
 			setup_label(node->builder->mode->name, WOFI_PROPERTY_BOX(box));
@@ -606,7 +604,7 @@ static gboolean _insert_widget(gpointer data) {
 		}
 	} else {
 		if(node->builder == NULL) {
-			parent = create_label(node->mode, nodetext, node->search_text, node->actions[0]);
+			parent = create_label(node->mode, node->text[0], node->search_text, node->actions[0]);
 		} else {
 			parent = GTK_WIDGET(node->builder->box);
 			setup_label(node->builder->mode->name, WOFI_PROPERTY_BOX(parent));

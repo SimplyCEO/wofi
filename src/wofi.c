@@ -407,7 +407,8 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 		// first, prepare cmd_labeltext to be each entry's actual comamand to run, aka replacing 'cat %s' to be 'cat filename'
 		if ((asprintf(&cmd_labeltext, pre_display_cmd, nodetext)) == -1) {
 			fprintf(stderr, "error parsing pre_display_cmd to run\n");
-			exit(EXIT_FAILURE); }
+			exit(EXIT_FAILURE);
+		}
 		// then, run the command
 		fp_labeltext = popen(cmd_labeltext, "r");
 		if (fp_labeltext == NULL) {
@@ -1283,7 +1284,7 @@ static void do_copy(void) {
 			close(fds[0]);
 
 			if (write(fds[1], action, strlen(action)) != 0) {
-				fprintf(stderr, "fd pipe failed to write");
+				fprintf(stderr, "fd pipe failed to write\n");
 			}
 
 			close(fds[1]);

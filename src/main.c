@@ -108,7 +108,7 @@ void wofi_load_css(bool nyan) {
 		fseek(file, 0, SEEK_SET);
 		char* data = malloc(size + 1);
 		if (fread(data, 1, size, file) == 0) {
-			printf(stderr, "failed to read stylesheet data from file");
+			fprintf(stderr, "failed to read stylesheet data from file\n");
 			exit(EXIT_FAILURE);
 		}
 		fclose(file);

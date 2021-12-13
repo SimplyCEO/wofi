@@ -50,7 +50,7 @@ Gentoo has a portage overlay https://gpo.zugaina.org/Overlays/guru/gui-apps/wofi
 The official documentation is provided by the man pages in this repository, sample styling can be found here https://cloudninja.pw/docs/wofi.html
 
 ## Donating
-If you feel like supporting development you can either buy me a tea https://www.buymeacoffee.com/Scoopta or support me monthly https://liberapay.com/Scoopta
+If you feel like supporting development you can either donate one time https://paypal.me/Scoopta or support me monthly https://liberapay.com/Scoopta
 
 ## Screenshots
 [![example 4](https://f.cloudninja.pw/Scaled_4.png)](https://f.cloudninja.pw/Rootbar_Example_4.png)

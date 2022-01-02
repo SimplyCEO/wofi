@@ -75,7 +75,7 @@ static char* get_search_text(char* file) {
 
 static bool populate_widget(char* file, char* action, struct widget_builder* builder) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(file);
-	if(info == NULL || g_desktop_app_info_get_is_hidden(info) || g_desktop_app_info_get_nodisplay(info)) {
+	if(info == NULL || !g_app_info_should_show(info)) {
 		return false;
 	}
 	const char* name;

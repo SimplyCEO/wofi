@@ -14,7 +14,7 @@ hg = find_program('hg', native : true, required : false)
 version = meson.project_version()
 
 if hg.found()
-	version = run_command(hg, 'identify').stdout().strip()
+	version = run_command(hg, 'identify', check : true).stdout().strip()
 endif
 
 add_project_arguments('-D_GNU_SOURCE', '-DVERSION="' + version + '"', language : 'c')

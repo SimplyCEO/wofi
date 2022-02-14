@@ -69,7 +69,7 @@ static void print_usage(char** argv) {
 	printf("--style\t\t\t-s\tSelects a stylesheet to use\n");
 	printf("--color\t\t\t-C\tSelects a colors file to use\n");
 	printf("--dmenu\t\t\t-d\tRuns in dmenu mode\n");
-	printf("--show\t\t\t-S\tSpecifies the mode to run in\n");
+	printf("--show\t\t\t-S\tSpecifies the mode to run in. A list can be found in wofi(7)\n");
 	printf("--width\t\t\t-W\tSpecifies the surface width\n");
 	printf("--height\t\t-H\tSpecifies the surface height\n");
 	printf("--prompt\t\t-p\tPrompt to display\n");

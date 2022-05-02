@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2020 Scoopta
+ *  Copyright (C) 2019-2022 Scoopta
  *  This file is part of Wofi
  *  Wofi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -40,7 +40,7 @@
 #include <pango/pango.h>
 #include <gdk/gdkwayland.h>
 
-static const char* terminals[] = {"kitty", "termite", "alacritty", "gnome-terminal", "weston-terminal"};
+static const char* terminals[] = {"kitty", "termite", "alacritty", "foot", "gnome-terminal", "weston-terminal"};
 
 enum matching_mode {
 	MATCHING_MODE_CONTAINS,

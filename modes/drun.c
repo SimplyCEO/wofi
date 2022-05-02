@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2020 Scoopta
+ *  Copyright (C) 2019-2022 Scoopta
  *  This file is part of Wofi
  *  Wofi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ static char* get_search_text(char* file) {
 
 static bool populate_widget(char* file, char* action, struct widget_builder* builder) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(file);
-	if(info == NULL || !g_app_info_should_show(info)) {
+	if(info == NULL || !g_app_info_should_show(G_APP_INFO(info))) {
 		return false;
 	}
 	const char* name;

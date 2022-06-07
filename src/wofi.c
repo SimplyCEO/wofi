@@ -41,11 +41,13 @@
 #include <gdk/gdkwayland.h>
 
 #define PROTO_VERSION(v1, v2) (v1 < v2 ? v1 : v2)
+#define MAX_MULTI_CONTAINS_FILTER_SIZE 256
 
 static const char* terminals[] = {"kitty", "termite", "alacritty", "foot", "gnome-terminal", "weston-terminal"};
 
 enum matching_mode {
 	MATCHING_MODE_CONTAINS,
+	MATCHING_MODE_MULTI_CONTAINS,
 	MATCHING_MODE_FUZZY
 };
 
@@ -970,12 +972,7 @@ static void activate_search(GtkEntry* entry, gpointer data) {
 	}
 }
 
-static gboolean filter_proxy(GtkFlowBoxChild* row) {
-	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
-	if(GTK_IS_EXPANDER(box)) {
-		box = gtk_expander_get_label_widget(GTK_EXPANDER(box));
-	}
-	const gchar* text = wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "filter");
+static gboolean do_strcomp(gchar* filter, const gchar* text) {
 	if(filter == NULL || strcmp(filter, "") == 0) {
 		return TRUE;
 	}
@@ -989,18 +986,57 @@ static gboolean filter_proxy(GtkFlowBoxChild* row) {
 	}
 }
 
-static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
-	(void) data;
-	gboolean ret = filter_proxy(row);
+static gboolean do_multi_strcomp(gchar* filter, const gchar* text) {
+	if(filter == NULL || strcmp(filter, "") == 0) {
+		return TRUE;
+	}
+	if(text == NULL) {
+		return FALSE;
+	}
+	gchar new_filter[MAX_MULTI_CONTAINS_FILTER_SIZE];
+	strncpy(new_filter, filter, sizeof(new_filter));
+	new_filter[sizeof(new_filter) - 1] = '\0';
+	gchar* token;
+	gchar* rest = new_filter;
+	while((token = strtok_r(rest, " ", &rest))) {
+		if(do_strcomp(token, text) == FALSE) {
+			return FALSE;
+		}
+	}
+	return TRUE;
+}
 
-	if(gtk_widget_get_visible(GTK_WIDGET(row)) == !ret && dynamic_lines) {
-		if(ret) {
+static gboolean filter_proxy(GtkFlowBoxChild* row) {
+	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
+	if(GTK_IS_EXPANDER(box)) {
+		box = gtk_expander_get_label_widget(GTK_EXPANDER(box));
+	}
+	const gchar* text =
+			wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "filter");
+	return do_strcomp(filter, text);
+}
+
+static gboolean filter_multi_proxy(GtkFlowBoxChild* row) {
+	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
+	if(GTK_IS_EXPANDER(box)) {
+		box = gtk_expander_get_label_widget(GTK_EXPANDER(box));
+	}
+	const gchar* text =
+			wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "filter");
+	return do_multi_strcomp(filter, text);
+}
+
+static void do_resize_surface_after_filter(GtkFlowBoxChild* row, gboolean filter_return) {
+
+	if (gtk_widget_get_visible(GTK_WIDGET(row)) == !filter_return &&
+			dynamic_lines) {
+		if (filter_return) {
 			++line_count;
 		} else {
 			--line_count;
 		}
 
-		if(line_count < max_lines) {
+		if (line_count < max_lines) {
 			lines = line_count;
 			update_surface_size();
 		} else {
@@ -1009,7 +1045,23 @@ static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
 		}
 	}
 
-	gtk_widget_set_visible(GTK_WIDGET(row), ret);
+	gtk_widget_set_visible(GTK_WIDGET(row), filter_return);
+}
+
+static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
+	(void) data;
+	gboolean ret = filter_proxy(row);
+
+	do_resize_surface_after_filter(row, ret);
+
+	return ret;
+}
+
+static gboolean do_multi_filter(GtkFlowBoxChild* row, gpointer data) {
+	(void)data;
+	gboolean ret = filter_multi_proxy(row);
+
+	do_resize_surface_after_filter(row, ret);
 
 	return ret;
 }
@@ -1053,6 +1105,54 @@ static gint fuzzy_sort(const gchar* text1, const gchar* text2) {
 	return dist1 - dist2;
 }
 
+// we sort based on how early in the string all the matches are.
+// if there are matches for each.
+static gint multi_contains_sort(const gchar* text1, const gchar* text2) {
+	// sum of string positions of each match
+	int t1_count = 0;
+	int t2_count = 0;
+	// does this string match with mult-contains
+	bool t1_match = true;
+	bool t2_match = true;
+
+	gchar new_filter[MAX_MULTI_CONTAINS_FILTER_SIZE];
+	strncpy(new_filter, filter, sizeof(new_filter));
+	new_filter[sizeof(new_filter) - 1] = '\0';
+
+	gchar* token;
+	gchar* rest = new_filter;
+	while((token = strtok_r(rest, " ", &rest))) {
+		char* str1, *str2;
+		if(insensitive) {
+			str1 = strcasestr(text1, token);
+			str2 = strcasestr(text2, token);
+		} else {
+			str1 = strstr(text1, token);
+			str2 = strstr(text2, token);
+		}
+		t1_match = t1_match && str1 != NULL;
+		t2_match = t2_match && str2 != NULL;
+		if(str1 != NULL) {
+			int pos1 = str1 - text1;
+			t1_count += pos1;
+		}
+		if(str2 != NULL) {
+			int pos2 = str2 - text2;
+			t2_count += pos2;
+		}
+	}
+	if(t1_match && t2_match) {
+		// both match
+		// return the one with the smallest count.
+		return t1_count - t2_count;
+	} else if(t1_match) {
+		return -1;
+	} else if(t2_match) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
 static gint contains_sort(const gchar* text1, const gchar* text2) {
 	char* str1, *str2;
 
@@ -1127,6 +1227,12 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 
 	gint primary = 0;
 	switch(matching) {
+	case MATCHING_MODE_MULTI_CONTAINS:
+		primary = multi_contains_sort(text1, text2);
+		if(primary == 0) {
+			return fallback;
+		}
+		return primary;
 	case MATCHING_MODE_CONTAINS:
 		primary = contains_sort(text1, text2);
 		if(primary == 0) {
@@ -1696,7 +1802,7 @@ void wofi_init(struct map* _config) {
 	char* password_char = map_get(config, "password_char");
 	exec_search = strcmp(config_get(config, "exec_search", "false"), "true") == 0;
 	bool hide_scroll = strcmp(config_get(config, "hide_scroll", "false"), "true") == 0;
-	matching = config_get_mnemonic(config, "matching", "contains", 2, "contains", "fuzzy");
+	matching = config_get_mnemonic(config, "matching", "contains", 3, "contains", "multi-contains", "fuzzy");
 	insensitive = strcmp(config_get(config, "insensitive", "false"), "true") == 0;
 	parse_search = strcmp(config_get(config, "parse_search", "false"), "true") == 0;
 	location = config_get_mnemonic(config, "location", "center", 18,
@@ -1895,6 +2001,10 @@ void wofi_init(struct map* _config) {
 	gtk_container_add(GTK_CONTAINER(scroll), wrapper_box);
 
 	switch(matching) {
+	case MATCHING_MODE_MULTI_CONTAINS:
+		gtk_flow_box_set_filter_func(GTK_FLOW_BOX(inner_box), do_multi_filter, NULL, NULL);
+		gtk_flow_box_set_sort_func(GTK_FLOW_BOX(inner_box), do_sort, NULL, NULL);
+		break;
 	case MATCHING_MODE_CONTAINS:
 		gtk_flow_box_set_filter_func(GTK_FLOW_BOX(inner_box), do_filter, NULL, NULL);
 		gtk_flow_box_set_sort_func(GTK_FLOW_BOX(inner_box), do_sort, NULL, NULL);

@@ -986,6 +986,32 @@ static gboolean do_strcomp(gchar* filter, const gchar* text) {
 	}
 }
 
+static char* strcasechr(const char *s, char c) {
+	const char accept[3] = {c, toupper(c), 0};
+	return strpbrk(s, accept);
+}
+
+
+static gboolean do_fuzzy_strcomp(gchar* filter, const gchar* text) {
+	if (filter == NULL || strcmp(filter, "") == 0) {
+		return TRUE;
+	}
+	if (text == NULL) {
+		return FALSE;
+	}
+	// we just check that all the characters (ignoring case) are in the
+	// search text possibly case insensitively in the correct order
+	while (*filter) {
+		char nch = *filter++;
+
+		if (!(text = strcasechr(text, nch))) {
+			return FALSE;
+		}
+		text++;
+	}
+	return TRUE;
+}
+
 static gboolean do_multi_strcomp(gchar* filter, const gchar* text) {
 	if(filter == NULL || strcmp(filter, "") == 0) {
 		return TRUE;
@@ -1026,7 +1052,17 @@ static gboolean filter_multi_proxy(GtkFlowBoxChild* row) {
 	return do_multi_strcomp(filter, text);
 }
 
-static void do_resize_surface_after_filter(GtkFlowBoxChild* row, gboolean filter_return) {
+static gboolean filter_fuzzy_proxy(GtkFlowBoxChild *row) {
+  GtkWidget *box = gtk_bin_get_child(GTK_BIN(row));
+  if (GTK_IS_EXPANDER(box)) {
+    box = gtk_expander_get_label_widget(GTK_EXPANDER(box));
+  }
+  const gchar *text =
+      wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "filter");
+  return do_fuzzy_strcomp(filter, text);
+}
+
+static void do_resize_surface_after_filter(GtkFlowBoxChild *row, gboolean filter_return) {
 
 	if (gtk_widget_get_visible(GTK_WIDGET(row)) == !filter_return &&
 			dynamic_lines) {
@@ -1055,6 +1091,15 @@ static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
 	do_resize_surface_after_filter(row, ret);
 
 	return ret;
+}
+
+static gboolean do_fuzzy_filter(GtkFlowBoxChild* row, gpointer data) {
+  (void)data;
+  gboolean ret = filter_fuzzy_proxy(row);
+
+  do_resize_surface_after_filter(row, ret);
+
+  return ret;
 }
 
 static gboolean do_multi_filter(GtkFlowBoxChild* row, gpointer data) {
@@ -1821,7 +1866,7 @@ void wofi_init(struct map* _config) {
 	char* monitor = map_get(config, "monitor");
 	char* layer = config_get(config, "layer", "top");
 	copy_exec = config_get(config, "copy_exec", "wl-copy");
-	
+
 	pre_display_cmd = map_get(config, "pre_display_cmd");
 
 	keys = map_init_void();
@@ -2010,7 +2055,10 @@ void wofi_init(struct map* _config) {
 		gtk_flow_box_set_sort_func(GTK_FLOW_BOX(inner_box), do_sort, NULL, NULL);
 		break;
 	case MATCHING_MODE_FUZZY:
-		gtk_flow_box_set_sort_func(GTK_FLOW_BOX(inner_box), do_sort, NULL, NULL);
+		gtk_flow_box_set_filter_func(GTK_FLOW_BOX(inner_box), do_fuzzy_filter, NULL,
+									 NULL);
+		gtk_flow_box_set_sort_func(GTK_FLOW_BOX(inner_box), do_sort, NULL,
+								   NULL);
 		break;
 	}
 

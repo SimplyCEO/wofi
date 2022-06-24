@@ -22,6 +22,11 @@
 
 #include <sys/types.h>
 
+typedef double score_t;
+#define SCORE_MAX INFINITY
+#define SCORE_MIN -INFINITY
+#define MATCH_FUZZY_MAX_LEN 256
+
 time_t utils_get_time_millis(void);
 
 void utils_sleep_millis(time_t millis);
@@ -34,6 +39,8 @@ size_t utils_min3(size_t n1, size_t n2, size_t n3);
 
 size_t utils_distance(const char* haystack, const char* needle);
 
-void utils_mkdir(char* path, mode_t mode);
+score_t utils_fuzzy_score(const char *haystack, const char *needle);
+
+void utils_mkdir(char *path, mode_t mode);
 
 #endif

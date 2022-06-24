@@ -1111,43 +1111,33 @@ static gboolean do_multi_filter(GtkFlowBoxChild* row, gpointer data) {
 	return ret;
 }
 
-static gint fuzzy_sort(const gchar* text1, const gchar* text2) {
-	char* _filter = strdup(filter);
-	size_t len = strlen(_filter);
-
-	char* t1 = strdup(text1);
-	size_t t1l = strlen(t1);
-
-	char* t2 = strdup(text2);
-	size_t t2l = strlen(t2);
-
-	if(insensitive) {
-		for(size_t count = 0; count < len; ++count) {
-			char chr = _filter[count];
-			if(isalpha(chr)) {
-				_filter[count] = tolower(chr);
-			}
+static gint fuzzy_sort(const gchar *text1, const gchar *text2) {
+	gboolean match1 = do_fuzzy_strcomp(filter, text1);
+	gboolean match2 = do_fuzzy_strcomp(filter, text2);
+	// both filters match do fuzzy scoring
+	if(match1 && match2) {
+		score_t dist1 = utils_fuzzy_score(text1, filter);
+		score_t dist2 = utils_fuzzy_score(text2, filter);
+		if (dist1 == dist2) {
+			// same same
+			return 0;
+		} else if (dist1 > dist2) { // highest score wins.
+			// text1 goes first
+			return -1;
+		} else {
+			// text2 goes first
+			return 1;
 		}
-		for(size_t count = 0; count < t1l; ++count) {
-			char chr = t1[count];
-			if(isalpha(chr)) {
-				t1[count] = tolower(chr);
-			}
-		}
-		for(size_t count = 0; count < t2l; ++count) {
-			char chr = t2[count];
-			if(isalpha(chr)) {
-				t2[count] = tolower(chr);
-			}
-		}
+	} else if(match1) {
+		// text1 goes first
+		return -1;
+	} else if(match2) {
+		// text2 goes first
+		return 1;
+	} else {
+		// same same.
+		return 0;
 	}
-
-	size_t dist1 = utils_distance(t1, _filter);
-	size_t dist2 = utils_distance(t2, _filter);
-	free(_filter);
-	free(t1);
-	free(t2);
-	return dist1 - dist2;
 }
 
 // we sort based on how early in the string all the matches are.

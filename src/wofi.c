@@ -29,6 +29,7 @@
 #include <sys/wait.h>
 
 #include <utils.h>
+#include <match.h>
 #include <config.h>
 #include <utils_g.h>
 #include <property_box.h>
@@ -41,15 +42,8 @@
 #include <gdk/gdkwayland.h>
 
 #define PROTO_VERSION(v1, v2) (v1 < v2 ? v1 : v2)
-#define MAX_MULTI_CONTAINS_FILTER_SIZE 256
 
 static const char* terminals[] = {"kitty", "termite", "alacritty", "foot", "gnome-terminal", "weston-terminal"};
-
-enum matching_mode {
-	MATCHING_MODE_CONTAINS,
-	MATCHING_MODE_MULTI_CONTAINS,
-	MATCHING_MODE_FUZZY
-};
 
 enum location {
 	LOCATION_CENTER,
@@ -972,66 +966,6 @@ static void activate_search(GtkEntry* entry, gpointer data) {
 	}
 }
 
-static gboolean do_strcomp(gchar* filter, const gchar* text) {
-	if(filter == NULL || strcmp(filter, "") == 0) {
-		return TRUE;
-	}
-	if(text == NULL) {
-		return FALSE;
-	}
-	if(insensitive) {
-		return strcasestr(text, filter) != NULL;
-	} else {
-		return strstr(text, filter) != NULL;
-	}
-}
-
-static char* strcasechr(const char *s, char c) {
-	const char accept[3] = {c, toupper(c), 0};
-	return strpbrk(s, accept);
-}
-
-
-static gboolean do_fuzzy_strcomp(gchar* filter, const gchar* text) {
-	if (filter == NULL || strcmp(filter, "") == 0) {
-		return TRUE;
-	}
-	if (text == NULL) {
-		return FALSE;
-	}
-	// we just check that all the characters (ignoring case) are in the
-	// search text possibly case insensitively in the correct order
-	while (*filter) {
-		char nch = *filter++;
-
-		if (!(text = strcasechr(text, nch))) {
-			return FALSE;
-		}
-		text++;
-	}
-	return TRUE;
-}
-
-static gboolean do_multi_strcomp(gchar* filter, const gchar* text) {
-	if(filter == NULL || strcmp(filter, "") == 0) {
-		return TRUE;
-	}
-	if(text == NULL) {
-		return FALSE;
-	}
-	gchar new_filter[MAX_MULTI_CONTAINS_FILTER_SIZE];
-	strncpy(new_filter, filter, sizeof(new_filter));
-	new_filter[sizeof(new_filter) - 1] = '\0';
-	gchar* token;
-	gchar* rest = new_filter;
-	while((token = strtok_r(rest, " ", &rest))) {
-		if(do_strcomp(token, text) == FALSE) {
-			return FALSE;
-		}
-	}
-	return TRUE;
-}
-
 static gboolean filter_proxy(GtkFlowBoxChild* row) {
 	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
 	if(GTK_IS_EXPANDER(box)) {
@@ -1039,40 +973,20 @@ static gboolean filter_proxy(GtkFlowBoxChild* row) {
 	}
 	const gchar* text =
 			wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "filter");
-	return do_strcomp(filter, text);
-}
-
-static gboolean filter_multi_proxy(GtkFlowBoxChild* row) {
-	GtkWidget* box = gtk_bin_get_child(GTK_BIN(row));
-	if(GTK_IS_EXPANDER(box)) {
-		box = gtk_expander_get_label_widget(GTK_EXPANDER(box));
-	}
-	const gchar* text =
-			wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "filter");
-	return do_multi_strcomp(filter, text);
-}
-
-static gboolean filter_fuzzy_proxy(GtkFlowBoxChild *row) {
-  GtkWidget *box = gtk_bin_get_child(GTK_BIN(row));
-  if (GTK_IS_EXPANDER(box)) {
-    box = gtk_expander_get_label_widget(GTK_EXPANDER(box));
-  }
-  const gchar *text =
-      wofi_property_box_get_property(WOFI_PROPERTY_BOX(box), "filter");
-  return do_fuzzy_strcomp(filter, text);
+	return match_for_matching_mode(filter, text, matching, insensitive);
 }
 
 static void do_resize_surface_after_filter(GtkFlowBoxChild *row, gboolean filter_return) {
 
-	if (gtk_widget_get_visible(GTK_WIDGET(row)) == !filter_return &&
+	if(gtk_widget_get_visible(GTK_WIDGET(row)) == !filter_return &&
 			dynamic_lines) {
-		if (filter_return) {
+		if(filter_return) {
 			++line_count;
 		} else {
 			--line_count;
 		}
 
-		if (line_count < max_lines) {
+		if(line_count < max_lines) {
 			lines = line_count;
 			update_surface_size();
 		} else {
@@ -1091,133 +1005,6 @@ static gboolean do_filter(GtkFlowBoxChild* row, gpointer data) {
 	do_resize_surface_after_filter(row, ret);
 
 	return ret;
-}
-
-static gboolean do_fuzzy_filter(GtkFlowBoxChild* row, gpointer data) {
-  (void)data;
-  gboolean ret = filter_fuzzy_proxy(row);
-
-  do_resize_surface_after_filter(row, ret);
-
-  return ret;
-}
-
-static gboolean do_multi_filter(GtkFlowBoxChild* row, gpointer data) {
-	(void)data;
-	gboolean ret = filter_multi_proxy(row);
-
-	do_resize_surface_after_filter(row, ret);
-
-	return ret;
-}
-
-static gint fuzzy_sort(const gchar *text1, const gchar *text2) {
-	gboolean match1 = do_fuzzy_strcomp(filter, text1);
-	gboolean match2 = do_fuzzy_strcomp(filter, text2);
-	// both filters match do fuzzy scoring
-	if(match1 && match2) {
-		score_t dist1 = utils_fuzzy_score(text1, filter);
-		score_t dist2 = utils_fuzzy_score(text2, filter);
-		if (dist1 == dist2) {
-			// same same
-			return 0;
-		} else if (dist1 > dist2) { // highest score wins.
-			// text1 goes first
-			return -1;
-		} else {
-			// text2 goes first
-			return 1;
-		}
-	} else if(match1) {
-		// text1 goes first
-		return -1;
-	} else if(match2) {
-		// text2 goes first
-		return 1;
-	} else {
-		// same same.
-		return 0;
-	}
-}
-
-// we sort based on how early in the string all the matches are.
-// if there are matches for each.
-static gint multi_contains_sort(const gchar* text1, const gchar* text2) {
-	// sum of string positions of each match
-	int t1_count = 0;
-	int t2_count = 0;
-	// does this string match with mult-contains
-	bool t1_match = true;
-	bool t2_match = true;
-
-	gchar new_filter[MAX_MULTI_CONTAINS_FILTER_SIZE];
-	strncpy(new_filter, filter, sizeof(new_filter));
-	new_filter[sizeof(new_filter) - 1] = '\0';
-
-	gchar* token;
-	gchar* rest = new_filter;
-	while((token = strtok_r(rest, " ", &rest))) {
-		char* str1, *str2;
-		if(insensitive) {
-			str1 = strcasestr(text1, token);
-			str2 = strcasestr(text2, token);
-		} else {
-			str1 = strstr(text1, token);
-			str2 = strstr(text2, token);
-		}
-		t1_match = t1_match && str1 != NULL;
-		t2_match = t2_match && str2 != NULL;
-		if(str1 != NULL) {
-			int pos1 = str1 - text1;
-			t1_count += pos1;
-		}
-		if(str2 != NULL) {
-			int pos2 = str2 - text2;
-			t2_count += pos2;
-		}
-	}
-	if(t1_match && t2_match) {
-		// both match
-		// return the one with the smallest count.
-		return t1_count - t2_count;
-	} else if(t1_match) {
-		return -1;
-	} else if(t2_match) {
-		return 1;
-	} else {
-		return 0;
-	}
-}
-static gint contains_sort(const gchar* text1, const gchar* text2) {
-	char* str1, *str2;
-
-	if(insensitive) {
-		str1 = strcasestr(text1, filter);
-		str2 = strcasestr(text2, filter);
-	} else {
-		str1 = strstr(text1, filter);
-		str2 = strstr(text2, filter);
-	}
-	bool tx1 = str1 == text1;
-	bool tx2 = str2 == text2;
-	bool txc1 = str1 != NULL;
-	bool txc2 = str2 != NULL;
-
-	if(tx1 && tx2) {
-		return 0;
-	} else if(tx1) {
-		return -1;
-	} else if(tx2) {
-		return 1;
-	} else if(txc1 && txc2) {
-		return 0;
-	} else if(txc1) {
-		return -1;
-	} else if(txc2) {
-		return 1;
-	} else {
-		return 0;
-	}
 }
 
 static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer data) {
@@ -1242,7 +1029,7 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 		return index1 - index2;
 	}
 
-	uint64_t fallback = 0;
+	int fallback = 0;
 	switch(sort_order) {
 	case SORT_ORDER_DEFAULT:
 		fallback = index1 - index2;
@@ -1259,30 +1046,7 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 	if(filter == NULL || strcmp(filter, "") == 0) {
 		return fallback;
 	}
-
-	gint primary = 0;
-	switch(matching) {
-	case MATCHING_MODE_MULTI_CONTAINS:
-		primary = multi_contains_sort(text1, text2);
-		if(primary == 0) {
-			return fallback;
-		}
-		return primary;
-	case MATCHING_MODE_CONTAINS:
-		primary = contains_sort(text1, text2);
-		if(primary == 0) {
-			return fallback;
-		}
-		return primary;
-	case MATCHING_MODE_FUZZY:
-		primary = fuzzy_sort(text1, text2);
-		if(primary == 0) {
-			return fallback;
-		}
-		return primary;
-	default:
-		return 0;
-	}
+	return sort_for_matching_mode(text1, text2, fallback, matching, filter, insensitive);
 }
 
 static void select_first(void) {
@@ -2035,22 +1799,8 @@ void wofi_init(struct map* _config) {
 	gtk_container_add(GTK_CONTAINER(wrapper_box), inner_box);
 	gtk_container_add(GTK_CONTAINER(scroll), wrapper_box);
 
-	switch(matching) {
-	case MATCHING_MODE_MULTI_CONTAINS:
-		gtk_flow_box_set_filter_func(GTK_FLOW_BOX(inner_box), do_multi_filter, NULL, NULL);
-		gtk_flow_box_set_sort_func(GTK_FLOW_BOX(inner_box), do_sort, NULL, NULL);
-		break;
-	case MATCHING_MODE_CONTAINS:
-		gtk_flow_box_set_filter_func(GTK_FLOW_BOX(inner_box), do_filter, NULL, NULL);
-		gtk_flow_box_set_sort_func(GTK_FLOW_BOX(inner_box), do_sort, NULL, NULL);
-		break;
-	case MATCHING_MODE_FUZZY:
-		gtk_flow_box_set_filter_func(GTK_FLOW_BOX(inner_box), do_fuzzy_filter, NULL,
-									 NULL);
-		gtk_flow_box_set_sort_func(GTK_FLOW_BOX(inner_box), do_sort, NULL,
-								   NULL);
-		break;
-	}
+	gtk_flow_box_set_filter_func(GTK_FLOW_BOX(inner_box), do_filter, NULL, NULL);
+	gtk_flow_box_set_sort_func(GTK_FLOW_BOX(inner_box), do_sort, NULL, NULL);
 
 	g_signal_connect(inner_box, "child-activated", G_CALLBACK(activate_item), NULL);
 	g_signal_connect(inner_box, "selected-children-changed", G_CALLBACK(select_item), NULL);

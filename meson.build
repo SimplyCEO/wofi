@@ -23,6 +23,7 @@ add_project_link_arguments('-rdynamic', language : 'c')
 sources = ['src/config.c',
 			'src/main.c',
 			'src/map.c',
+			'src/match.c',
 			'src/property_box.c',
 			'src/utils_g.c',
 			'src/utils.c',

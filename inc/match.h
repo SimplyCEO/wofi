@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2020 Scoopta
+ *  Copyright (C) 2019-2022 Scoopta
  *  This file is part of Wofi
  *  Wofi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -15,25 +15,26 @@
     along with Wofi.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef UTIL_H
-#define UTIL_H
+#ifndef MATCH_H
+#define MATCH_H
 
-#include <time.h>
+#include <math.h>
+#include <stdbool.h>
 
-#include <sys/types.h>
+typedef double score_t;
+#define SCORE_MAX INFINITY
+#define SCORE_MIN -INFINITY
+#define MATCH_FUZZY_MAX_LEN 256
+#define MAX_MULTI_CONTAINS_FILTER_SIZE 256
 
-time_t utils_get_time_millis(void);
+enum matching_mode {
+  MATCHING_MODE_CONTAINS,
+  MATCHING_MODE_MULTI_CONTAINS,
+  MATCHING_MODE_FUZZY
+};
 
-void utils_sleep_millis(time_t millis);
+int sort_for_matching_mode(const char *text1, const char *text2, int fallback,
+                           enum matching_mode match_type, const char *filter, bool insensitive);
 
-char* utils_concat(size_t arg_count, ...);
-
-size_t utils_min(size_t n1, size_t n2);
-
-size_t utils_min3(size_t n1, size_t n2, size_t n3);
-
-size_t utils_distance(const char* haystack, const char* needle);
-
-void utils_mkdir(char *path, mode_t mode);
-
+bool match_for_matching_mode(const char* filter, const char* text, enum matching_mode matching, bool insensitive);
 #endif

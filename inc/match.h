@@ -34,7 +34,7 @@ enum matching_mode {
 };
 
 int sort_for_matching_mode(const char *text1, const char *text2, int fallback,
-                           enum matching_mode match_type, const char *filter, bool insensitive);
+						   enum matching_mode match_type, const char *filter, bool insensitive);
 
 bool match_for_matching_mode(const char* filter, const char* text, enum matching_mode matching, bool insensitive);
 #endif

@@ -81,7 +81,7 @@ static bool fuzzy_match(const char* filter, const char* text, bool insensitive) 
 	}
 	// we just check that all the characters (ignoring case) are in the
 	// search text possibly case insensitively in the correct order
-	while(*filter) {
+	while(*filter != 0) {
 		char nch = *filter++;
 
 		if(!(text = strcasechr(text, nch, insensitive))) {
@@ -229,7 +229,7 @@ static inline void match_row(int row, score_t* curr_D, score_t* curr_M,
 // which has been implemented here.
 
 static score_t fuzzy_score(const char* haystack, const char* needle, bool insensitive) {
-	if(!*needle)
+	if(*needle == 0)
 		return SCORE_MIN;
 
 	int n = strlen(needle);

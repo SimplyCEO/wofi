@@ -397,9 +397,9 @@ int sort_for_matching_mode(const char* text1, const char* text2, int fallback,
 	case MATCHING_MODE_CONTAINS:
 		primary = contains_sort(text1, text2, filter, insensitive);
 		break;
-		case MATCHING_MODE_FUZZY:
-			primary = fuzzy_sort(text1, text2, filter, insensitive);
-			break;
+	case MATCHING_MODE_FUZZY:
+		primary = fuzzy_sort(text1, text2, filter, insensitive);
+		break;
 	default:
 		return 0;
 	}

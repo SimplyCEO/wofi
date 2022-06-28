@@ -65,7 +65,7 @@ static bool contains_match(const char* filter, const char* text, bool insensitiv
 
 static char* strcasechr(const char* s,char c, bool insensitive) {
 	if(insensitive) {
-		const char accept[3] = {c, toupper(c), 0};
+		const char accept[3] = {tolower(c), toupper(c), 0};
 		return strpbrk(s, accept);
 	} else {
 		return strchr(s, c);

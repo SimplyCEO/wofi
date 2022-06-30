@@ -119,11 +119,17 @@ static bool populate_widget(char* file, char* action, struct widget_builder* bui
 			pixbuf = gtk_icon_info_load_icon(info, NULL);
 		}
 
+		if(pixbuf == NULL) {
+			goto img_fail;
+		}
+
 		pixbuf = utils_g_resize_pixbuf(pixbuf, wofi_get_image_size() * wofi_get_window_scale(), GDK_INTERP_BILINEAR);
 
 		wofi_widget_builder_insert_image(builder, pixbuf, "icon", NULL);
 		g_object_unref(pixbuf);
 	}
+
+	img_fail:
 	wofi_widget_builder_insert_text(builder, name, "name", NULL);
 	wofi_widget_builder_insert_text(builder, generic_name, "generic-name", NULL);
 	free(generic_name);

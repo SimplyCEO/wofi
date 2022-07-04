@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020 Scoopta
+ *  Copyright (C) 2020-2022 Scoopta
  *  This file is part of Wofi
  *  Wofi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -24,6 +24,11 @@
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
+struct css_class {
+	char* class;
+	struct wl_list link;
+};
+
 struct widget_builder* wofi_widget_builder_init(struct mode* mode, size_t actions);
 
 void wofi_widget_builder_set_search_text(struct widget_builder* builder, char* search_text);
@@ -32,7 +37,11 @@ void wofi_widget_builder_set_action(struct widget_builder* builder, char* action
 
 __attribute__((sentinel)) void wofi_widget_builder_insert_text(struct widget_builder* builder, const char* text, ...);
 
+void wofi_widget_builder_insert_text_with_list(struct widget_builder* builder, const char* text, struct wl_list* classes);
+
 __attribute__((sentinel)) void wofi_widget_builder_insert_image(struct widget_builder* builder, GdkPixbuf* pixbuf, ...);
+
+void wofi_widget_builder_insert_image_with_list(struct widget_builder* builder, GdkPixbuf* pixbuf, struct wl_list* classes);
 
 struct widget_builder* wofi_widget_builder_get_idx(struct widget_builder* builder, size_t idx);
 

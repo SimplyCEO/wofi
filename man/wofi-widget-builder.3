@@ -49,7 +49,20 @@ Inserts text into the widget specified by the builder
 \- The names of the CSS classes for this text. The class that will be assigned is .mode_name-css_name where mode_name is the name of the mode, i.e. drun etc. This should have a NULL sentinel
 
 .TP
-.B void wofi_widget_builder_insert_image(struct widget_builder* builder, GdkPixbuf* pixbuf, char* css_name)
+.B void wofi_widget_builder_insert_text_with_list(struct widget_builder* builder, char* text, struct wl_list* classes)
+Inserts text into the widget specified by the builder
+
+.B struct widget_builder* builder
+\- The builder that contains the widget to add the text to
+
+.B char* text
+\- The text to add to the widget
+
+.B struct wl_list* classes
+\- The names of the CSS classes for this text. The class that will be assigned is .mode_name-css_name where mode_name is the name of the mode, i.e. drun etc. This list should contain struct css_class nodes.
+
+.TP
+.B void wofi_widget_builder_insert_image(struct widget_builder* builder, GdkPixbuf* pixbuf, ...)
 Inserts an image into the widget specified by the builder
 
 .B struct widget_builder* builder
@@ -60,6 +73,19 @@ Inserts an image into the widget specified by the builder
 
 .B ...
 \- The names of the CSS classes for this image. The class that will be assigned is .mode_name-css_name where mode_name is the name of the mode, i.e. drun etc. This should have a NULL sentinel
+
+.TP
+.B void wofi_widget_builder_insert_image_with_list(struct widget_builder* builder, GdkPixbuf* pixbuf, struct wl_list* classes)
+Inserts an image into the widget specified by the builder
+
+.B struct widget_builder* builder
+\- The builder that contains the widget to add the image to
+
+.B GdkPixbuf* pixbuf
+\- The image to add to the widget
+
+.B struct wl_list* classes
+\- The names of the CSS classes for this image. The class that will be assigned is .mode_name-css_name where mode_name is the name of the mode, i.e. drun etc. This list should contain struct css_class nodes.
 
 .TP
 .B struct widget_builder* wofi_widget_builder_get_idx(struct widget_builder* builder, size_t idx)

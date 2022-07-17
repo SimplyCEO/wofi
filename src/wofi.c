@@ -416,7 +416,7 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 		} else if (fgets(line, sizeof(line), fp_labeltext) != NULL) {
 			// lastly, read the output of said command, and put it into the text variable to be used for the label widgets
 			// consider using 'printf %.10s as your --pre-display-cmd to limit a string to a determined width. 10 here is an example
-			size += strlen(line+1); // we need place for the \0 of strcpy
+			size += strlen(line)+1; // we need place for the \0 of strcpy
 			text = (char *) realloc(text, size);
 			strcpy(text, line);
 			while (fgets(line, sizeof(line), fp_labeltext) != NULL) {

@@ -31,21 +31,8 @@ To manually launch a user session bus run the following:
 	dbus-daemon --session --address=unix:path=$XDG_RUNTIME_DIR/bus
 
 ## Packages
-Debian sid has a package in the official repos https://packages.debian.org/sid/wofi
+[![Packaging status](https://repology.org/badge/vertical-allrepos/wofi.svg)](https://repology.org/project/wofi/versions)
 
-Ubuntu focal has a package in universe https://packages.ubuntu.com/focal/wofi
-
-Arch has an AUR package for the current tip https://aur.archlinux.org/packages/wofi-hg/ and an official package for the current stable https://www.archlinux.org/packages/community/x86_64/wofi/
-
-NixOS has a packge in unstable https://nixos.org/nixos/packages.html?attr=wofi&channel=nixos-unstable&query=wofi
-
-Void Linux also has a package
-
-Fedora has an official package https://src.fedoraproject.org/rpms/wofi as well as one in COPR https://copr.fedorainfracloud.org/coprs/wef/wofi/
-
-FreeBSD has an official package https://www.freebsd.org/cgi/ports.cgi?query=wofi&stype=all&sektion=x11
-
-Gentoo has a portage overlay https://gpo.zugaina.org/Overlays/guru/gui-apps/wofi
 ## Documentation
 The official documentation is provided by the man pages in this repository, sample styling can be found here https://cloudninja.pw/docs/wofi.html
 

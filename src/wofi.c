@@ -106,8 +106,12 @@ static bool has_joined_mode = false;
 static char* copy_exec = NULL;
 static char* pre_display_cmd = NULL;
 static bool single_click = false;
+static GdkModifierType shift_mask = GDK_SHIFT_MASK;
+static GdkModifierType ctrl_mask = GDK_CONTROL_MASK;
+static GdkModifierType alt_mask = GDK_MOD1_MASK;
 
 static struct map* keys;
+static struct map* mods;
 
 static struct wl_display* wl = NULL;
 static struct wl_surface* wl_surface;
@@ -1056,24 +1060,43 @@ static void select_first(void) {
 	gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), GTK_FLOW_BOX_CHILD(child));
 }
 
-static GdkModifierType get_mask_from_keyval(guint keyval) {
-	switch(keyval) {
-	case GDK_KEY_Shift_L:
-	case GDK_KEY_Shift_R:
+static GdkModifierType get_mask_from_keystate(guint state) {
+	if ((state & GDK_SHIFT_MASK) == GDK_SHIFT_MASK) {
 		return GDK_SHIFT_MASK;
-	case GDK_KEY_Control_L:
-	case GDK_KEY_Control_R:
+	}
+
+	if ((state & GDK_CONTROL_MASK) == GDK_CONTROL_MASK) {
 		return GDK_CONTROL_MASK;
-	case GDK_KEY_Alt_L:
-	case GDK_KEY_Alt_R:
+	}
+
+	// Alt
+	if ((state & GDK_MOD1_MASK) == GDK_MOD1_MASK) {
 		return GDK_MOD1_MASK;
+	};
+
+	return 0;
+}
+
+static char* get_name_from_mask(GdkModifierType mask) {
+	switch(mask) {
+	case GDK_SHIFT_MASK:
+		return "Shift";
+	case GDK_CONTROL_MASK:
+		return "Ctrl";
+	case GDK_MOD1_MASK:
+		return "Alt";
 	default:
-		return 0;
+		return NULL;
 	}
 }
 
 static GdkModifierType get_mask_from_name(char* name) {
-	return get_mask_from_keyval(gdk_keyval_from_name(name));
+	GdkModifierType* mask = map_get(mods, name);
+	if (mask) {
+		return *mask;
+	}
+
+	return 0;
 }
 
 static void move_up(void) {
@@ -1201,6 +1224,8 @@ static void do_copy(void) {
 }
 
 static bool do_key_action(GdkEvent* event, char* mod, void (*action)(void)) {
+	// GTK children focus gets all messed up if we don't first blow away any
+	// modifier keystate that's currently happening.
 	if(mod != NULL) {
 		GdkModifierType mask = get_mask_from_name(mod);
 		if((event->key.state & mask) == mask) {
@@ -1280,9 +1305,24 @@ static gboolean key_press(GtkWidget* widget, GdkEvent* event, gpointer data) {
 		return FALSE;
 	}
 
-
 	bool key_success = true;
-	struct key_entry* key_ent = map_get(keys, gdk_keyval_name(event->key.keyval));
+	struct key_entry* key_ent = NULL;
+	char* mod = NULL;
+
+	if (has_mod(event->key.state)) {
+		char* keyval = gdk_keyval_name(event->key.keyval);
+		GdkModifierType mask = get_mask_from_keystate(event->key.state);
+		mod = get_name_from_mask(mask);
+		size_t len = strlen(mod) + 1 + strlen(keyval) + 1;
+		char* mod_keyval = malloc(len);
+		strcpy(mod_keyval, mod);
+		strcat(mod_keyval, "-");
+		strcat(mod_keyval, keyval);
+		key_ent = map_get(keys, mod_keyval);
+		free(mod_keyval);
+	} else {
+		key_ent = map_get(keys, gdk_keyval_name(event->key.keyval));
+	}
 
 	if(key_ent != NULL && key_ent->action != NULL) {
 		key_success = do_key_action(event, key_ent->mod, key_ent->action);
@@ -1486,7 +1526,7 @@ static void* start_mode_thread(void* data) {
 	return NULL;
 }
 
-static void parse_mods(char* key, void (*action)(void)) {
+static void add_key_entry(char* key, void (*action)(void)) {
 	char* tmp = strdup(key);
 	char* save_ptr;
 	char* str = strtok_r(tmp, ",", &save_ptr);
@@ -1495,22 +1535,20 @@ static void parse_mods(char* key, void (*action)(void)) {
 			break;
 		}
 		char* hyphen = strchr(str, '-');
-		char* mod;
+		char* mod = NULL;
+		GdkModifierType modifier = 0;
 		if(hyphen != NULL) {
-			*hyphen = 0;
-			guint key1 = gdk_keyval_from_name(str);
-			guint key2 = gdk_keyval_from_name(hyphen + 1);
-			if(get_mask_from_keyval(key1) != 0) {
+			*hyphen = '\0';
+			modifier = get_mask_from_name(str);
+			if (modifier) {
 				mod = str;
 				str = hyphen + 1;
-			} else if(get_mask_from_keyval(key2) != 0) {
-				mod = hyphen + 1;
 			} else {
-				fprintf(stderr, "Neither %s nor %s is a modifier, this is not supported\n", str, hyphen + 1);
-				mod = NULL;
+				fprintf(stderr,
+						"Could not parse %s as a modifier. Valid modifiers are "
+						"Ctrl, Shift, and Alt.\n",
+						str);
 			}
-		} else {
-			mod = NULL;
 		}
 		struct key_entry* entry = malloc(sizeof(struct key_entry));
 		if(mod == NULL) {
@@ -1519,7 +1557,20 @@ static void parse_mods(char* key, void (*action)(void)) {
 			entry->mod = strdup(mod);
 		}
 		entry->action = action;
-		map_put_void(keys, str, entry);
+		char* map_key = NULL;
+
+		if (mod) {
+			size_t len = strlen(mod) + 1 + strlen(str) + 1;
+			map_key = malloc(len);
+			strcpy(map_key, mod);
+			strcat(map_key, "-");
+			strcat(map_key, str);
+		} else {
+			map_key = strdup(str);
+		}
+
+		map_put_void(keys, map_key, entry);
+		free(map_key);
 	} while((str = strtok_r(NULL, ",", &save_ptr)) != NULL);
 	free(tmp);
 }
@@ -1625,36 +1676,59 @@ void wofi_init(struct map* _config) {
 	single_click = strcmp(config_get(config, "single_click", "false"), "true") == 0;
 
 	keys = map_init_void();
+	mods = map_init_void();
 
+	map_put_void(mods, "Shift", &shift_mask);
+	map_put_void(mods, "Ctrl", &ctrl_mask);
+	map_put_void(mods, "Alt", &alt_mask);
 
+	// First pass maps the default key entries.
+	// Second pass maps any custom key entry configs in addition to (or
+	// replacing) defaults.
+	for (int i = 0; i < 2; i++) {
+		char* key_default;
 
-	char* key_up = config_get(config, "key_up", "Up");
-	char* key_down = config_get(config, "key_down", "Down");
-	char* key_left = config_get(config, "key_left", "Left");
-	char* key_right = config_get(config, "key_right", "Right");
-	char* key_forward = config_get(config, "key_forward", "Tab");
-	char* key_backward = config_get(config, "key_backward", "ISO_Left_Tab");
-	char* key_submit = config_get(config, "key_submit", "Return");
-	char* key_exit = config_get(config, "key_exit", "Escape");
-	char* key_pgup = config_get(config, "key_pgup", "Page_Up");
-	char* key_pgdn = config_get(config, "key_pgdn", "Page_Down");
-	char* key_expand = config_get(config, "key_expand", "");
-	char* key_hide_search = config_get(config, "key_hide_search", "");
-	char* key_copy = config_get(config, "key_copy", "Control_L-c");
+		key_default = "Up";
+		char* key_up = (i == 0) ? "Up" : config_get(config, "key_up", key_default);
+		key_default = "Down";
+		char* key_down = (i == 0) ? key_default : config_get(config, "key_down", key_default);
+		key_default = "Left";
+		char* key_left = (i == 0) ? key_default : config_get(config, "key_left", key_default);
+		key_default = "Right";
+		char* key_right = (i == 0) ? key_default : config_get(config, "key_right", key_default);
+		key_default = "Tab";
+		char* key_forward = (i == 0) ? key_default : config_get(config, "key_forward", key_default);
+		key_default = "Shift-ISO_Left_Tab";
+		char* key_backward = (i == 0) ? key_default : config_get(config, "key_backward", key_default);
+		key_default = "Return";
+		char* key_submit = (i == 0) ? key_default : config_get(config, "key_submit", key_default);
+		key_default = "Escape";
+		char* key_exit = (i == 0) ? key_default : config_get(config, "key_exit", key_default);
+		key_default = "Page_Up";
+		char* key_pgup = (i == 0) ? key_default : config_get(config, "key_pgup", key_default);
+		key_default = "Page_Down";
+		char* key_pgdn = (i == 0) ? key_default : config_get(config, "key_pgdn", key_default);
+		key_default = "";
+		char* key_expand = (i == 0) ? key_default: config_get(config, "key_expand", key_default);
+		key_default = "";
+		char* key_hide_search = (i == 0) ? key_default: config_get(config, "key_hide_search", key_default);
+		key_default = "Ctrl-c";
+		char* key_copy = (i == 0) ? key_default : config_get(config, "key_copy", key_default);
 
-	parse_mods(key_up, move_up);
-	parse_mods(key_down, move_down);
-	parse_mods(key_left, move_left);
-	parse_mods(key_right, move_right);
-	parse_mods(key_forward, move_forward);
-	parse_mods(key_backward, move_backward);
-	parse_mods(key_submit, NULL); //submit is a special case, when a NULL action is encountered submit is used instead
-	parse_mods(key_exit, do_exit);
-	parse_mods(key_pgup, move_pgup);
-	parse_mods(key_pgdn, move_pgdn);
-	parse_mods(key_expand, do_expand);
-	parse_mods(key_hide_search, do_hide_search);
-	parse_mods(key_copy, do_copy);
+		add_key_entry(key_up, move_up);
+		add_key_entry(key_down, move_down);
+		add_key_entry(key_left, move_left);
+		add_key_entry(key_right, move_right);
+		add_key_entry(key_forward, move_forward);
+		add_key_entry(key_backward, move_backward);
+		add_key_entry(key_submit, NULL); //submit is a special case, when a NULL action is encountered submit is used instead
+		add_key_entry(key_exit, do_exit);
+		add_key_entry(key_pgup, move_pgup);
+		add_key_entry(key_pgdn, move_pgdn);
+		add_key_entry(key_expand, do_expand);
+		add_key_entry(key_hide_search, do_hide_search);
+		add_key_entry(key_copy, do_copy);
+	}
 
 	modes = map_init_void();
 

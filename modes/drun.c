@@ -29,7 +29,7 @@
 #include <gtk/gtk.h>
 #include <gio/gdesktopappinfo.h>
 
-static const char* arg_names[] = {"print_command", "display_generic"};
+static const char* arg_names[] = {"print_command", "display_generic", "disable_prime"};
 
 static struct mode* mode;
 
@@ -43,6 +43,7 @@ static struct wl_list desktop_entries;
 
 static bool print_command;
 static bool display_generic;
+static bool disable_prime;
 
 static char* get_search_text(char* file) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(file);
@@ -335,6 +336,7 @@ void wofi_drun_init(struct mode* this, struct map* config) {
 
 	print_command = strcmp(config_get(config, "print_command", "false"), "true") == 0;
 	display_generic = strcmp(config_get(config, "display_generic", "false"), "true") == 0;
+	disable_prime = strcmp(config_get(config, "disable_prime", "false"), "true") == 0;
 
 	entries = map_init();
 	struct wl_list* cache = wofi_read_cache(mode);
@@ -407,7 +409,7 @@ static void launch_done(GObject* obj, GAsyncResult* result, gpointer data) {
 
 static void set_dri_prime(GDesktopAppInfo* info) {
 	bool dri_prime = g_desktop_app_info_get_boolean(info, "PrefersNonDefaultGPU");
-	if(dri_prime) {
+	if(dri_prime && !disable_prime) {
 		setenv("DRI_PRIME", "1", true);
 	}
 }

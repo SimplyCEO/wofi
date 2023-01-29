@@ -10,7 +10,7 @@ Wofi is a launcher/menu program for wlroots based wayland compositors such as sw
 ## Building
 	hg clone https://hg.sr.ht/~scoopta/wofi
 	cd wofi
-	meson build
+	meson setup build
 	ninja -C build
 ## Installing
 	sudo ninja -C build install

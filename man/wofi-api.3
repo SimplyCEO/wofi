@@ -106,7 +106,7 @@ Returns true if the user was holding control when selecting an entry, false othe
 
 .TP
 .B void wofi_term_run(const char* cmd)
-Runs the provided cmd in a terminal emulator. The following order is used for picking a terminal emulator: The user specified terminal, kitty, termite, alacritty, foot, gnome\-terminal, weston\-terminal. If none of these can be found execution will fail.
+Runs the provided cmd in a terminal emulator. The following order is used for picking a terminal emulator: The user specified terminal, kitty, alacritty, wezterm, foot, termite, gnome\-terminal, weston\-terminal. If none of these can be found execution will fail.
 
 .B const char* cmd
 \- The command to run, this is invoked by doing \fBterm \-\- cmd\fR.

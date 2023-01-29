@@ -43,7 +43,7 @@
 
 #define PROTO_VERSION(v1, v2) (v1 < v2 ? v1 : v2)
 
-static const char* terminals[] = {"kitty", "termite", "alacritty", "foot", "gnome-terminal", "weston-terminal"};
+static const char* terminals[] = {"kitty", "alacritty", "wezterm", "foot", "termite", "gnome-terminal", "weston-terminal"};
 
 enum location {
 	LOCATION_CENTER,

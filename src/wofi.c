@@ -1072,7 +1072,7 @@ static GdkModifierType get_mask_from_keystate(guint state) {
 	// Alt
 	if ((state & GDK_MOD1_MASK) == GDK_MOD1_MASK) {
 		return GDK_MOD1_MASK;
-	};
+	}
 
 	return 0;
 }

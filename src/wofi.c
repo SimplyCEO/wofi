@@ -42,6 +42,8 @@
 #include <gdk/gdkwayland.h>
 
 #define PROTO_VERSION(v1, v2) (v1 < v2 ? v1 : v2)
+#define _UNUSED(x) (void)(x)
+#define CUSTOM_KEY_NUMBER 20
 
 static const char* terminals[] = {"kitty", "alacritty", "wezterm", "foot", "termite", "gnome-terminal", "weston-terminal"};
 
@@ -130,6 +132,8 @@ struct key_entry {
 	char* mod;
 	void (*action)(void);
 };
+
+static int custom_key_return_code = EXIT_SUCCESS;
 
 static void nop() {}
 
@@ -1223,6 +1227,38 @@ static void do_copy(void) {
 	}
 }
 
+static void on_exit_set_custom_key_return_code(int status, void* data) {
+	_UNUSED(data);
+	if (status == EXIT_SUCCESS) {
+		_exit(custom_key_return_code);
+	}
+}
+
+static void do_custom_key(int custom_key_num) {
+	custom_key_return_code = custom_key_num + 10;
+}
+
+static void do_custom_key_0(void) {do_custom_key(0);}
+static void do_custom_key_1(void) {do_custom_key(1);}
+static void do_custom_key_2(void) {do_custom_key(2);}
+static void do_custom_key_3(void) {do_custom_key(3);}
+static void do_custom_key_4(void) {do_custom_key(4);}
+static void do_custom_key_5(void) {do_custom_key(5);}
+static void do_custom_key_6(void) {do_custom_key(6);}
+static void do_custom_key_7(void) {do_custom_key(7);}
+static void do_custom_key_8(void) {do_custom_key(8);}
+static void do_custom_key_9(void) {do_custom_key(9);}
+static void do_custom_key_10(void) {do_custom_key(10);}
+static void do_custom_key_11(void) {do_custom_key(11);}
+static void do_custom_key_12(void) {do_custom_key(12);}
+static void do_custom_key_13(void) {do_custom_key(13);}
+static void do_custom_key_14(void) {do_custom_key(14);}
+static void do_custom_key_15(void) {do_custom_key(15);}
+static void do_custom_key_16(void) {do_custom_key(16);}
+static void do_custom_key_17(void) {do_custom_key(17);}
+static void do_custom_key_18(void) {do_custom_key(18);}
+static void do_custom_key_19(void) {do_custom_key(19);}
+
 static bool do_key_action(GdkEvent* event, char* mod, void (*action)(void)) {
 	// GTK children focus gets all messed up if we don't first blow away any
 	// modifier keystate that's currently happening.
@@ -1715,6 +1751,14 @@ void wofi_init(struct map* _config) {
 		key_default = "Ctrl-c";
 		char* key_copy = (i == 0) ? key_default : config_get(config, "key_copy", key_default);
 
+		char* keys_custom[CUSTOM_KEY_NUMBER];
+		key_default = "";
+		for (uint8_t kc_index = 0; kc_index < (sizeof(keys_custom) / sizeof(char*)); kc_index++) {
+			char config_entry[15];
+			sprintf(config_entry, "key_custom_%d", kc_index);
+			keys_custom[kc_index] = (i == 0) ? key_default : config_get(config, config_entry, key_default);
+		}
+
 		add_key_entry(key_up, move_up);
 		add_key_entry(key_down, move_down);
 		add_key_entry(key_left, move_left);
@@ -1728,6 +1772,29 @@ void wofi_init(struct map* _config) {
 		add_key_entry(key_expand, do_expand);
 		add_key_entry(key_hide_search, do_hide_search);
 		add_key_entry(key_copy, do_copy);
+
+		#define CUSTOM_KEY_FUNC(index) do_custom_key_##index
+
+		add_key_entry(keys_custom[0], CUSTOM_KEY_FUNC(0));
+		add_key_entry(keys_custom[1], CUSTOM_KEY_FUNC(1));
+		add_key_entry(keys_custom[2], CUSTOM_KEY_FUNC(2));
+		add_key_entry(keys_custom[3], CUSTOM_KEY_FUNC(3));
+		add_key_entry(keys_custom[4], CUSTOM_KEY_FUNC(4));
+		add_key_entry(keys_custom[5], CUSTOM_KEY_FUNC(5));
+		add_key_entry(keys_custom[6], CUSTOM_KEY_FUNC(6));
+		add_key_entry(keys_custom[7], CUSTOM_KEY_FUNC(7));
+		add_key_entry(keys_custom[8], CUSTOM_KEY_FUNC(8));
+		add_key_entry(keys_custom[9], CUSTOM_KEY_FUNC(9));
+		add_key_entry(keys_custom[10], CUSTOM_KEY_FUNC(10));
+		add_key_entry(keys_custom[11], CUSTOM_KEY_FUNC(11));
+		add_key_entry(keys_custom[12], CUSTOM_KEY_FUNC(12));
+		add_key_entry(keys_custom[13], CUSTOM_KEY_FUNC(13));
+		add_key_entry(keys_custom[14], CUSTOM_KEY_FUNC(14));
+		add_key_entry(keys_custom[15], CUSTOM_KEY_FUNC(15));
+		add_key_entry(keys_custom[16], CUSTOM_KEY_FUNC(16));
+		add_key_entry(keys_custom[17], CUSTOM_KEY_FUNC(17));
+		add_key_entry(keys_custom[18], CUSTOM_KEY_FUNC(18));
+		add_key_entry(keys_custom[19], CUSTOM_KEY_FUNC(19));
 	}
 
 	modes = map_init_void();
@@ -1910,4 +1977,6 @@ void wofi_init(struct map* _config) {
 
 	gtk_window_set_title(GTK_WINDOW(window), prompt);
 	gtk_widget_show_all(window);
+
+	on_exit(on_exit_set_custom_key_return_code, NULL);
 }

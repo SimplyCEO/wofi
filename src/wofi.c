@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2022 Scoopta
+ *  Copyright (C) 2019-2023 Scoopta
  *  This file is part of Wofi
  *  Wofi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -1230,6 +1230,8 @@ static void do_copy(void) {
 static void on_exit_set_custom_key_return_code(int status, void* data) {
 	_UNUSED(data);
 	if (status == EXIT_SUCCESS) {
+		fflush(stdout);
+		fflush(stderr);
 		_exit(custom_key_return_code);
 	}
 }

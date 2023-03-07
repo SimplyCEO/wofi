@@ -5,7 +5,7 @@ Wofi is a launcher/menu program for wlroots based wayland compositors such as sw
 ## Dependencies
 	libwayland-dev
 	libgtk-3-dev
-	pkg-config
+	pkgconf
 	meson
 ## Building
 	hg clone https://hg.sr.ht/~scoopta/wofi

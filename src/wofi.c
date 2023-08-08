@@ -1662,6 +1662,12 @@ static gboolean do_percent_size(gpointer data) {
 	return G_SOURCE_CONTINUE;
 }
 
+static gboolean do_percent_size_first(gpointer data){
+	gdk_threads_add_timeout(50, do_percent_size, data);
+  do_percent_size(data);
+  return G_SOURCE_REMOVE;
+}
+
 void wofi_init(struct map* _config) {
 	config = _config;
 	char* width_str = config_get(config, "width", "50%");
@@ -1968,8 +1974,7 @@ void wofi_init(struct map* _config) {
 		static char* geo_str[2];
 		geo_str[0] = width_str;
 		geo_str[1] = height_str;
-		gdk_threads_add_timeout(50, do_percent_size, geo_str);
-		do_percent_size(geo_str);
+		gdk_threads_add_timeout(25, do_percent_size_first, geo_str);
 	}
 
 	wl_list_init(&mode_list);

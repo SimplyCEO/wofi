@@ -1664,8 +1664,8 @@ static gboolean do_percent_size(gpointer data) {
 
 static gboolean do_percent_size_first(gpointer data){
 	gdk_threads_add_timeout(50, do_percent_size, data);
-  do_percent_size(data);
-  return G_SOURCE_REMOVE;
+	do_percent_size(data);
+	return G_SOURCE_REMOVE;
 }
 
 void wofi_init(struct map* _config) {

@@ -29,7 +29,7 @@
 #include <gtk/gtk.h>
 #include <gio/gdesktopappinfo.h>
 
-static const char* arg_names[] = {"print_command", "display_generic", "disable_prime"};
+static const char* arg_names[] = {"print_command", "display_generic", "disable_prime", "print_desktop_file"};
 
 static struct mode* mode;
 
@@ -44,6 +44,7 @@ static struct wl_list desktop_entries;
 static bool print_command;
 static bool display_generic;
 static bool disable_prime;
+static bool print_desktop_file;
 
 static char* get_search_text(char* file) {
 	GDesktopAppInfo* info = g_desktop_app_info_new_from_filename(file);
@@ -338,6 +339,7 @@ void wofi_drun_init(struct mode* this, struct map* config) {
 	print_command = strcmp(config_get(config, "print_command", "false"), "true") == 0;
 	display_generic = strcmp(config_get(config, "display_generic", "false"), "true") == 0;
 	disable_prime = strcmp(config_get(config, "disable_prime", "false"), "true") == 0;
+	print_desktop_file = strcmp(config_get(config, "print_desktop_file", "false"), "true") == 0;
 
 	entries = map_init();
 	struct wl_list* cache = wofi_read_cache(mode);
@@ -448,6 +450,9 @@ void wofi_drun_exec(const gchar* cmd) {
 			printf("%s\n", cmd);
 			free(cmd);
 			exit(0);
+		} else if(print_desktop_file) {
+			printf("%s\n", cmd);
+			exit(0);
 		} else {
 			set_dri_prime(info);
 			if(uses_dbus(info)) {
@@ -468,6 +473,9 @@ void wofi_drun_exec(const gchar* cmd) {
 			printf("%s\n", cmd);
 			free(cmd);
 			fprintf(stderr, "Printing the command line for an action is not supported\n");
+		} else if(print_desktop_file) {
+			printf("%s %s\n", cmd, action);
+			exit(0);
 		} else {
 			set_dri_prime(info);
 			g_desktop_app_info_launch_action(info, action, NULL);

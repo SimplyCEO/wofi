@@ -56,6 +56,9 @@ If true then generic names will be displayed in () next to the application name,
 .TP
 .B disable_prime=\fIBOOL\fR
 If true then wofi will ignore the PrefersNonDefaultGPU desktop variable, specifically this prevents wofi from setting DRI_PRIME, default is false.
+.TP
+.B print_desktop_file=\fIBOOL\fR
+If true the path to the desktop file and the name of the corresponding action(if present) will be printed to stdout instead of invoking it, default is false.
 
 .SH DRUN
 When images are enabled drun mode will pull icon themes however being a GTK app it's possible you'll need to run gtk\-update\-icon\-cache to get them to apply.

@@ -1060,7 +1060,7 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 }
 
 static void select_first(void) {
-	GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 1);
+	GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0);
 	gtk_widget_grab_focus(GTK_WIDGET(child));
 	gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), GTK_FLOW_BOX_CHILD(child));
 }
@@ -1142,12 +1142,21 @@ static void move_forward(void) {
 		select_first();
 		return;
 	}
+
 	gtk_widget_child_focus(window, GTK_DIR_TAB_FORWARD);
+
+	if(gtk_widget_has_focus(entry)) {
+		select_first();
+	}
 }
 
 static void move_backward(void) {
 	user_moved = true;
 	gtk_widget_child_focus(window, GTK_DIR_TAB_BACKWARD);
+
+	if(gtk_widget_has_focus(entry)) {
+		move_backward();
+	}
 }
 
 static void move_pgup(void) {

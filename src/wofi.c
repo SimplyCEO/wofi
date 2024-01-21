@@ -268,6 +268,9 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 	map_put(mode_map, "img-base64-noscale", "true");
 	map_put(mode_map, "text", "true");
 
+	if(text == NULL) {
+		return NULL;
+	}
 	char* original = strdup(text);
 	char* mode1 = NULL;
 	char* mode2 = NULL;

@@ -491,7 +491,11 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 			}
 		}
 
-		pclose(fp_labeltext);
+		if(pre_display_exec) {
+			fclose(fp_labeltext);
+		} else {
+			pclose(fp_labeltext);
+		}
 	}
 
 	if(allow_images) {

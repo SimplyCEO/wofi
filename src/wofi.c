@@ -493,6 +493,7 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 
 		if(pre_display_exec) {
 			fclose(fp_labeltext);
+			while(waitpid(-1, NULL, WNOHANG) > 0);
 		} else {
 			pclose(fp_labeltext);
 		}

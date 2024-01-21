@@ -189,6 +189,9 @@ Specifies the executable to pipe copy data into. $PATH will be scanned, this is 
 .TP
 .B single_click=\fIBOOL\fR
 Specifies whether or not actions should be executed on a single click or a double click. Default is false.
+.TP
+.B pre_display_exec=\fIBOOL\fR
+This modifies the behavior of pre_display_cmd and causes the command in question to be directly executed via fork/exec rather than through the shell.
 
 .SH CSS SELECTORS
 Any GTK widget can be selected by using the name of its CSS node, these however might change with updates and are not guaranteed to stay constant. Wofi also provides certain widgets with names and classes which can be referenced from CSS to give access to the most important widgets easily. \fBwofi\fR(7) contains the current widget layout used by wofi so if you want to get into CSS directly using GTK widget names look there for info.

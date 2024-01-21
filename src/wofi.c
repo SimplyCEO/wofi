@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2023 Scoopta
+ *  Copyright (C) 2019-2024 Scoopta
  *  This file is part of Wofi
  *  Wofi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -107,6 +107,7 @@ static pthread_t mode_thread;
 static bool has_joined_mode = false;
 static char* copy_exec = NULL;
 static char* pre_display_cmd = NULL;
+static bool pre_display_exec = false;
 static bool single_click = false;
 static GdkModifierType shift_mask = GDK_SHIFT_MASK;
 static GdkModifierType ctrl_mask = GDK_CONTROL_MASK;
@@ -415,22 +416,75 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 		char line[128]; // you'd think this caps the line's length to 128, but it's just a buffer which due to the nature of fgets() splits on lines
 		size_t size = 0;
 		// first, prepare cmd_labeltext to be each entry's actual comamand to run, aka replacing 'cat %s' to be 'cat filename'
-		if ((asprintf(&cmd_labeltext, pre_display_cmd, nodetext)) == -1) {
+		if(asprintf(&cmd_labeltext, pre_display_cmd, nodetext) == -1) {
 			fprintf(stderr, "error parsing pre_display_cmd to run\n");
 			exit(EXIT_FAILURE);
 		}
 		// then, run the command
-		fp_labeltext = popen(cmd_labeltext, "r");
-		if (fp_labeltext == NULL) {
+		if(pre_display_exec) {
+			int fds[2];
+			if(pipe(fds) == -1) {
+				perror("pipe broken");
+				exit(1);
+			}
+			if(fork() == 0) {
+				close(fds[0]);
+				dup2(fds[1], STDOUT_FILENO);
+
+				char* cmd = strdup(pre_display_cmd);
+				char* space = strchr(cmd, ' ');
+				if(space != NULL) {
+					*space = 0;
+				}
+
+
+				size_t space_count = 0;
+				char* tmp_space = space;
+				for(; (tmp_space = strchr(tmp_space + 1, ' ')) != NULL; ++space_count);
+
+				char** args = malloc((sizeof(char*) * space_count) + 2);
+				args[0] = cmd;
+				args[1] = space + 1;
+				args[space_count + 2] = NULL;
+
+				//> 0 is used because args[0] is the command
+				for(size_t count = space_count; count > 0; --count) {
+					char* arg = strrchr(space + 1, ' ');
+					args[count + 1] = arg + 1;
+					*arg = 0;
+				}
+
+				for(size_t count = 1; count <= space_count + 1; ++count) {
+					if(strstr(args[count], "%s") != NULL) {
+						if(asprintf(&args[count], args[count], nodetext) == -1) {
+							fprintf(stderr, "error parsing pre_display_cmd to run\n");
+							exit(EXIT_FAILURE);
+						}
+					}
+				}
+
+				execvp(cmd, args);
+				free(cmd);
+				free(args);
+				fprintf(stderr, "error executing '%s'\n", cmd_labeltext);
+				exit(1);
+			}
+			close(fds[1]);
+
+			fp_labeltext = fdopen(fds[0], "r");
+		} else {
+			fp_labeltext = popen(cmd_labeltext, "r");
+		}
+		if(fp_labeltext == NULL) {
 			fprintf(stderr, "error executing '%s'\n", cmd_labeltext);
 			exit(EXIT_FAILURE);
-		} else if (fgets(line, sizeof(line), fp_labeltext) != NULL) {
+		} else if(fgets(line, sizeof(line), fp_labeltext) != NULL) {
 			// lastly, read the output of said command, and put it into the text variable to be used for the label widgets
 			// consider using 'printf %.10s as your --pre-display-cmd to limit a string to a determined width. 10 here is an example
 			size += strlen(line)+1; // we need place for the \0 of strcpy
 			text = (char *) realloc(text, size);
 			strcpy(text, line);
-			while (fgets(line, sizeof(line), fp_labeltext) != NULL) {
+			while(fgets(line, sizeof(line), fp_labeltext) != NULL) {
 				size += strlen(line);
 				text = (char *) realloc(text, size);
 				strncat(text, line, size);
@@ -1730,6 +1784,7 @@ void wofi_init(struct map* _config) {
 	char* layer = config_get(config, "layer", "top");
 	copy_exec = config_get(config, "copy_exec", "wl-copy");
 	pre_display_cmd = map_get(config, "pre_display_cmd");
+	pre_display_exec = strcmp(config_get(config, "pre_display_exec", "false"), "true") == 0;
 	single_click = strcmp(config_get(config, "single_click", "false"), "true") == 0;
 
 	keys = map_init_void();

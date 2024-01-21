@@ -442,7 +442,7 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 				char* tmp_space = space;
 				for(; (tmp_space = strchr(tmp_space + 1, ' ')) != NULL; ++space_count);
 
-				char** args = malloc((sizeof(char*) * space_count) + 2);
+				char** args = malloc((sizeof(char*) * (space_count + 2)));
 				args[0] = cmd;
 				args[1] = space + 1;
 				args[space_count + 2] = NULL;

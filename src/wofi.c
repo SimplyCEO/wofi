@@ -1745,6 +1745,12 @@ void wofi_init(struct map* _config) {
 	char* height_str = config_get(config, "height", "40%");
 	width = strtol(width_str, NULL, 10);
 	height = strtol(height_str, NULL, 10);
+
+	if(width > UINT16_MAX || height > UINT16_MAX) {
+		fprintf(stderr, "Do you actually have a monitor big enough to see this O_o? Dimensions can be no larger than %ux%u\n", UINT16_MAX, UINT16_MAX);
+		exit(1);
+	}
+
 	x = map_get(config, "x");
 	y = map_get(config, "y");
 	bool normal_window = strcmp(config_get(config, "normal_window", "false"), "true") == 0;

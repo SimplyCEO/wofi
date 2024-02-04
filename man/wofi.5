@@ -169,6 +169,9 @@ Specifies the key to use in order to hide/show the search bar. There is no defau
 .B key_copy=\fIKEY\fR
 Specifies the key to use in order to copy the action text for the current entry. The default is Ctrl-c. See \fBwofi\-keys\fR(7) for the key codes.
 .TP
+.B key_custom_(n)=\fIKEY\fR
+Allows for configuring custom exit codes. For example setting key_custom_0=Ctrl-0 will make it so if you press Ctrl-0 wofi will set its exit status to 10. This will not cause wofi to exit, it will only set its exit code for when it does. 20 of these keys are configurable numbered 0-19. The exit status used is 10+n where n is the number attached to key_custom_n. There are no defaults for these. See \fBwofi\-keys\fR(7) for the key codes.
+.TP
 .B line_wrap=\fIMODE\fR
 Specifies the line wrap mode to use. The options are off, word, char, and word_char. Default is off.
 .TP

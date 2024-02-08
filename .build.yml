@@ -3,11 +3,11 @@ packages:
  - build-essential
  - libwayland-dev
  - libgtk-3-dev
- - pkg-config
+ - pkgconf
  - meson
 
 tasks:
  - build: |
     cd wofi
-    meson build
+    meson setup build
     ninja -C build

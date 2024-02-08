@@ -110,3 +110,7 @@ Runs the provided cmd in a terminal emulator. The following order is used for pi
 
 .B const char* cmd
 \- The command to run, this is invoked by doing \fBterm \-\- cmd\fR.
+
+.TP
+.B void wofi_exit(void)
+This function is how you should call to exit wofi. It checks the status given and only sets a custom exit code if you pass EXIT_SUCCESS. If you call the libc exit() function then the custom exit code will always be used even if an error should be reported

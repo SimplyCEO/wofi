@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2020 Scoopta
+ *  Copyright (C) 2019-2024 Scoopta
  *  This file is part of Wofi
  *  Wofi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -192,7 +192,7 @@ void wofi_run_exec(const char* cmd) {
 	}
 	if(print_command) {
 		printf("%s\n", cmd);
-		exit(0);
+		wofi_exit(0);
 	}
 	if(arg_run) {
 		size_t space_count = 2;
@@ -215,7 +215,7 @@ void wofi_run_exec(const char* cmd) {
 		execl(cmd, cmd, NULL);
 	}
 	fprintf(stderr, "%s cannot be executed %s\n", cmd, strerror(errno));
-	exit(errno);
+	wofi_exit(errno);
 }
 
 const char** wofi_run_get_arg_names(void) {

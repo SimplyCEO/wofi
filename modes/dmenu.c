@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2020 Scoopta
+ *  Copyright (C) 2019-2024 Scoopta
  *  This file is part of Wofi
  *  Wofi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -156,7 +156,7 @@ void wofi_dmenu_exec(const gchar* cmd) {
 	}
 	printf("%s\n", action);
 	free(action);
-	exit(0);
+	wofi_exit(0);
 }
 
 const char** wofi_dmenu_get_arg_names(void) {

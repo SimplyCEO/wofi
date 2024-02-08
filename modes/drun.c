@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2023 Scoopta
+ *  Copyright (C) 2019-2024 Scoopta
  *  This file is part of Wofi
  *  Wofi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -398,7 +398,7 @@ struct widget* wofi_drun_get_widget(void) {
 static void launch_done(GObject* obj, GAsyncResult* result, gpointer data) {
 	GError* err = NULL;
 	if(g_app_info_launch_uris_finish(G_APP_INFO(obj), result, &err)) {
-		exit(0);
+		wofi_exit(0);
 	} else if(err != NULL) {
 		char* cmd = data;
 		fprintf(stderr, "%s cannot be executed: %s\n", cmd, err->message);
@@ -407,7 +407,7 @@ static void launch_done(GObject* obj, GAsyncResult* result, gpointer data) {
 		char* cmd = data;
 		fprintf(stderr, "%s cannot be executed\n", cmd);
 	}
-	exit(1);
+	wofi_exit(1);
 }
 
 static void set_dri_prime(GDesktopAppInfo* info) {
@@ -449,17 +449,17 @@ void wofi_drun_exec(const gchar* cmd) {
 			char* cmd = get_cmd(G_APP_INFO(info));
 			printf("%s\n", cmd);
 			free(cmd);
-			exit(0);
+			wofi_exit(0);
 		} else if(print_desktop_file) {
 			printf("%s\n", cmd);
-			exit(0);
+			wofi_exit(0);
 		} else {
 			set_dri_prime(info);
 			if(uses_dbus(info)) {
 				g_app_info_launch_uris_async(G_APP_INFO(info), NULL, NULL, NULL, launch_done, (gchar*) cmd);
 			} else {
 				g_app_info_launch_uris(G_APP_INFO(info), NULL, NULL, NULL);
-				exit(0);
+				wofi_exit(0);
 			}
 		}
 	} else if(strrchr(cmd, ' ') != NULL) {
@@ -475,15 +475,15 @@ void wofi_drun_exec(const gchar* cmd) {
 			fprintf(stderr, "Printing the command line for an action is not supported\n");
 		} else if(print_desktop_file) {
 			printf("%s %s\n", cmd, action);
-			exit(0);
+			wofi_exit(0);
 		} else {
 			set_dri_prime(info);
 			g_desktop_app_info_launch_action(info, action, NULL);
 		}
-		exit(0);
+		wofi_exit(0);
 	} else {
 		fprintf(stderr, "%s cannot be executed\n", cmd);
-		exit(1);
+		wofi_exit(1);
 	}
 }
 

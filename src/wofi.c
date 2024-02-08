@@ -418,14 +418,14 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 		// first, prepare cmd_labeltext to be each entry's actual comamand to run, aka replacing 'cat %s' to be 'cat filename'
 		if(asprintf(&cmd_labeltext, pre_display_cmd, nodetext) == -1) {
 			fprintf(stderr, "error parsing pre_display_cmd to run\n");
-			exit(EXIT_FAILURE);
+			wofi_exit(EXIT_FAILURE);
 		}
 		// then, run the command
 		if(pre_display_exec) {
 			int fds[2];
 			if(pipe(fds) == -1) {
 				perror("pipe broken");
-				exit(1);
+				wofi_exit(1);
 			}
 			if(fork() == 0) {
 				close(fds[0]);
@@ -477,7 +477,7 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 		}
 		if(fp_labeltext == NULL) {
 			fprintf(stderr, "error executing '%s'\n", cmd_labeltext);
-			exit(EXIT_FAILURE);
+			wofi_exit(EXIT_FAILURE);
 		} else if(fgets(line, sizeof(line), fp_labeltext) != NULL) {
 			// lastly, read the output of said command, and put it into the text variable to be used for the label widgets
 			// consider using 'printf %.10s as your --pre-display-cmd to limit a string to a determined width. 10 here is an example
@@ -993,7 +993,7 @@ void wofi_term_run(const char* cmd) {
 		execlp(terminals[count], terminals[count], "-e", cmd, NULL);
 	}
 	fprintf(stderr, "No terminal emulator found please set term in config or use --term\n");
-	exit(1);
+	wofi_exit(1);
 }
 
 static void flag_box(GtkBox* box, GtkStateFlags flags) {
@@ -1236,7 +1236,7 @@ static void move_pgdn(void) {
 }
 
 static void do_exit(void) {
-	exit(1);
+	wofi_exit(1);
 }
 
 static void do_expand(void) {
@@ -1277,7 +1277,7 @@ static void do_copy(void) {
 			int fds[2];
 			if (pipe(fds) == -1) {
 				perror("pipe broken");
-				exit(EXIT_FAILURE);
+				wofi_exit(EXIT_FAILURE);
 			}
 			if(fork() == 0) {
 				close(fds[1]);
@@ -1299,13 +1299,21 @@ static void do_copy(void) {
 	}
 }
 
-static void on_exit_set_custom_key_return_code(int status, void* data) {
-	_UNUSED(data);
-	if (status == EXIT_SUCCESS) {
-		fflush(stdout);
-		fflush(stderr);
+static void on_exit_set_custom_key_return_code(void) {
+	fflush(stdout);
+	fflush(stderr);
+	_exit(custom_key_return_code);
+}
+
+void wofi_exit(int status) {
+	fflush(stdout);
+	fflush(stderr);
+
+	if(status == EXIT_SUCCESS) {
 		_exit(custom_key_return_code);
 	}
+
+	_exit(status);
 }
 
 static void do_custom_key(int custom_key_num) {
@@ -1609,7 +1617,7 @@ static struct mode* add_mode(char* _mode) {
 
 			if(init == NULL) {
 				fprintf(stderr, "I would love to show %s but Idk what it is\n", _mode);
-				exit(1);
+				wofi_exit(1);
 			}
 		}
 	}
@@ -1748,7 +1756,7 @@ void wofi_init(struct map* _config) {
 
 	if(width > UINT16_MAX || height > UINT16_MAX) {
 		fprintf(stderr, "Do you actually have a monitor big enough to see this O_o? Dimensions can be no larger than %ux%u\n", UINT16_MAX, UINT16_MAX);
-		exit(1);
+		wofi_exit(1);
 	}
 
 	x = map_get(config, "x");
@@ -1904,7 +1912,7 @@ void wofi_init(struct map* _config) {
 
 		if(wl == NULL) {
 			fprintf(stderr, "Failed to connect to wayland compositor\n");
-			exit(1);
+			wofi_exit(1);
 		}
 
 		struct wl_registry* registry = wl_display_get_registry(wl);
@@ -2064,5 +2072,5 @@ void wofi_init(struct map* _config) {
 	gtk_window_set_title(GTK_WINDOW(window), prompt);
 	gtk_widget_show_all(window);
 
-	on_exit(on_exit_set_custom_key_return_code, NULL);
+	atexit(on_exit_set_custom_key_return_code);
 }

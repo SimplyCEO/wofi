@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2020 Scoopta
+ *  Copyright (C) 2020-2024 Scoopta
  *  This file is part of Wofi
  *  Wofi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -57,5 +57,7 @@ bool wofi_mod_shift(void);
 bool wofi_mod_control(void);
 
 void wofi_term_run(const char* cmd);
+
+void wofi_exit(int status);
 
 #endif

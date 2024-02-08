@@ -42,7 +42,7 @@ Gets a config entry, if the entry is not set then it returns \fBdef_opt\fR.
 \- The default value to be returned if the key does not exist.
 
 .TP
-.B uint8_t config_get_mnemonic(struct map* config, const char* key, char* def_opt, uint8_t num_choices, ...)
+.B int config_get_mnemonic(struct map* config, const char* key, char* def_opt, int num_choices, ...)
 Gets an enum value from the config. If the value is not set then it returns \fBdef_opt\fR.
 
 .B struct map* config
@@ -54,7 +54,7 @@ Gets an enum value from the config. If the value is not set then it returns \fBd
 .B char* def_opt
 \- The default value to be returned if the key does not exist.
 
-.B uint8_t num_choices
+.B int num_choices
 \- The number of enum options available.
 
 .B varargs

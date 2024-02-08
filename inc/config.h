@@ -1,5 +1,5 @@
 /*
- *  Copyright (C) 2019-2020 Scoopta
+ *  Copyright (C) 2019-2024 Scoopta
  *  This file is part of Wofi
  *  Wofi is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,6 +28,6 @@ void config_load(struct map* map, const char* config);
 
 char* config_get(struct map* config, const char* key, char* def_opt);
 
-uint8_t config_get_mnemonic(struct map* config, const char* key, char* def_opt, uint8_t num_choices, ...);
+int config_get_mnemonic(struct map* config, const char* key, char* def_opt, int num_choices, ...);
 
 #endif

@@ -926,7 +926,16 @@ struct wl_list* wofi_read_cache(struct mode* mode) {
 				smallest_node = node;
 			}
 		}
-		char* tmp = strdup(strchr(smallest_node->line, ' ') + 1);
+
+		char* space = strchr(smallest_node->line, ' ');
+
+		if(space == NULL) {
+			free(smallest_node->line);
+			wl_list_remove(&smallest_node->link);
+			continue;
+		}
+
+		char* tmp = strdup(space + 1);
 		free(smallest_node->line);
 		smallest_node->line = tmp;
 		wl_list_remove(&smallest_node->link);

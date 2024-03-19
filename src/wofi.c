@@ -1130,8 +1130,8 @@ static gint do_sort(GtkFlowBoxChild* child1, GtkFlowBoxChild* child2, gpointer d
 	return sort_for_matching_mode(text1, text2, fallback, matching, filter, insensitive);
 }
 
-static void select_first(void) {
-	GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), 0);
+static void select_idx(gint idx) {
+	GtkFlowBoxChild* child = gtk_flow_box_get_child_at_index(GTK_FLOW_BOX(inner_box), idx);
 	gtk_widget_grab_focus(GTK_WIDGET(child));
 	gtk_flow_box_select_child(GTK_FLOW_BOX(inner_box), GTK_FLOW_BOX_CHILD(child));
 }
@@ -1184,7 +1184,7 @@ static void move_down(void) {
 	user_moved = true;
 	if(outer_orientation == GTK_ORIENTATION_VERTICAL) {
 		if(gtk_widget_has_focus(entry) || gtk_widget_has_focus(scroll)) {
-			select_first();
+			select_idx(1);
 			return;
 		}
 	}
@@ -1200,7 +1200,7 @@ static void move_right(void) {
 	user_moved = true;
 	if(outer_orientation == GTK_ORIENTATION_HORIZONTAL) {
 		if(gtk_widget_has_focus(entry) || gtk_widget_has_focus(scroll)) {
-			select_first();
+			select_idx(1);
 			return;
 		}
 	}
@@ -1210,14 +1210,14 @@ static void move_right(void) {
 static void move_forward(void) {
 	user_moved = true;
 	if(gtk_widget_has_focus(entry) || gtk_widget_has_focus(scroll)) {
-		select_first();
+		select_idx(1);
 		return;
 	}
 
 	gtk_widget_child_focus(window, GTK_DIR_TAB_FORWARD);
 
 	if(gtk_widget_has_focus(entry)) {
-		select_first();
+		select_idx(0);
 	}
 }
 

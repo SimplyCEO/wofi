@@ -109,6 +109,7 @@ static char* copy_exec = NULL;
 static char* pre_display_cmd = NULL;
 static bool pre_display_exec = false;
 static bool single_click = false;
+static bool hide_search = false;
 static GdkModifierType shift_mask = GDK_SHIFT_MASK;
 static GdkModifierType ctrl_mask = GDK_CONTROL_MASK;
 static GdkModifierType alt_mask = GDK_MOD1_MASK;
@@ -1753,6 +1754,7 @@ static gboolean do_percent_size(gpointer data) {
 static gboolean do_percent_size_first(gpointer data){
 	gdk_threads_add_timeout(50, do_percent_size, data);
 	do_percent_size(data);
+	gtk_widget_set_visible(entry, !hide_search);
 	return G_SOURCE_REMOVE;
 }
 
@@ -1805,7 +1807,7 @@ void wofi_init(struct map* _config) {
 	sort_order = config_get_mnemonic(config, "sort_order", "default", 2, "default", "alphabetical");
 	line_wrap = config_get_mnemonic(config, "line_wrap", "off", 4, "off", "word", "char", "word_char") - 1;
 	bool global_coords = strcmp(config_get(config, "global_coords", "false"), "true") == 0;
-	bool hide_search = strcmp(config_get(config, "hide_search", "false"), "true") == 0;
+	hide_search = strcmp(config_get(config, "hide_search", "false"), "true") == 0;
 	char* search = map_get(config, "search");
 	dynamic_lines = strcmp(config_get(config, "dynamic_lines", "false"), "true") == 0;
 	char* monitor = map_get(config, "monitor");
@@ -2012,7 +2014,6 @@ void wofi_init(struct map* _config) {
 	gtk_widget_set_name(entry, "input");
 	gtk_entry_set_placeholder_text(GTK_ENTRY(entry), prompt);
 	gtk_container_add(GTK_CONTAINER(outer_box), entry);
-	gtk_widget_set_child_visible(entry, !hide_search);
 
 	if(search != NULL) {
 		gtk_entry_set_text(GTK_ENTRY(entry), search);

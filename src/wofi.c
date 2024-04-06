@@ -1754,6 +1754,11 @@ static gboolean do_percent_size(gpointer data) {
 static gboolean do_percent_size_first(gpointer data){
 	gdk_threads_add_timeout(50, do_percent_size, data);
 	do_percent_size(data);
+	return G_SOURCE_REMOVE;
+}
+
+static gboolean hide_search_first(gpointer data) {
+	(void) data;
 	gtk_widget_set_visible(entry, !hide_search);
 	return G_SOURCE_REMOVE;
 }
@@ -2072,6 +2077,8 @@ void wofi_init(struct map* _config) {
 		geo_str[1] = height_str;
 		gdk_threads_add_timeout(25, do_percent_size_first, geo_str);
 	}
+
+	gdk_threads_add_timeout(5, hide_search_first, NULL);
 
 	wl_list_init(&mode_list);
 

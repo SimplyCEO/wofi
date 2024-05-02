@@ -1,0 +1,7 @@
+*.cproject
+*.project
+*.settings
+*.hgrepos
+[B,b]uild
+[D,d]ebug
+noasan

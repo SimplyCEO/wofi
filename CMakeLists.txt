@@ -41,6 +41,14 @@ find_package(PkgConfig REQUIRED)
 # LIBM
 find_library(MATH_LIBRARY NAMES m libm HINTS ${CMAKE_PREFIX_PATH}/lib)
 
+# GLIB
+pkg_check_modules(GLIB2 glib-2.0 REQUIRED)
+include_directories(${GLIB2_INCLUDE_DIRS})
+
+# GOBJECT
+pkg_check_modules(GLIB2 gobject-2.0 REQUIRED)
+include_directories(${GOBJECT_INCLUDE_DIRS})
+
 # GTK3
 pkg_check_modules(GTK3 gtk+-3.0 REQUIRED)
 include_directories(${GTK3_INCLUDE_DIRS})
@@ -88,6 +96,8 @@ add_definitions(-DVERSION="${VERSION_STRING}")
 add_definitions (${GTK3_CFLAGS_OTHER})
 target_link_libraries(${TARGET} ${MATH_LIBRARY})
 target_link_libraries(${TARGET} ${GTK3_LIBRARIES})
+target_link_libraries(${TARGET} ${GLIB2_LIBRARIES})
+target_link_libraries(${TARGET} ${GOBJECT_LIBRARIES})
 target_link_libraries(${TARGET} ${WAYLAND_CLIENT_LIBRARIES})
 target_link_libraries(${TARGET} ${THREADS_LIBRARY})
 target_link_libraries(${TARGET} ${DL_LIBRARY})

@@ -275,21 +275,25 @@ static void insert_dir(char* app_dir) {
 	closedir(dir);
 }
 
-static char* get_data_dirs(void) {
+static char*
+get_data_dirs(void)
+{
 	char* data_dirs = getenv("XDG_DATA_DIRS");
-	if(data_dirs == NULL) {
-		data_dirs = "/usr/local/share:/usr/share";
-	}
+	if (data_dirs == NULL)
+	{	data_dirs = "/usr/local/share:/usr/share"; }
+
 	return strdup(data_dirs);
 }
 
-static char* get_data_home(void) {
-	char* data_home = getenv("XDG_DATA_HOME");
-	if(data_home == NULL) {
-		data_home = utils_concat(2, getenv("HOME"), "/.local/share");
-	} else {
-		data_home = strdup(data_home);
-	}
+static char*
+get_data_home(void)
+{
+	char* data_home = (getenv("WOFI_DATA_DIR") == NULL) ? getenv("XDG_DATA_HOME") : getenv("WOFI_DATA_HOME");
+	if (data_home == NULL)
+	{	data_home = utils_concat(2, getenv("HOME"), "/.local/share"); }
+	else
+	{	data_home = strdup(data_home); }
+
 	return data_home;
 }
 

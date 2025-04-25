@@ -3,7 +3,7 @@
 wofi \- Mode functions and documentation
 
 .SH DESCRIPTION
-Wofi provides a C API which can be used for developing 3rd party modes. These modes should be compiled to a shared object which should be placed in $XDG_CONFIG_HOME/wofi/plugins. If $XDG_CONFIG_HOME is not defined then it will default to ~/.config.
+Wofi provides a C API which can be used for developing 3rd party modes. These modes should be compiled to a shared object which should be placed in $WOFI_CONFIG_DIR/wofi/plugins or $XDG_CONFIG_HOME/wofi/plugins. If both are not defined then it will default to ~/.config.
 
 It is very important to note that this API is not stable. It's mostly stable however if something comes up that requires a substantial change things will be changed. This shouldn't happen too much but has happened in the past and might in the future.
 

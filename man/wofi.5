@@ -17,13 +17,13 @@ Most of the options here are the command flags as found in \fBwofi\fR(1) in snak
 Specifies the CSS file to use as the stylesheet.
 .TP
 .B stylesheet=\fIPATH\fR
-Specifies the CSS file to use as the stylesheet. This option is NOT the same as \fBstyle\fR. Absolute paths are absolute however relative paths are relative to the wofi config folder location $XDG_CONFIG_HOME/wofi and NOT the current working directory as they are with \fBstyle\fR. They are also NOT relative to the path as specified by \fB\-\-conf\fR. This option comes from rootbar and is probably more confusing than it's worth. You should probably use \fBstyle\fR unless you're sure this is what you want.
+Specifies the CSS file to use as the stylesheet. This option is NOT the same as \fBstyle\fR. Absolute paths are absolute however relative paths are relative to the wofi config folder location $WOFI_CONFIG_DIR/wofi or $XDG_CONFIG_HOME/wofi and NOT the current working directory as they are with \fBstyle\fR. They are also NOT relative to the path as specified by \fB\-\-conf\fR. This option comes from rootbar and is probably more confusing than it's worth. You should probably use \fBstyle\fR unless you're sure this is what you want.
 .TP
 .B color=\fIPATH\fR
 Specifies the colors file to use.
 .TP
 .B colors=\fIPATH\fR
-Specifies the colors file to use. This option is NOT the same as \fBcolor\fR. Absolute paths are absolute however relative paths are relative to the wofi config folder location $XDG_CONFIG_HOME/wofi and NOT the current working directory as they are with \fBcolor\fR. They are also NOT relative to the path as specified by \fB\-\-conf\fR. This option comes from rootbar and is probably more confusing than it's worth. You should probably use \fBcolor\fR unless you're sure this is what you want.
+Specifies the colors file to use. This option is NOT the same as \fBcolor\fR. Absolute paths are absolute however relative paths are relative to the wofi config folder location $WOFI_CONFIG_DIR/wofi or $XDG_CONFIG_HOME/wofi and NOT the current working directory as they are with \fBcolor\fR. They are also NOT relative to the path as specified by \fB\-\-conf\fR. This option comes from rootbar and is probably more confusing than it's worth. You should probably use \fBcolor\fR unless you're sure this is what you want.
 .TP
 .B show=\fIMODE\fR
 Specifies the mode to run in. A list of modes can be found in \fBwofi\fR(7).
@@ -62,7 +62,7 @@ If true allows image escape sequences to be processed and rendered, default is f
 If true allows pango markup to be processed and rendered, default is false.
 .TP
 .B cache_file=\fIPATH\fR
-Specifies the cache file to load/store cache, default is $XDG_CACHE_HOME/wofi\-<mode name> where <mode name> is the name of the mode, if $XDG_CACHE_HOME is not specified ~/.cache is used.
+Specifies the cache file to load/store cache, default is $WOFI_CACHE_DIR/wofi\-<mode name> or $XDG_CACHE_HOME/wofi\-<mode name> where <mode name> is the name of the mode, if both are not specified ~/.cache is used.
 .TP
 .B term=\fITERM\fR
 Specifies the term to use when running a program in a terminal. This overrides the default terminal run order which is kitty, alacritty, wezterm, foot, termite, gnome\-terminal, weston\-terminal in that order.

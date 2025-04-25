@@ -60,7 +60,7 @@ Allows image escape sequences to be processed and rendered.
 Allows pango markup to be processed and rendered.
 .TP
 .B \-k, \-\-cache\-file=\fIPATH\fR
-Specifies the cache file to load/store cache, default is $XDG_CACHE_HOME/wofi\-<mode name> where <mode name> is the name of the mode, if $XDG_CACHE_HOME is not specified ~/.cache is used.
+Specifies the cache file to load/store cache, default is $WOFI_CACHE_DIR/wofi\-<mode name> or $XDG_CACHE_HOME/wofi\-<mode name> where <mode name> is the name of the mode, if both of them are not specified ~/.cache is used.
 .TP
 .B \-t, \-\-term=\fITERM\fR
 Specifies the term to use when running a program in a terminal. This overrides the default terminal run order which is kitty, alacritty, wezterm, foot, termite, gnome\-terminal, weston\-terminal in that order.
@@ -120,16 +120,16 @@ If set, the selectable entry won't be displayed as-is, but will instead be displ
 .SH CONFIGURATION
 Wofi has 3 main files used for configuration. All files are completely optional.
 .IP 1. 4
-The config file which defaults to $XDG_CONFIG_HOME/wofi/config.
+The config file which defaults to $WOFI_CONFIG_DIR/wofi/config, or $XDG_CONFIG_HOME/wofi/config.
 .IP 2. 4
-The CSS file which defaults to $XDG_CONFIG_HOME/wofi/style.css.
+The CSS file which defaults to $WOFI_CONFIG_DIR/wofi/style.css, or $XDG_CONFIG_HOME/wofi/style.css.
 .IP 3. 4
-The colors file which defaults to the pywal cache $XDG_CACHE_HOME/wal/colors.
+The colors file which defaults to the pywal cache $WOFI_CACHE_DIR/wal/colors, or $XDG_CACHE_HOME/wal/colors.
 
 .P
 All 3 of these paths can be manually specified using the respective command line flag. In the case of the last 2 they can additionally be specified in the config file.
 
-In the event $XDG_CONFIG_HOME is not specified it defaults to ~/.config likewise if $XDG_CACHE_HOME is not specified it defaults to ~/.cache.
+In the event $WOFI_CONFIG_DIR or $XDG_CONFIG_HOME are not specified it defaults to ~/.config likewise if $WOFI_CACHE_DIR or $XDG_CACHE_HOME are not specified it defaults to ~/.cache.
 
 Information about the formats for these files can be found in
 .B wofi\fR(5).

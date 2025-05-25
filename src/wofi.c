@@ -535,15 +535,15 @@ static GtkWidget* create_label(char* mode, char* text, char* search_text, char* 
 }
 
 static char* get_cache_path(const gchar* mode) {
-	if(cache_file != NULL) {
-		return strdup(cache_file);
-	}
-	char* cache_path = getenv("XDG_CACHE_HOME");
-	if(cache_path == NULL) {
-		cache_path = utils_concat(3, getenv("HOME"), "/.cache/wofi-", mode);
-	} else {
-		cache_path = utils_concat(3, cache_path, "/wofi-", mode);
-	}
+	if (cache_file != NULL)
+	{	return strdup(cache_file); }
+
+	char* cache_path = (getenv("WOFI_CACHE_DIR") == NULL) ? getenv("XDG_CACHE_HOME") : getenv("WOFI_CACHE_DIR");
+	if (cache_path == NULL)
+	{	cache_path = utils_concat(3, getenv("HOME"), "/.cache/wofi-", mode); }
+	else
+	{	cache_path = utils_concat(3, cache_path, "/wofi-", mode); }
+
 	return cache_path;
 }
 

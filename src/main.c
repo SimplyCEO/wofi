@@ -590,19 +590,17 @@ int main(int argc, char** argv) {
 	}
 
 	const char* home_dir = getenv("HOME");
-	const char* xdg_conf = getenv("XDG_CONFIG_HOME");
-	if(xdg_conf == NULL) {
-		CONFIG_LOCATION = utils_concat(2, home_dir, "/.config/wofi");
-	} else {
-		CONFIG_LOCATION = utils_concat(2, xdg_conf, "/wofi");
-	}
+	const char* wofi_conf = (getenv("WOFI_CONFIG_DIR") == NULL) ? getenv("XDG_CONFIG_HOME") : getenv("WOFI_CONFIG_DIR");
+	if (wofi_conf == NULL)
+	{	CONFIG_LOCATION = utils_concat(2, home_dir, "/.config/wofi"); }
+	else
+	{	CONFIG_LOCATION = utils_concat(2, wofi_conf, "/wofi"); }
 
-	const char* xdg_cache = getenv("XDG_CACHE_HOME");
-	if(xdg_cache == NULL) {
-		COLORS_LOCATION = utils_concat(2, home_dir, "/.cache/wal/colors");
-	} else {
-		COLORS_LOCATION = utils_concat(2, xdg_cache, "/wal/colors");
-	}
+	const char* wofi_cache = (getenv("WOFI_CACHE_DIR") == NULL) ? getenv("XDG_CACHE_HOME") : getenv("WOFI_CACHE_DIR");
+	if (wofi_cache == NULL)
+	{	COLORS_LOCATION = utils_concat(2, home_dir, "/.cache/wal/colors"); }
+	else
+	{	COLORS_LOCATION = utils_concat(2, wofi_cache, "/wal/colors"); }
 
 	config = map_init();
 

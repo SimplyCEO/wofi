@@ -47,6 +47,8 @@
 
 static const char* terminals[] = {"kitty", "alacritty", "wezterm", "foot", "termite", "gnome-terminal", "weston-terminal"};
 
+unsigned char input_under_scroll = 0;
+
 enum location {
 	LOCATION_CENTER,
 	LOCATION_TOP_LEFT,
@@ -2018,7 +2020,6 @@ void wofi_init(struct map* _config) {
 
 	gtk_widget_set_name(entry, "input");
 	gtk_entry_set_placeholder_text(GTK_ENTRY(entry), prompt);
-	gtk_container_add(GTK_CONTAINER(outer_box), entry);
 
 	if(search != NULL) {
 		gtk_entry_set_text(GTK_ENTRY(entry), search);
@@ -2031,9 +2032,19 @@ void wofi_init(struct map* _config) {
 
 	scroll = gtk_scrolled_window_new(NULL, NULL);
 	gtk_widget_set_name(scroll, "scroll");
-	gtk_container_add(GTK_CONTAINER(outer_box), scroll);
 	if(hide_scroll) {
 		gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scroll), GTK_POLICY_EXTERNAL, GTK_POLICY_EXTERNAL);
+	}
+
+	if (input_under_scroll == 1)
+	{
+		gtk_container_add(GTK_CONTAINER(outer_box), scroll);
+		gtk_container_add(GTK_CONTAINER(outer_box), entry);
+	}
+	else
+	{
+		gtk_container_add(GTK_CONTAINER(outer_box), entry);
+		gtk_container_add(GTK_CONTAINER(outer_box), scroll);
 	}
 
 	inner_box = gtk_flow_box_new();

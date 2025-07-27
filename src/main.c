@@ -93,6 +93,7 @@ static void print_usage(char** argv) {
 	printf("--lines\t\t\t-L\tSets the height in number of lines\n");
 	printf("--columns\t\t-w\tSets the number of columns to display\n");
 	printf("--sort-order\t\t-O\tSets the sort order\n");
+	printf("--bottom-search\t\t-B\tMove input entry under scroll\n");
 	printf("--gtk-dark\t\t-G\tUses the dark variant of the current GTK theme\n");
 	printf("--search\t\t-Q\tSearch for something immediately on open\n");
 	printf("--monitor\t\t-o\tSets the monitor to open on\n");
@@ -408,6 +409,12 @@ int main(int argc, char** argv) {
 			.val = 'O'
 		},
 		{
+			.name = "bottom-search",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'B'
+		},
+		{
 			.name = "gtk-dark",
 			.has_arg = no_argument,
 			.flag = NULL,
@@ -464,6 +471,7 @@ int main(int argc, char** argv) {
 	char* lines = NULL;
 	char* columns = NULL;
 	char* sort_order = NULL;
+	char* bottom_search = NULL;
 	char* gtk_dark = NULL;
 	char* search = NULL;
 	char* monitor = NULL;
@@ -474,7 +482,7 @@ int main(int argc, char** argv) {
 	struct option_node* node;
 
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:GQ:o:r:", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:BGQ:o:r:", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -574,6 +582,9 @@ int main(int argc, char** argv) {
 		case 'O':
 			sort_order = optarg;
 			break;
+		case 'B':
+			bottom_search = "true";
+			break;
 		case 'G':
 			gtk_dark = "true";
 			break;
@@ -656,6 +667,9 @@ int main(int argc, char** argv) {
 	} else {
 		color_path = strdup(color_str);
 	}
+
+	if (bottom_search == NULL)
+	{ bottom_search = map_get(config, "bottom_search"); }
 
 	//Check if --gtk-dark was specified
 	if(gtk_dark == NULL) {
@@ -783,6 +797,9 @@ int main(int argc, char** argv) {
 
 
 	gtk_init(&argc, &argv);
+
+	if ((bottom_search != NULL) && (strcmp(bottom_search, "true") == 0))
+	{ input_under_scroll = 1; }
 
 	if(gtk_dark != NULL && strcmp(gtk_dark, "true") == 0) {
 		g_object_set(gtk_settings_get_default(),

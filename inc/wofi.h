@@ -42,4 +42,7 @@ struct mode {
 void wofi_init(struct map* config);
 
 void wofi_load_css(bool nyan);
+
+extern unsigned char input_under_scroll;
+
 #endif

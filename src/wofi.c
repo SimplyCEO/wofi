@@ -1847,10 +1847,16 @@ void wofi_init(struct map* _config) {
 		char* key_right = (i == 0) ? key_default : config_get(config, "key_right", key_default);
 		key_default = "Tab";
 		char* key_forward = (i == 0) ? key_default : config_get(config, "key_forward", key_default);
+#ifdef VI_KEYBINDS
+		key_default = "Ctrl-h";
+		char* key_vi_left = (i == 0) ? key_default : config_get(config, "key_vi_left", key_default);
 		key_default = "Ctrl-j";
-		char* key_vim_down = (i == 0) ? key_default : config_get(config, "key_vim_down", key_default);
+		char* key_vi_down = (i == 0) ? key_default : config_get(config, "key_vi_down", key_default);
 		key_default = "Ctrl-k";
-		char* key_vim_up = (i == 0) ? key_default : config_get(config, "key_vim_up", key_default);
+		char* key_vi_up = (i == 0) ? key_default : config_get(config, "key_vi_up", key_default);
+		key_default = "Ctrl-l";
+		char* key_vi_right = (i == 0) ? key_default : config_get(config, "key_vi_right", key_default);
+#endif
 		key_default = "Shift-ISO_Left_Tab";
 		char* key_backward = (i == 0) ? key_default : config_get(config, "key_backward", key_default);
 		key_default = "Return";
@@ -1880,8 +1886,12 @@ void wofi_init(struct map* _config) {
 		add_key_entry(key_down, move_down);
 		add_key_entry(key_left, move_left);
 		add_key_entry(key_right, move_right);
-		add_key_entry(key_vim_down, move_down);
-		add_key_entry(key_vim_up, move_up);
+#ifdef VI_KEYBINDS
+		add_key_entry(key_vi_left, move_left);
+		add_key_entry(key_vi_up, move_up);
+		add_key_entry(key_vi_down, move_down);
+		add_key_entry(key_vi_right, move_right);
+#endif
 		add_key_entry(key_forward, move_forward);
 		add_key_entry(key_backward, move_backward);
 		add_key_entry(key_submit, NULL); //submit is a special case, when a NULL action is encountered submit is used instead

@@ -82,6 +82,10 @@ if(ENABLE_DMENU)
   set(__ALL_OPTIONAL_FILES ${__ALL_OPTIONAL_FILES} ${__MODES_PATH}/dmenu.c)
 endif()
 
+if(VI_KEYBINDS)
+  add_definitions(-DVI_KEYBINDS=1)
+endif()
+
 # COMPILER PREPARATION
 include_directories(${__HEADER_PATH} ${__SOURCE_PATH})
 file(GLOB_RECURSE __ALL_HEADERS "${__HEADER_PATH}/*.h")

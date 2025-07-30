@@ -32,8 +32,17 @@ Then build with your desired build system:
 - CMake:
 
 ```shell
-cmake -S . -B build -DCMAKE_INSTALL_PREFIX=/usr/local
+cmake -S . -B build \
+  -DCMAKE_INSTALL_PREFIX=/usr/local \
+  -DENABLE_RUN=1 \
+  -DENABLE_DRUN=1 \
+  -DENABLE_DMENU=1
 cmake --build build
+```
+
+There are more available options in [CMakeLists.txt](/CMakeLists.txt).
+```shell
+cat CMakeLists.txt | head -n 87 | tail -n $((87-66)) | less
 ```
 
 - Meson:

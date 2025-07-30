@@ -3,7 +3,7 @@ Wofi
 
 Wofi is a launcher/menu program for wlroots based wayland compositors such as sway.
 
-This repository is a <b>mirror</b> of https://hg.sr.ht/~scoopta/wofi with some [additions](https://github.com/SimplyCEO/wofi/commits/master/?author=SimplyCEO).
+This repository is a <b>fork</b> of https://hg.sr.ht/~scoopta/wofi with some [additions](https://github.com/SimplyCEO/wofi/commits/master/?author=SimplyCEO).
 
 Dependencies
 ------------
@@ -77,12 +77,15 @@ su -c "ninja -C build uninstall"
 Bug Reports
 -----------
 
-Please file bug reports at https://todo.sr.ht/~scoopta/wofi
+This fork is <b>not</b> connected to mainstream, so, for any bugs
+regarding newer software behaviour please file reports at their
+sourcehut repository: https://todo.sr.ht/~scoopta/wofi
 
 Contributing
 ------------
 
-Please submit patches to https://lists.sr.ht/~scoopta/wofi
+It is advised to submit patches to https://lists.sr.ht/~scoopta/wofi
+since this fork is <b>not</b> connected to mainstream.
 
 You can find documentation here https://man.sr.ht/hg.sr.ht/email.md
 

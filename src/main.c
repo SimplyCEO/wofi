@@ -93,6 +93,7 @@ static void print_usage(char** argv) {
 	printf("--lines\t\t\t-L\tSets the height in number of lines\n");
 	printf("--columns\t\t-w\tSets the number of columns to display\n");
 	printf("--sort-order\t\t-O\tSets the sort order\n");
+	printf("--render-only-image\t-R\tRemove label of dmenu image\n");
 	printf("--bottom-search\t\t-B\tMove input entry under scroll\n");
 	printf("--gtk-dark\t\t-G\tUses the dark variant of the current GTK theme\n");
 	printf("--search\t\t-Q\tSearch for something immediately on open\n");
@@ -409,6 +410,12 @@ int main(int argc, char** argv) {
 			.val = 'O'
 		},
 		{
+			.name = "render-only-image",
+			.has_arg = no_argument,
+			.flag = NULL,
+			.val = 'R'
+		},
+		{
 			.name = "bottom-search",
 			.has_arg = no_argument,
 			.flag = NULL,
@@ -471,6 +478,7 @@ int main(int argc, char** argv) {
 	char* lines = NULL;
 	char* columns = NULL;
 	char* sort_order = NULL;
+	char* dmenu_only_image = NULL;
 	char* bottom_search = NULL;
 	char* gtk_dark = NULL;
 	char* search = NULL;
@@ -482,7 +490,7 @@ int main(int argc, char** argv) {
 	struct option_node* node;
 
 	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:BGQ:o:r:", opts, NULL)) != -1) {
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:RBGQ:o:r:", opts, NULL)) != -1) {
 		switch(opt) {
 		case 'h':
 			print_usage(argv);
@@ -582,6 +590,9 @@ int main(int argc, char** argv) {
 		case 'O':
 			sort_order = optarg;
 			break;
+		case 'R':
+			dmenu_only_image = "true";
+			break;
 		case 'B':
 			bottom_search = "true";
 			break;
@@ -667,6 +678,9 @@ int main(int argc, char** argv) {
 	} else {
 		color_path = strdup(color_str);
 	}
+
+	if (dmenu_only_image == NULL)
+	{ dmenu_only_image = map_get(config, "dmenu_only_image"); }
 
 	if (bottom_search == NULL)
 	{ bottom_search = map_get(config, "bottom_search"); }
@@ -797,6 +811,9 @@ int main(int argc, char** argv) {
 
 
 	gtk_init(&argc, &argv);
+
+	if ((dmenu_only_image != NULL) && (strcmp(dmenu_only_image, "true") == 0))
+	{ render_only_image = 1; }
 
 	if ((bottom_search != NULL) && (strcmp(bottom_search, "true") == 0))
 	{ input_under_scroll = 1; }

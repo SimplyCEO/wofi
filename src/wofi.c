@@ -48,6 +48,7 @@
 static const char* terminals[] = {"kitty", "alacritty", "wezterm", "foot", "termite", "gnome-terminal", "weston-terminal"};
 
 unsigned char input_under_scroll = 0;
+unsigned char render_only_image = 0;
 
 enum location {
 	LOCATION_CENTER,
@@ -356,21 +357,52 @@ static char* parse_images(WofiPropertyBox* box, const char* text, bool create_wi
 
 				gtk_widget_set_name(img, "img");
 				gtk_container_add(GTK_CONTAINER(box), img);
-			} else if(strcmp(mode1, "text") == 0) {
-				if(create_widgets) {
+			}
+			if(strcmp(mode1, "text") == 0)
+			{
+				if(create_widgets)
+				{
 					GtkWidget* label = gtk_label_new(data1);
 					gtk_widget_set_name(label, "text");
 					gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
 					gtk_label_set_xalign(GTK_LABEL(label), 0);
-					if(line_wrap >= 0) {
+					if(line_wrap >= 0)
+					{
 						gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
 						gtk_label_set_line_wrap_mode(GTK_LABEL(label), line_wrap);
 					}
 					gtk_container_add(GTK_CONTAINER(box), label);
-				} else {
+				}
+				else
+				{
 					char* tmp = ret;
 					ret = utils_concat(2, ret, data1);
 					free(tmp);
+				}
+			}
+			else
+			{
+				if (render_only_image == 0)
+				{
+					char* filename = (char*)malloc(256*sizeof(char));
+					if (filename == NULL)
+					{ goto done; }
+					memset(filename, '\0', 256*sizeof(char));
+
+					filename[0] = ' ';
+					strncat(filename, basename(data1), 256*sizeof(char));
+					GtkWidget* label = gtk_label_new(filename);
+					free(filename);
+
+					gtk_widget_set_name(label, "text");
+					gtk_label_set_use_markup(GTK_LABEL(label), allow_markup);
+					gtk_label_set_xalign(GTK_LABEL(label), 0);
+					if(line_wrap >= 0)
+					{
+						gtk_label_set_line_wrap(GTK_LABEL(label), TRUE);
+						gtk_label_set_line_wrap_mode(GTK_LABEL(label), line_wrap);
+					}
+					gtk_container_add(GTK_CONTAINER(box), label);
 				}
 			}
 			done:

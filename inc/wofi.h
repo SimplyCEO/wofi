@@ -44,5 +44,6 @@ void wofi_init(struct map* config);
 void wofi_load_css(bool nyan);
 
 extern unsigned char input_under_scroll;
+extern unsigned char render_only_image;
 
 #endif

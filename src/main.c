@@ -60,45 +60,46 @@ static char* get_exec_name(char* path) {
 	return path + offset;
 }
 
+#define PRINT_USAGE_FORMAT "  %s%c  %s%s%s\n"
 static void print_usage(char** argv) {
-	printf("%s [options]\n", get_exec_name(argv[0]));
+	printf("%s [options] <[value]>\n\n", get_exec_name(argv[0]));
 	printf("Options:\n");
-	printf("--help\t\t\t-h\tDisplays this help message\n");
-	printf("--fork\t\t\t-f\tForks the menu so you can close the terminal\n");
-	printf("--conf\t\t\t-c\tSelects a config file to use\n");
-	printf("--style\t\t\t-s\tSelects a stylesheet to use\n");
-	printf("--color\t\t\t-C\tSelects a colors file to use\n");
-	printf("--dmenu\t\t\t-d\tRuns in dmenu mode\n");
-	printf("--show\t\t\t-S\tSpecifies the mode to run in. A list can be found in wofi(7)\n");
-	printf("--width\t\t\t-W\tSpecifies the surface width\n");
-	printf("--height\t\t-H\tSpecifies the surface height\n");
-	printf("--prompt\t\t-p\tPrompt to display\n");
-	printf("--xoffset\t\t-x\tThe x offset\n");
-	printf("--yoffset\t\t-y\tThe y offset\n");
-	printf("--normal-window\t\t-n\tRender to a normal window\n");
-	printf("--allow-images\t\t-I\tAllows images to be rendered\n");
-	printf("--allow-markup\t\t-m\tAllows pango markup\n");
-	printf("--cache-file\t\t-k\tSets the cache file to use\n");
-	printf("--term\t\t\t-t\tSpecifies the terminal to use when running in a term\n");
-	printf("--password\t\t-P\tRuns in password mode\n");
-	printf("--exec-search\t\t-e\tMakes enter always use the search contents not the first result\n");
-	printf("--hide-scroll\t\t-b\tHides the scroll bars\n");
-	printf("--matching\t\t-M\tSets the matching method, default is contains\n");
-	printf("--insensitive\t\t-i\tAllows case insensitive searching\n");
-	printf("--parse-search\t\t-q\tParses the search text removing image escapes and pango\n");
-	printf("--version\t\t-v\tPrints the version and then exits\n");
-	printf("--location\t\t-l\tSets the location\n");
-	printf("--no-actions\t\t-a\tDisables multiple actions for modes that support it\n");
-	printf("--define\t\t-D\tSets a config option\n");
-	printf("--lines\t\t\t-L\tSets the height in number of lines\n");
-	printf("--columns\t\t-w\tSets the number of columns to display\n");
-	printf("--sort-order\t\t-O\tSets the sort order\n");
-	printf("--render-only-image\t-R\tRemove label of dmenu image\n");
-	printf("--bottom-search\t\t-B\tMove input entry under scroll\n");
-	printf("--gtk-dark\t\t-G\tUses the dark variant of the current GTK theme\n");
-	printf("--search\t\t-Q\tSearch for something immediately on open\n");
-	printf("--monitor\t\t-o\tSets the monitor to open on\n");
-	printf("--pre-display-cmd\t-r\tRuns command for the displayed entries, without changing the output. %%s for the real string\n");
+	printf(PRINT_USAGE_FORMAT,   "-h",   ',',   "--help",                "\t\t\t",   "Displays this help message");
+	printf(PRINT_USAGE_FORMAT,   "-f",   ',',   "--fork",                "\t\t\t",   "Forks the menu so you can close the terminal");
+	printf(PRINT_USAGE_FORMAT,   "-c",   ',',   "--conf",                "\t\t\t",   "Selects a config file to use");
+	printf(PRINT_USAGE_FORMAT,   "-s",   ',',   "--style",               "\t\t\t",   "Selects a stylesheet to use");
+	printf(PRINT_USAGE_FORMAT,   "-C",   ',',   "--color",               "\t\t\t",   "Selects a colors file to use");
+	printf(PRINT_USAGE_FORMAT,   "-d",   ',',   "--dmenu",               "\t\t\t",   "Runs in dmenu mode");
+	printf(PRINT_USAGE_FORMAT,   "-S",   ',',   "--show",                "\t\t\t",   "Specifies the mode to run in. A list can be found in wofi(7)");
+	printf(PRINT_USAGE_FORMAT,   "-W",   ',',   "--width",               "\t\t\t",   "Specifies the surface width");
+	printf(PRINT_USAGE_FORMAT,   "-H",   ',',   "--height",              "\t\t\t",   "Specifies the surface height");
+	printf(PRINT_USAGE_FORMAT,   "-p",   ',',   "--prompt",              "\t\t\t",   "Prompt to display");
+	printf(PRINT_USAGE_FORMAT,   "-x",   ',',   "--xoffset",             "\t\t",     "The x offset");
+	printf(PRINT_USAGE_FORMAT,   "-y",   ',',   "--yoffset",             "\t\t",     "The y offset");
+	printf(PRINT_USAGE_FORMAT,   "-n",   ',',   "--normal-window",       "\t\t",     "Render to a normal window");
+	printf(PRINT_USAGE_FORMAT,   "-I",   ',',   "--allow-images",        "\t\t",     "Allows images to be rendered");
+	printf(PRINT_USAGE_FORMAT,   "-m",   ',',   "--allow-markup",        "\t\t",     "Allows pango markup");
+	printf(PRINT_USAGE_FORMAT,   "-k",   ',',   "--cache-file",          "\t\t",     "Sets the cache file to use");
+	printf(PRINT_USAGE_FORMAT,   "-t",   ',',   "--term",                "\t\t\t",   "Specifies the terminal to use when running in a term");
+	printf(PRINT_USAGE_FORMAT,   "-P",   ',',   "--password",            "\t\t",     "Runs in password mode");
+	printf(PRINT_USAGE_FORMAT,   "-e",   ',',   "--exec-search",         "\t\t",     "Makes enter always use the search contents not the first result");
+	printf(PRINT_USAGE_FORMAT,   "-b",   ',',   "--hide-scroll",         "\t\t",     "Hides the scroll bars");
+	printf(PRINT_USAGE_FORMAT,   "-M",   ',',   "--matching",            "\t\t",     "Sets the matching method, default is contains");
+	printf(PRINT_USAGE_FORMAT,   "-i",   ',',   "--insensitive",         "\t\t",     "Allows case insensitive searching");
+	printf(PRINT_USAGE_FORMAT,   "-q",   ',',   "--parse-search",        "\t\t",     "Parses the search text removing image escapes and pango");
+	printf(PRINT_USAGE_FORMAT,   "-v",   ',',   "--version",             "\t\t",     "Prints the version and then exits");
+	printf(PRINT_USAGE_FORMAT,   "-l",   ',',   "--location",            "\t\t",     "Sets the location");
+	printf(PRINT_USAGE_FORMAT,   "-a",   ',',   "--no-actions",          "\t\t",     "Disables multiple actions for modes that support it");
+	printf(PRINT_USAGE_FORMAT,   "-D",   ',',   "--define",              "\t\t\t",   "Sets a config option");
+	printf(PRINT_USAGE_FORMAT,   "-L",   ',',   "--lines",               "\t\t\t",   "Sets the height in number of lines");
+	printf(PRINT_USAGE_FORMAT,   "-w",   ',',   "--columns",             "\t\t",     "Sets the number of columns to display");
+	printf(PRINT_USAGE_FORMAT,   "-O",   ',',   "--sort-order",          "\t\t",     "Sets the sort order");
+	printf(PRINT_USAGE_FORMAT,   "-G",   ',',   "--gtk-dark",            "\t\t",     "Uses the dark variant of the current GTK theme");
+	printf(PRINT_USAGE_FORMAT,   "-Q",   ',',   "--search",              "\t\t\t",   "Search for something immediately on open");
+	printf(PRINT_USAGE_FORMAT,   "-o",   ',',   "--monitor",             "\t\t",     "Sets the monitor to open on");
+	printf(PRINT_USAGE_FORMAT,   "-r",   ',',   "--pre-display-cmd",     "\t",       "Runs command for the displayed entries, without changing the output. %%s for the real string");
+	printf(PRINT_USAGE_FORMAT,   "  ",   ' ',   "--render-only-image",   "\t",       "Remove label of dmenu image");
+	printf(PRINT_USAGE_FORMAT,   "  ",   ' ',   "--bottom-search",       "\t",       "Move input entry under scroll");
 	exit(0);
 }
 
@@ -228,386 +229,156 @@ static void sig(int32_t signum) {
 
 int main(int argc, char** argv) {
 
-	const struct option opts[] = {
-		{
-			.name = "help",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'h'
-		},
-		{
-			.name = "fork",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'f'
-		},
-		{
-			.name = "conf",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'c'
-		},
-		{
-			.name = "style",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 's'
-		},
-		{
-			.name = "color",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'C'
-		},
-		{
-			.name = "dmenu",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'd'
-		},
-		{
-			.name = "show",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'S'
-		},
-		{
-			.name = "width",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'W'
-		},
-		{
-			.name = "height",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'H'
-		},
-		{
-			.name = "prompt",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'p'
-		},
-		{
-			.name = "xoffset",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'x'
-		},
-		{
-			.name = "yoffset",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'y'
-		},
-		{
-			.name = "normal-window",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'n'
-		},
-		{
-			.name = "allow-images",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'I'
-		},
-		{
-			.name = "allow-markup",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'm'
-		},
-		{
-			.name = "cache-file",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'k'
-		},
-		{
-			.name = "term",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 't'
-		},
-		{
-			.name = "password",
-			.has_arg = optional_argument,
-			.flag = NULL,
-			.val = 'P'
-		},
-		{
-			.name = "exec-search",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'e'
-		},
-		{
-			.name = "hide-scroll",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'b'
-		},
-		{
-			.name = "matching",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'M'
-		},
-		{
-			.name = "insensitive",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'i'
-		},
-		{
-			.name = "parse-search",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'q'
-		},
-		{
-			.name = "version",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'v'
-		},
-		{
-			.name = "location",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'l'
-		},
-		{
-			.name = "no-actions",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'a'
-		},
-		{
-			.name = "define",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'D'
-		},
-		{
-			.name = "lines",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'L'
-		},
-		{
-			.name = "columns",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'w'
-		},
-		{
-			.name = "sort-order",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'O'
-		},
-		{
-			.name = "render-only-image",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'R'
-		},
-		{
-			.name = "bottom-search",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'B'
-		},
-		{
-			.name = "gtk-dark",
-			.has_arg = no_argument,
-			.flag = NULL,
-			.val = 'G'
-		},
-		{
-			.name = "search",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'Q'
-		},
-		{
-			.name = "monitor",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'o'
-		},
-		{
-			.name = "pre-display-cmd",
-			.has_arg = required_argument,
-			.flag = NULL,
-			.val = 'r'
-		},
-		{
-			.name = NULL,
-			.has_arg = 0,
-			.flag = NULL,
-			.val = 0
-		}
+	typedef enum
+	{
+		OPT_NONE = 0,
+		OPT_RENDER_ONLY_IMAGE,
+		OPT_BOTTOM_SEARCH
+	} OptIndex;
+
+	const struct option opts[] =
+	{
+		{ .name = "0template",           .has_arg = no_argument,         .flag = NULL,   .val = '0' },
+		{ .name = "1template",           .has_arg = required_argument,   .flag = NULL,   .val = '1' },
+		/* Long options only comes first */
+		{ .name = "render-only-image",   .has_arg = no_argument,         .flag = NULL,   .val = '0' },
+		{ .name = "bottom-search",       .has_arg = no_argument,         .flag = NULL,   .val = '0' },
+		/* Double options */
+		{ .name = "help",                .has_arg = no_argument,         .flag = NULL,   .val = 'h' },
+		{ .name = "fork",                .has_arg = no_argument,         .flag = NULL,   .val = 'f' },
+		{ .name = "conf",                .has_arg = required_argument,   .flag = NULL,   .val = 'c' },
+		{ .name = "style",               .has_arg = required_argument,   .flag = NULL,   .val = 's' },
+		{ .name = "color",               .has_arg = required_argument,   .flag = NULL,   .val = 'C' },
+		{ .name = "dmenu",               .has_arg = no_argument,         .flag = NULL,   .val = 'd' },
+		{ .name = "show",                .has_arg = required_argument,   .flag = NULL,   .val = 'S' },
+		{ .name = "width",               .has_arg = required_argument,   .flag = NULL,   .val = 'W' },
+		{ .name = "height",              .has_arg = required_argument,   .flag = NULL,   .val = 'H' },
+		{ .name = "prompt",              .has_arg = required_argument,   .flag = NULL,   .val = 'p' },
+		{ .name = "xoffset",             .has_arg = required_argument,   .flag = NULL,   .val = 'x' },
+		{ .name = "yoffset",             .has_arg = required_argument,   .flag = NULL,   .val = 'y' },
+		{ .name = "normal-window",       .has_arg = no_argument,         .flag = NULL,   .val = 'n' },
+		{ .name = "allow-images",        .has_arg = no_argument,         .flag = NULL,   .val = 'I' },
+		{ .name = "allow-markup",        .has_arg = no_argument,         .flag = NULL,   .val = 'm' },
+		{ .name = "cache-file",          .has_arg = required_argument,   .flag = NULL,   .val = 'k' },
+		{ .name = "term",                .has_arg = required_argument,   .flag = NULL,   .val = 't' },
+		{ .name = "password",            .has_arg = optional_argument,   .flag = NULL,   .val = 'P' },
+		{ .name = "exec-search",         .has_arg = no_argument,         .flag = NULL,   .val = 'e' },
+		{ .name = "hide-scroll",         .has_arg = no_argument,         .flag = NULL,   .val = 'b' },
+		{ .name = "matching",            .has_arg = required_argument,   .flag = NULL,   .val = 'M' },
+		{ .name = "insensitive",         .has_arg = no_argument,         .flag = NULL,   .val = 'i' },
+		{ .name = "parse-search",        .has_arg = no_argument,         .flag = NULL,   .val = 'q' },
+		{ .name = "version",             .has_arg = no_argument,         .flag = NULL,   .val = 'v' },
+		{ .name = "location",            .has_arg = required_argument,   .flag = NULL,   .val = 'l' },
+		{ .name = "no-actions",          .has_arg = no_argument,         .flag = NULL,   .val = 'a' },
+		{ .name = "define",              .has_arg = required_argument,   .flag = NULL,   .val = 'D' },
+		{ .name = "lines",               .has_arg = required_argument,   .flag = NULL,   .val = 'L' },
+		{ .name = "columns",             .has_arg = required_argument,   .flag = NULL,   .val = 'w' },
+		{ .name = "sort-order",          .has_arg = required_argument,   .flag = NULL,   .val = 'O' },
+		{ .name = "gtk-dark",            .has_arg = no_argument,         .flag = NULL,   .val = 'G' },
+		{ .name = "search",              .has_arg = required_argument,   .flag = NULL,   .val = 'Q' },
+		{ .name = "monitor",             .has_arg = required_argument,   .flag = NULL,   .val = 'o' },
+		{ .name = "pre-display-cmd",     .has_arg = required_argument,   .flag = NULL,   .val = 'r' },
+		{ .name = NULL,                  .has_arg = 0,                   .flag = NULL, 	.val =  0  }
 	};
 
 	const char* config_str = NULL;
-	char* style_str = NULL;
-	char* color_str = NULL;
-	char* mode = NULL;
-	char* prompt = NULL;
-	char* width = NULL;
-	char* height = NULL;
-	char* x = NULL;
-	char* y = NULL;
-	char* normal_window = NULL;
-	char* allow_images = NULL;
-	char* allow_markup = NULL;
-	char* cache_file = NULL;
-	char* terminal = NULL;
-	char* password_char = "false";
-	char* exec_search = NULL;
-	char* hide_scroll = NULL;
-	char* matching = NULL;
-	char* insensitive = NULL;
-	char* parse_search = NULL;
-	char* location = NULL;
-	char* no_actions = NULL;
-	char* lines = NULL;
-	char* columns = NULL;
-	char* sort_order = NULL;
-	char* dmenu_only_image = NULL;
-	char* bottom_search = NULL;
-	char* gtk_dark = NULL;
-	char* search = NULL;
-	char* monitor = NULL;
-	char* pre_display_cmd = NULL;
+	      char* dmenu_only_image = NULL;
+	      char* bottom_search = NULL;
+	      char* style_str = NULL;
+	      char* color_str = NULL;
+	      char* mode = NULL;
+	      char* prompt = NULL;
+	      char* width = NULL;
+	      char* height = NULL;
+	      char* x = NULL;
+	      char* y = NULL;
+	      char* normal_window = NULL;
+	      char* allow_images = NULL;
+	      char* allow_markup = NULL;
+	      char* cache_file = NULL;
+	      char* terminal = NULL;
+	      char* password_char = "false";
+	      char* exec_search = NULL;
+	      char* hide_scroll = NULL;
+	      char* matching = NULL;
+	      char* insensitive = NULL;
+	      char* parse_search = NULL;
+	      char* location = NULL;
+	      char* no_actions = NULL;
+	      char* lines = NULL;
+	      char* columns = NULL;
+	      char* sort_order = NULL;
+	      char* gtk_dark = NULL;
+	      char* search = NULL;
+	      char* monitor = NULL;
+	      char* pre_display_cmd = NULL;
 
 	struct wl_list options;
 	wl_list_init(&options);
 	struct option_node* node;
 
-	int opt;
-	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:RBGQ:o:r:", opts, NULL)) != -1) {
-		switch(opt) {
-		case 'h':
-			print_usage(argv);
-			break;
-		case 'f':
-			if(fork() > 0) {
-				exit(0);
-			}
-			fclose(stdout);
-			fclose(stderr);
-			fclose(stdin);
-			break;
-		case 'c':
-			config_str = optarg;
-			break;
-		case 's':
-			style_str = optarg;
-			break;
-		case 'C':
-			color_str = optarg;
-			break;
-		case 'd':
-			mode = "dmenu";
-			break;
-		case 'S':
-			mode = optarg;
-			break;
-		case 'W':
-			width = optarg;
-			break;
-		case 'H':
-			height = optarg;
-			break;
-		case 'p':
-			prompt = optarg;
-			break;
-		case 'x':
-			x = optarg;
-			break;
-		case 'y':
-			y = optarg;
-			break;
-		case 'n':
-			normal_window = "true";
-			break;
-		case 'I':
-			allow_images = "true";
-			break;
-		case 'm':
-			allow_markup = "true";
-			break;
-		case 'k':
-			cache_file = optarg;
-			break;
-		case 't':
-			terminal = optarg;
-			break;
-		case 'P':
-			password_char = optarg;
-			break;
-		case 'e':
-			exec_search = "true";
-			break;
-		case 'b':
-			hide_scroll = "true";
-			break;
-		case 'M':
-			matching = optarg;
-			break;
-		case 'i':
-			insensitive = "true";
-			break;
-		case 'q':
-			parse_search = "true";
-			break;
-		case 'v':
-			printf(VERSION"\n");
-			exit(0);
-			break;
-		case 'l':
-			location = optarg;
-			break;
-		case 'a':
-			no_actions = "true";
-			break;
-		case 'D':
-			node = malloc(sizeof(struct option_node));
-			node->option = optarg;
-			wl_list_insert(&options, &node->link);
-			break;
-		case 'L':
-			lines = optarg;
-			break;
-		case 'w':
-			columns = optarg;
-			break;
-		case 'O':
-			sort_order = optarg;
-			break;
-		case 'R':
-			dmenu_only_image = "true";
-			break;
-		case 'B':
-			bottom_search = "true";
-			break;
-		case 'G':
-			gtk_dark = "true";
-			break;
-		case 'Q':
-			search = optarg;
-			break;
-		case 'o':
-			monitor = optarg;
-			break;
-		case 'r':
-			pre_display_cmd = optarg;
-			break;
+	int opt = 0, opt_index = 0;
+	while((opt = getopt_long(argc, argv, "hfc:s:C:dS:W:H:p:x:y:nImk:t:P::ebM:iqvl:aD:L:w:O:GQ:o:r:01:", opts, &opt_index)) != -1)
+	{
+		switch(opt)
+		{
+			case '0':
+			case '1':
+			{
+				switch ((OptIndex)opt_index)
+				{
+					case OPT_NONE: fprintf(stderr, "ERROR: No valid option has been provided.\nMore information: -h.\n"); exit(1);
+					case OPT_RENDER_ONLY_IMAGE: dmenu_only_image = "true"; break;
+					case OPT_BOTTOM_SEARCH: bottom_search = "true"; break;
+					default: exit(1);
+				}
+			} break;
+			case 'h': print_usage(argv);         break;
+			case 'f':
+			{
+				if (fork > 0) { exit(0); }
+				fclose(stdout);
+				fclose(stderr);
+				fclose(stdin);
+			} break;
+			case 'c': config_str = optarg;       break;
+			case 's': style_str = optarg;        break;
+			case 'C': color_str = optarg;        break;
+			case 'd': mode = "dmenu";            break;
+			case 'S': mode = optarg;             break;
+			case 'W': width = optarg;            break;
+			case 'H': height = optarg;           break;
+			case 'p': prompt = optarg;           break;
+			case 'x': x = optarg;                break;
+			case 'y': y = optarg;                break;
+			case 'n': normal_window = "true";    break;
+			case 'I': allow_images = "true";     break;
+			case 'm': allow_markup = "true";     break;
+			case 'k': cache_file = optarg;       break;
+			case 't': terminal = optarg;         break;
+			case 'P': password_char = optarg;    break;
+			case 'e': exec_search = "true";      break;
+			case 'b': hide_scroll = "true";      break;
+			case 'M': matching = optarg;         break;
+			case 'i': insensitive = "true";      break;
+			case 'q': parse_search = "true";     break;
+			case 'v': printf(VERSION"\n");       exit(0);
+			case 'l': location = optarg;         break;
+			case 'a': no_actions = "true";       break;
+			case 'D':
+			{
+				node = malloc(sizeof(struct option_node));
+				node->option = optarg;
+				wl_list_insert(&options, &node->link);
+			} break;
+			case 'L': lines = optarg;            break;
+			case 'w': columns = optarg;          break;
+			case 'O': sort_order = optarg;       break;
+			case 'G': gtk_dark = "true";         break;
+			case 'Q': search = optarg;           break;
+			case 'o': monitor = optarg;          break;
+			case 'r': pre_display_cmd = optarg;  break;
+			default: fprintf(stderr, "More information: -h.\n"); exit(1);
 		}
 	}
 

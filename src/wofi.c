@@ -2064,6 +2064,14 @@ void wofi_init(struct map* _config) {
 	gtk_widget_set_name(outer_box, "outer-box");
 	gtk_container_add(GTK_CONTAINER(window), outer_box);
 	entry = gtk_search_entry_new();
+
+  // If an entry icon is provided, replace the entry icon with it
+  char *entry_icon = map_get(config, "entry_icon");
+  if (entry_icon != NULL) {
+    gtk_entry_set_icon_from_icon_name(GTK_ENTRY(entry), GTK_ENTRY_ICON_PRIMARY,
+                                      entry_icon);
+  }
+
 	g_signal_connect(entry, "size-allocate", G_CALLBACK(widget_allocate), NULL);
 
 	gtk_widget_set_name(entry, "input");

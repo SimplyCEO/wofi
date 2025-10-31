@@ -1855,6 +1855,7 @@ void wofi_init(struct map* _config) {
 	pre_display_cmd = map_get(config, "pre_display_cmd");
 	pre_display_exec = strcmp(config_get(config, "pre_display_exec", "false"), "true") == 0;
 	single_click = strcmp(config_get(config, "single_click", "false"), "true") == 0;
+	char* entry_icon = map_get(config, "entry_icon");
 
 	keys = map_init_void();
 	mods = map_init_void();
@@ -2065,12 +2066,15 @@ void wofi_init(struct map* _config) {
 	gtk_container_add(GTK_CONTAINER(window), outer_box);
 	entry = gtk_search_entry_new();
 
-  // If an entry icon is provided, replace the entry icon with it
-  char *entry_icon = map_get(config, "entry_icon");
-  if (entry_icon != NULL) {
-    gtk_entry_set_icon_from_icon_name(GTK_ENTRY(entry), GTK_ENTRY_ICON_PRIMARY,
-                                      entry_icon);
-  }
+	/* Replace entry icon with a valid provided. */
+	if (entry_icon != NULL)
+	{
+		gtk_entry_set_icon_from_icon_name(
+			GTK_ENTRY(entry),
+			GTK_ENTRY_ICON_PRIMARY,
+			entry_icon
+		);
+	}
 
 	g_signal_connect(entry, "size-allocate", G_CALLBACK(widget_allocate), NULL);
 

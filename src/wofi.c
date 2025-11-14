@@ -231,6 +231,41 @@ static gboolean do_search(gpointer data) {
 	return G_SOURCE_CONTINUE;
 }
 
+static void
+filter_character_out(char* src, const char ch)
+{
+	const char delimiter[2] = {ch, '\0'};
+	char* token = strtok(src, delimiter);
+
+	while (token != NULL)
+	{
+		sprintf(src, "%s", token);
+		token = strtok(NULL, delimiter);
+	}
+}
+
+static GIcon*
+get_icon_from_string(char* src)
+{
+	filter_character_out(src, '\'');
+	filter_character_out(src, '"');
+
+	GIcon* icon = NULL;
+	GFile* fptr = g_file_new_for_path(src);
+
+	if (g_file_query_exists(fptr, NULL) == 0)
+	{
+		icon = g_themed_icon_new(src);
+	}
+	else
+	{
+		icon = g_file_icon_new(fptr);
+	}
+
+	g_object_unref(fptr);
+	return icon;
+}
+
 static void get_img_data(char* original, char* str, struct map* mode_map, bool first, char** mode, char** data) {
 	char* colon = strchr(str, ':');
 	if(colon == NULL) {
@@ -1855,6 +1890,8 @@ void wofi_init(struct map* _config) {
 	pre_display_cmd = map_get(config, "pre_display_cmd");
 	pre_display_exec = strcmp(config_get(config, "pre_display_exec", "false"), "true") == 0;
 	single_click = strcmp(config_get(config, "single_click", "false"), "true") == 0;
+	char* entry_icon_primary = map_get(config, "entry_icon_primary");
+	char* entry_icon_secondary = map_get(config, "entry_icon_secondary");
 
 	keys = map_init_void();
 	mods = map_init_void();
@@ -2064,6 +2101,32 @@ void wofi_init(struct map* _config) {
 	gtk_widget_set_name(outer_box, "outer-box");
 	gtk_container_add(GTK_CONTAINER(window), outer_box);
 	entry = gtk_search_entry_new();
+
+	/* Replace entry icon with a valid provided. */
+	if ((entry_icon_primary != NULL) || (entry_icon_secondary != NULL))
+	{
+		GIcon* primary_icon = get_icon_from_string(entry_icon_primary);
+		if (primary_icon != NULL)
+		{
+			gtk_entry_set_icon_from_gicon(
+				GTK_ENTRY(entry),
+				GTK_ENTRY_ICON_PRIMARY,
+				primary_icon
+			);
+			g_object_unref(primary_icon);
+		}
+		GIcon* secondary_icon = get_icon_from_string(entry_icon_secondary);
+		if (secondary_icon != NULL)
+		{
+			gtk_entry_set_icon_from_gicon(
+				GTK_ENTRY(entry),
+				GTK_ENTRY_ICON_SECONDARY,
+				secondary_icon
+			);
+			g_object_unref(secondary_icon);
+		}
+	}
+
 	g_signal_connect(entry, "size-allocate", G_CALLBACK(widget_allocate), NULL);
 
 	gtk_widget_set_name(entry, "input");

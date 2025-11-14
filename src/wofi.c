@@ -231,6 +231,25 @@ static gboolean do_search(gpointer data) {
 	return G_SOURCE_CONTINUE;
 }
 
+static GIcon*
+get_icon_from_string(const char* src)
+{
+	GIcon* icon = NULL;
+	GFile* fptr = g_file_new_for_path(src);
+
+	if (g_file_query_exists(fptr, NULL) == 0)
+	{
+		icon = g_themed_icon_new(src);
+	}
+	else
+	{
+		icon = g_file_icon_new(fptr);
+	}
+
+	g_object_unref(fptr);
+	return icon;
+}
+
 static void get_img_data(char* original, char* str, struct map* mode_map, bool first, char** mode, char** data) {
 	char* colon = strchr(str, ':');
 	if(colon == NULL) {
@@ -2069,11 +2088,16 @@ void wofi_init(struct map* _config) {
 	/* Replace entry icon with a valid provided. */
 	if (entry_icon != NULL)
 	{
-		gtk_entry_set_icon_from_icon_name(
-			GTK_ENTRY(entry),
-			GTK_ENTRY_ICON_PRIMARY,
-			entry_icon
-		);
+		GIcon* entry_primary_icon = get_icon_from_string(entry_icon);
+		if (entry_primary_icon != NULL)
+		{
+			gtk_entry_set_icon_from_gicon(
+				GTK_ENTRY(entry),
+				GTK_ENTRY_ICON_PRIMARY,
+				entry_primary_icon
+			);
+			g_object_unref(entry_primary_icon);
+		}
 	}
 
 	g_signal_connect(entry, "size-allocate", G_CALLBACK(widget_allocate), NULL);

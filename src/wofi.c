@@ -231,9 +231,25 @@ static gboolean do_search(gpointer data) {
 	return G_SOURCE_CONTINUE;
 }
 
-static GIcon*
-get_icon_from_string(const char* src)
+static void
+filter_character_out(char* src, const char ch)
 {
+	const char delimiter[2] = {ch, '\0'};
+	char* token = strtok(src, delimiter);
+
+	while (token != NULL)
+	{
+		sprintf(src, "%s", token);
+		token = strtok(NULL, delimiter);
+	}
+}
+
+static GIcon*
+get_icon_from_string(char* src)
+{
+	filter_character_out(src, '\'');
+	filter_character_out(src, '"');
+
 	GIcon* icon = NULL;
 	GFile* fptr = g_file_new_for_path(src);
 

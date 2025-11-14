@@ -2088,15 +2088,15 @@ void wofi_init(struct map* _config) {
 	/* Replace entry icon with a valid provided. */
 	if (entry_icon != NULL)
 	{
-		GIcon* magnifying_glass = get_icon_from_string(entry_icon);
-		if (magnifying_glass != NULL)
+		GIcon* entry_primary_icon = get_icon_from_string(entry_icon);
+		if (entry_primary_icon != NULL)
 		{
 			gtk_entry_set_icon_from_gicon(
 				GTK_ENTRY(entry),
 				GTK_ENTRY_ICON_PRIMARY,
-				magnifying_glass
+				entry_primary_icon
 			);
-			g_object_unref(magnifying_glass);
+			g_object_unref(entry_primary_icon);
 		}
 	}
 

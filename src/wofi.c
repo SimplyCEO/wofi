@@ -1874,7 +1874,8 @@ void wofi_init(struct map* _config) {
 	pre_display_cmd = map_get(config, "pre_display_cmd");
 	pre_display_exec = strcmp(config_get(config, "pre_display_exec", "false"), "true") == 0;
 	single_click = strcmp(config_get(config, "single_click", "false"), "true") == 0;
-	char* entry_icon = map_get(config, "entry_icon");
+	char* entry_icon_primary = map_get(config, "entry_icon_primary");
+	char* entry_icon_secondary = map_get(config, "entry_icon_secondary");
 
 	keys = map_init_void();
 	mods = map_init_void();
@@ -2086,17 +2087,27 @@ void wofi_init(struct map* _config) {
 	entry = gtk_search_entry_new();
 
 	/* Replace entry icon with a valid provided. */
-	if (entry_icon != NULL)
+	if ((entry_icon_primary != NULL) || (entry_icon_secondary != NULL))
 	{
-		GIcon* entry_primary_icon = get_icon_from_string(entry_icon);
-		if (entry_primary_icon != NULL)
+		GIcon* primary_icon = get_icon_from_string(entry_icon_primary);
+		if (primary_icon != NULL)
 		{
 			gtk_entry_set_icon_from_gicon(
 				GTK_ENTRY(entry),
 				GTK_ENTRY_ICON_PRIMARY,
-				entry_primary_icon
+				primary_icon
 			);
-			g_object_unref(entry_primary_icon);
+			g_object_unref(primary_icon);
+		}
+		GIcon* secondary_icon = get_icon_from_string(entry_icon_secondary);
+		if (secondary_icon != NULL)
+		{
+			gtk_entry_set_icon_from_gicon(
+				GTK_ENTRY(entry),
+				GTK_ENTRY_ICON_SECONDARY,
+				secondary_icon
+			);
+			g_object_unref(secondary_icon);
 		}
 	}
 

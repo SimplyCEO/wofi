@@ -18,6 +18,7 @@
 #include <wofi.h>
 
 #include <ctype.h>
+#define __USE_GNU
 #include <dlfcn.h>
 #include <errno.h>
 #include <string.h>

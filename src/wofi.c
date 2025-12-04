@@ -18,7 +18,9 @@
 #include <wofi.h>
 
 #include <ctype.h>
-#define __USE_GNU
+#if defined(__GLIBC__) && (__GLIBC__ <= 2 && __GLIBC_MINOR__ <= 35)
+# define __USE_GNU
+#endif
 #include <dlfcn.h>
 #include <errno.h>
 #include <string.h>
